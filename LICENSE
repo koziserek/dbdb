@@ -1,0 +1,123 @@
+dbdb Licence, version 1.0
+
+DRAFT. This text has not yet been reviewed by a lawyer.
+
+Copyright (c) 2026 Jakub Sadowski ("the Licensor"). All rights reserved.
+
+dbdb is proprietary software. Its source code is not published. Its use
+is free for individuals and for smaller organisations. Larger organisations
+need a paid commercial licence. The terms are below.
+
+
+1. Definitions
+
+"The Software" means the dbdb programs for the desktop, the command line
+and the browser as the Licensor provides them, with their documentation
+and examples.
+
+"You" means the person or the organisation using the Software. An
+organisation is counted together with every organisation that controls it,
+is controlled by it, or is under common control with it.
+
+"Large Organisation" means an organisation of any kind, public bodies
+included, that in its last completed financial year had
+
+  (a) more than 10 people working for it, employees and contractors
+      together, or
+  (b) a revenue, or for a body without revenue a budget, of more than
+      5 million Swiss francs or the same amount in another currency.
+
+"Commercial Licence" means a separate written agreement with the Licensor.
+
+
+2. Free use
+
+You may use the Software free of charge, for any purpose including
+commercial work, if
+
+  (a) You are an individual using it for yourself, or
+  (b) You are an organisation that is not a Large Organisation.
+
+A Large Organisation may use the Software free of charge to evaluate it,
+for no more than 30 days in total.
+
+Use on behalf of someone else counts as use by them. A consultant or
+contractor who uses the Software in work for a Large Organisation needs
+that organisation to hold a Commercial Licence, whatever the consultant's
+own size.
+
+
+3. Use that needs a Commercial Licence
+
+Any use by or on behalf of a Large Organisation beyond the evaluation in
+section 2 needs a Commercial Licence. The README says how to get one.
+
+
+4. What You may do
+
+Within the use that sections 2 and 3 allow, You may
+
+  (a) run the Software on any number of machines You control, and
+  (b) make the copies that running it and keeping backups need.
+
+
+5. What You may not do
+
+Without the Licensor's written permission You may not
+
+  (a) give, sell, rent or sublicense the Software to anyone else,
+  (b) offer the Software to others as a hosted or managed service,
+  (c) decompile, disassemble or otherwise reverse engineer the Software,
+      or change it or build other software from it, except where the law
+      gives You that right and it cannot be excluded,
+  (d) remove or change licence or copyright notices, or
+  (e) get around any technical means that tell free use from licensed use.
+
+This licence gives You no right to the source code. Source code that
+reaches You in any way stays the Licensor's and is covered by these same
+limits.
+
+
+6. What You make with it stays Yours
+
+This licence makes no claim on Your data, on the projects, jobs, queries
+and other files You make with the Software, or on what they produce.
+
+
+7. Parts by others
+
+The Software contains components by other authors under their own
+licences, among them the Terminus TTF font under the SIL Open Font License
+1.1. Those licences apply to those components in place of this one.
+
+
+8. End of the licence
+
+Your rights under this licence end if You break its terms and have not put
+that right within 30 days of the Licensor telling You so. They also end, as
+far as free use goes, when You become a Large Organisation; You then have
+90 days to obtain a Commercial Licence or stop using the Software. When
+Your rights end, You must stop using the Software and delete Your copies.
+
+
+9. No warranty, limited liability
+
+The Software is provided as it is, without warranty of any kind, express or
+implied, including fitness for a particular purpose. You are responsible
+for checking what it does to Your data. As far as the law allows, the
+Licensor is not liable for any damage that comes from using the Software or
+from not being able to use it. Liability that the law does not allow to be
+excluded, such as for intent or gross negligence, is not affected.
+
+
+10. Law and courts
+
+This licence is governed by Swiss law, without its rules on conflict of
+laws. The courts at the Licensor's place of residence have exclusive
+jurisdiction.
+
+
+11. Other versions
+
+The Licensor may publish new versions of this licence. A release of the
+Software stays under the version of the licence it was published with.
