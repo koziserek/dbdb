@@ -83,6 +83,7 @@ archive for each system:
 | `dbdb-<version>-windows-x86_64.zip` | Windows, x86_64 |
 | `dbdb-<version>-macos-arm64.tar.xz` | macOS, Apple Silicon |
 | `dbdb-<version>-wasm32.zip` | the app for a web browser, on any system |
+| `dbdb-<version>-intro.html` | an introduction to dbdb with pictures, as one page to open in a browser |
 | `SHA256SUMS` | checksums of the files above |
 
 The "Source code" archives that GitHub adds to every release hold only this
