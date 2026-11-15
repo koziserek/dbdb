@@ -4,9 +4,10 @@ DRAFT. This text has not yet been reviewed by a lawyer.
 
 Copyright (c) 2026 Jakub Sadowski ("the Licensor"). All rights reserved.
 
-dbdb is proprietary software. Its source code is not published. Its use
-is free for individuals and for smaller organisations. Larger organisations
-need a paid commercial licence. The terms are below.
+dbdb is shareware: proprietary software that You may try, and may pass on
+unchanged. Its source code is not published. Its use is free for
+individuals and for smaller organisations. Larger organisations need a paid
+commercial licence. The terms are below.
 
 
 1. Definitions
@@ -57,15 +58,20 @@ section 2 needs a Commercial Licence. The README says how to get one.
 
 Within the use that sections 2 and 3 allow, You may
 
-  (a) run the Software on any number of machines You control, and
-  (b) make the copies that running it and keeping backups need.
+  (a) run the Software on any number of machines You control,
+  (b) make the copies that running it and keeping backups need, and
+  (c) give others complete, unchanged copies of the Software as the
+      Licensor published it, free of charge and together with this
+      licence. Whoever receives a copy uses it under this licence, and
+      section 3 applies to them as it does to You.
 
 
 5. What You may not do
 
 Without the Licensor's written permission You may not
 
-  (a) give, sell, rent or sublicense the Software to anyone else,
+  (a) sell, rent or sublicense the Software, or give it to anyone else
+      in any other way than section 4 (c) allows,
   (b) offer the Software to others as a hosted or managed service,
   (c) decompile, disassemble or otherwise reverse engineer the Software,
       or change it or build other software from it, except where the law
@@ -84,14 +90,29 @@ This licence makes no claim on Your data, on the projects, jobs, queries
 and other files You make with the Software, or on what they produce.
 
 
-7. Parts by others
+7. If You like it, and if You do not
+
+In the tradition of shareware:
+
+  (a) If You like the Software, You "shall" praise it and pass it on:
+      tell a colleague, and give them a copy as section 4 (c) allows.
+  (b) If You do not, You are "obliged" to say what is wrong: send a bug
+      report or a request by email, or on the project's issues page on
+      GitHub. The README says where.
+
+Both are asked in earnest and in good humour, and neither is a condition
+of this licence: Your rights do not depend on them. What You send may be
+used to improve the Software, without anything being owed to You for it.
+
+
+8. Parts by others
 
 The Software contains components by other authors under their own
 licences, among them the Terminus TTF font under the SIL Open Font License
 1.1. Those licences apply to those components in place of this one.
 
 
-8. End of the licence
+9. End of the licence
 
 Your rights under this licence end if You break its terms and have not put
 that right within 30 days of the Licensor telling You so. They also end, as
@@ -100,7 +121,7 @@ far as free use goes, when You become a Large Organisation; You then have
 Your rights end, You must stop using the Software and delete Your copies.
 
 
-9. No warranty, limited liability
+10. No warranty, limited liability
 
 The Software is provided as it is, without warranty of any kind, express or
 implied, including fitness for a particular purpose. You are responsible
@@ -110,14 +131,14 @@ from not being able to use it. Liability that the law does not allow to be
 excluded, such as for intent or gross negligence, is not affected.
 
 
-10. Law and courts
+11. Law and courts
 
 This licence is governed by Swiss law, without its rules on conflict of
 laws. The courts at the Licensor's place of residence have exclusive
 jurisdiction.
 
 
-11. Other versions
+12. Other versions
 
 The Licensor may publish new versions of this licence. A release of the
 Software stays under the version of the licence it was published with.
