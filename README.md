@@ -80,6 +80,7 @@ archive for each system:
 | File | For |
 | --- | --- |
 | `dbdb-<version>-linux-x86_64.tar.xz` | Linux, x86_64 |
+| `dbdb-<version>-linux-x86_64.flatpak` | Linux, x86_64, as a [Flatpak](#flatpak) |
 | `dbdb-<version>-windows-x86_64.zip` | Windows, x86_64 |
 | `dbdb-<version>-macos-arm64.tar.xz` | macOS, Apple Silicon |
 | `dbdb-<version>-wasm32.zip` | the app for a web browser, on any system |
@@ -117,6 +118,53 @@ user:
 ./install-desktop.sh            # run again after moving the folder
 ./install-desktop.sh --remove   # take it away again
 ```
+
+### Flatpak
+
+The same two programs as a Flatpak, with a menu entry and an icon:
+
+```sh
+flatpak install --user https://koziserek.github.io/dbdb/dbdb.flatpakref
+flatpak run io.github.koziserek.dbdb
+flatpak run --command=dbdb-cli io.github.koziserek.dbdb --help
+```
+
+`dbdb-<version>-linux-x86_64.flatpak` among the release files is the
+same as one file to download: `flatpak install --user
+dbdb-*-linux-x86_64.flatpak`.
+
+Either way dbdb then updates like your other Flatpaks: `flatpak update`
+finds a new version, and so does a software centre that keeps Flatpaks up
+to date (GNOME Software, KDE Discover). dbdb is not on Flathub; it comes
+from a Flatpak repository of its own on this project's pages, signed
+with the project's key, which the install above takes note of. The first
+install also fetches the libraries it runs on (the freedesktop runtime)
+from Flathub.
+
+In its sandbox dbdb reaches the network, for database servers, and your
+home folder. To use files elsewhere, open that place to it once, for
+example `flatpak override --user --filesystem=/data io.github.koziserek.dbdb`.
+An assistant program installed on your system (the Assistant pane starts
+one) is out of reach from the sandbox; use the archive or Nix for that.
+
+### Nix and NixOS
+
+This repository is a flake that takes the programs of the latest release,
+checks them against their checksums and fits them to Nix, for Linux
+(x86_64) and macOS (Apple Silicon). Nothing is compiled.
+
+```sh
+nix run github:koziserek/dbdb                  # start the app
+nix run github:koziserek/dbdb#cli -- --help    # the command line
+nix profile install github:koziserek/dbdb      # keep both installed
+```
+
+Add a version to stay on one release: `github:koziserek/dbdb/v<version>`.
+In a NixOS or home-manager configuration, add the flake as an input and
+take `inputs.dbdb.packages.${pkgs.system}.default`. The licence is not a
+free one; the flake's own packages are allowed already, so there is
+nothing to set. With its `overlays.default`, which adds `pkgs.dbdb` to
+your nixpkgs, your configuration has to allow it (`allowUnfreePredicate`).
 
 ### Windows
 
