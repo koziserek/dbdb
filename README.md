@@ -10,7 +10,7 @@ It is one program with nothing else to install, it starts in a moment, and
 everything runs on your own machine: no account, no server, nothing sent
 anywhere.
 
-![The job designer: a Filter whose rejected rows go to a file of their own, and a Map step with an expression, its rows below](images/designer.png)
+![The job designer: joins that bring the operations database and the master data together, one with its description on the step, and the rows coming out of it below](images/designer.png)
 
 **[Download the latest release](https://github.com/koziserek/dbdb/releases/latest)**
 · [all releases](https://github.com/koziserek/dbdb/releases)
@@ -47,8 +47,9 @@ dbdb comes in four shapes that share one engine and one project file:
   and from declared relations.
 - **Runs jobs you design.** A job is a canvas of steps joined by wires:
   filter, sort, remove duplicates, join, append, aggregate, map columns with
-  expressions, and run other jobs. Every step shows its row count and its
-  rows, so you see what each step did to the data.
+  expressions, read and write whole files, ask a model for rows, and run
+  other jobs. Every step shows its row count and its rows, so you see what
+  each step did to the data. Jobs larger than memory spill to disk.
 - **Checks before it writes.** Duplicate keys, missing mandatory values,
   values too long for their column, formats that do not match, and fields
   that must or must not be filled depending on another field. Rows the
@@ -64,13 +65,29 @@ dbdb comes in four shapes that share one engine and one project file:
   what was not. dbdb is inspired by Talaxie and shares no code with it.
 - **Helps with SQL.** The Query pane checks a query as you type, points out
   what another database would reject, and previews the first rows.
-- **Works with an AI assistant.** `dbdb-cli guide` prints everything an
-  assistant needs to build a project from your inputs, and `dbdb-cli mcp`
-  offers the same over the Model Context Protocol.
+- **Shows how the data hangs together.** The Graph draws tables joined by
+  their keys, also for databases of thousands of tables, and key files add
+  and describe the keys a database does not declare.
+- **Compares the target with the source.** A comparison matches the rows of
+  two sources by key and shows what differs, with tolerances for numbers.
+- **Keeps what a migration needs.** Notes in Markdown, a history of every
+  run, schedules that run jobs by themselves, runs asked of another machine,
+  and a vault that keeps passwords out of the project file.
+- **Works on one project together.** Copies of the app that have one
+  project open see each other's changes within a second, through a shared
+  folder or a relay you run, which cannot read what it passes on.
+- **Works with an AI assistant.** The Assistant pane talks with a model on
+  your own machine (Ollama, llama.cpp), with Claude or with GitHub Copilot,
+  and changes the project only after asking. `dbdb-cli guide` prints
+  everything an outside assistant needs to build a project from your
+  inputs, and `dbdb-cli mcp` offers the same over the Model Context
+  Protocol.
 
 ![The Browser pane: each aircraft with its flights nested beside it](images/browser.png)
 
 ![The Query pane: a query with window functions, checked against six SQL dialects, and its first 1000 rows](images/query.png)
+
+![The Compare pane: the fleet in the database against the authority's register](images/compare.png)
 
 ## Download
 
