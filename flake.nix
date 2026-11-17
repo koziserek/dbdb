@@ -7,7 +7,7 @@
 #   nix profile install github:koziserek/dbdb        keep both installed
 #
 # Add /v<version> for one particular release:
-#   nix run github:koziserek/dbdb/v0.29.0
+#   nix run github:koziserek/dbdb/v0.30.0
 #
 # In a NixOS or home-manager configuration, take `packages.<system>.default`
 # of this flake, or add `overlays.default` and use `pkgs.dbdb`. dbdb is not
@@ -22,11 +22,11 @@
 
   outputs = { self, nixpkgs }:
     let
-      version = "0.29.0";
+      version = "0.30.0";
       # The archive of each system, and its SHA-256 as in SHA256SUMS.
       archives = {
-        x86_64-linux = { name = "linux-x86_64"; sha256 = "280dbc54df42d61d829559671c75718a266fe4076fd32db3b7d745c447a8da4c"; };
-        aarch64-darwin = { name = "macos-arm64"; sha256 = "9e063447322d29bc3a80b298f954efb773b5acc5efd13ebc2f64148012d1f4c8"; };
+        x86_64-linux = { name = "linux-x86_64"; sha256 = "8fbdeae1c32536060d74552c6966774c8b5f00d3cf36ddcdf80e4dc9de211271"; };
+        aarch64-darwin = { name = "macos-arm64"; sha256 = "e36027d9a158a756144fe429dc191587ccbe76eaae7d8f9619a159df3884e8bf"; };
       };
       systems = builtins.attrNames archives;
 
