@@ -1,6 +1,6 @@
 # dbdb
 
-dbdb is a data manipulation tool written in Rust, with a desktop
+dbdb is an ETL and data migration tool written in pure Rust, with a desktop
 interface built on [egui](https://github.com/emilk/egui). You point it at the
 files and databases you have, look around in the data, design jobs that
 reshape it, and get checked output files or database tables at the other
@@ -224,6 +224,11 @@ the command for it. The README in the archive has the details.
 Open an [issue](https://github.com/koziserek/dbdb/issues) and say which
 version and system you use, what you did and what happened. Leave real
 data, passwords and connection strings out: an issue is public.
+
+The app writes one with you under Help > Report issue or idea…: it adds
+the version and the system, can take a picture of its window for you to
+mark up, and opens the new issue in your browser, where you send it.
+dbdb sends nothing itself.
 
 `dbdb-cli --version` prints the version, and the app shows it under Help >
 Licences….
