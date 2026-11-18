@@ -1,6 +1,6 @@
 # dbdb
 
-dbdb is an ETL and data migration tool written in pure Rust, with a desktop
+dbdb is a data manipulation tool written in Rust, with a desktop
 interface built on [egui](https://github.com/emilk/egui). You point it at the
 files and databases you have, look around in the data, design jobs that
 reshape it, and get checked output files or database tables at the other
