@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Parameters and environments · dbdb</title>
+<meta name="description" content="${name} in paths, connections and table names, and environments for test and production.">
+<style>
+:root{--bg:#fbfaf7;--fg:#1d1f21;--muted:#62666d;--line:#dcd9d2;--code:#f0eee8;--accent:#a8401a;--head:#f3f1eb}
+@media (prefers-color-scheme:dark){:root{--bg:#16181b;--fg:#e4e2dd;--muted:#9a9ea6;--line:#33373d;--code:#22252a;--accent:#f0935f;--head:#1e2125}}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font:17px/1.6 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+main{max-width:46rem;margin:0 auto;padding:2.5rem 1rem 4rem}
+h1,h2,h3{line-height:1.25;text-wrap:balance}
+h1{font-size:2.1rem;margin:0 0 .4rem}
+h2{font-size:1.5rem;margin:2.8rem 0 .8rem;padding-top:1.4rem;border-top:1px solid var(--line)}
+h3{font-size:1.15rem;margin:2rem 0 .5rem}
+p.lede{color:var(--muted);font-size:1.1rem;margin:0 0 .3rem}
+p.date{color:var(--muted);font-size:.9rem;margin:0 0 2rem}
+a{color:var(--accent);text-underline-offset:2px}
+img{max-width:100%;height:auto;border:1px solid var(--line);border-radius:6px;display:block}
+figure{margin:1.6rem 0}
+@media (min-width:52rem){figure.wide{width:min(72rem,calc(100vw - 2rem));margin-left:50%;transform:translateX(-50%)}}
+figcaption{color:var(--muted);font-size:.88rem;margin-top:.45rem;text-align:center}
+code{font:0.88em/1.45 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;background:var(--code);padding:.1em .3em;border-radius:4px}
+p code,li code{overflow-wrap:anywhere}
+pre{background:var(--code);padding:.9rem 1rem;border-radius:6px;overflow-x:auto}
+pre code{background:none;padding:0;font-size:.84rem}
+.table{overflow-x:auto;margin:1.2rem 0}
+table{border-collapse:collapse;width:100%;min-width:34rem;font-size:.93rem}
+th,td{text-align:left;vertical-align:top;padding:.45rem .7rem;border-bottom:1px solid var(--line)}
+th{background:var(--head);font-weight:600;white-space:nowrap}
+td:first-child{white-space:nowrap}
+table.wrap td:first-child{white-space:normal;overflow-wrap:anywhere}
+li{margin:.3rem 0}
+td img{width:9.5rem;height:3.6rem;object-fit:contain;background:#fff;border:1px solid var(--line);border-radius:6px}
+td:nth-child(2){white-space:nowrap}
+figure.scroll{overflow-x:auto}
+figure.scroll img{min-width:46rem}
+small{display:block;color:var(--muted);font-size:.82rem;line-height:1.5}
+</style>
+<style>
+nav.site{max-width:46rem;margin:0 auto;padding:1rem 1rem 0;display:flex;flex-wrap:wrap;gap:.3rem 1.1rem;font-size:.95rem}
+nav.site a{text-decoration:none}
+nav.site a:first-child{font-weight:700;margin-right:auto}
+td:first-child,td:nth-child(2){white-space:normal}
+dl.pages dt{margin-top:1rem;font-weight:600}
+dl.pages dd{margin:.15rem 0 0;color:var(--muted)}
+</style>
+</head>
+<body>
+<nav class="site"><a href="../">dbdb</a><a href="../docs/">Documentation</a><a href="../flatpak.html">Flatpak</a><a href="https://github.com/koziserek/dbdb/releases">Download</a><a href="https://github.com/koziserek/dbdb/issues">Issues</a></nav>
+<main>
+<h1>Parameters and environments</h1>
+<p class="lede">${name} in paths, connections and table names, and environments for test and production.</p>
+<p>A parameter is a named value of the project. Write <code>${name}</code> where the value should go, and one job runs against test data today and production tomorrow without being changed.</p>
+<pre class="json"><code>&quot;parameters&quot;: [
+  {&quot;name&quot;: &quot;in&quot;,  &quot;value&quot;: &quot;data/test&quot;},
+  {&quot;name&quot;: &quot;db&quot;,  &quot;value&quot;: &quot;env:TEST_DB&quot;},
+  {&quot;name&quot;: &quot;tag&quot;, &quot;value&quot;: &quot;T&quot;}
+],
+&quot;environments&quot;: [
+  {&quot;name&quot;: &quot;production&quot;, &quot;values&quot;: {&quot;in&quot;: &quot;/srv/export&quot;, &quot;db&quot;: &quot;env:PROD_DB&quot;}}
+]</code></pre>
+<p>Each parameter has a default value. An environment gives some of them another value; the ones it does not mention keep their default.</p>
+<h2 id="where-name-works">Where <code>${name}</code> works</h2>
+<ul>
+<li>File paths of sources and outputs: <code>${in}/parts.csv</code>. A path that begins with a parameter is taken from the project's folder unless the value is a full path.</li>
+<li>Connections, table names, sheet names and queries of sources: <code>${db}</code>, <code>${tag}.orders</code>.</li>
+<li>Expressions in Map and Filter steps, where it is a value: <code>${tag} || '-' || code</code>.</li>
+</ul>
+<p>A name that is not a parameter of the project is an error, so a misspelt <code>${naem}</code> never becomes part of a file name.</p>
+<h2 id="dates-and-other-formulas-in-a-path">Dates and other formulas in a path</h2>
+<p>Between the curly brackets there may also be a formula, written as in a Map step (see <a href="expressions.html">expressions</a>), with the parameters where a Map step has columns:</p>
+<div class="table">
+<table>
+<thead>
+<tr>
+<th>Path</th>
+<th>Written to</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>out/${today()}/XATA.txt</code></td>
+<td><code>out/2026-09-30/XATA.txt</code></td>
+</tr>
+<tr>
+<td><code>out/XATA${format_date(now(), 'yyyyMMddHHmm')}.txt</code></td>
+<td><code>out/XATA202609301716.txt</code></td>
+</tr>
+<tr>
+<td><code>${in}/${upper(tag)}_${format_date(add_days(today(), -1), 'yyMMdd')}.csv</code></td>
+<td><code>data/test/T_260929.csv</code></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>A folder that does not exist yet is made. This works wherever <code>${name}</code> does, except inside an expression, which is a formula already.</p>
+<p>The brackets are curly ones. <code>$(name)</code>, as a shell writes it, is not filled in, and a file path that has it is refused instead of becoming a folder of that very name.</p>
+<p>A password does not belong in a parameter in plain text. A parameter can hold <code>env:PROD_DB</code>, which is read from the variable <code>PROD_DB</code> when connecting, or a connection that takes its password from the project's vault, such as <code>postgresql://etl:${vault:pg_prod}@db/sales</code> (see <a href="vault.html">the vault</a>). An environment can name another secret, so test and production each have their own.</p>
+<h2 id="choosing-the-values-for-a-run">Choosing the values for a run</h2>
+<ul>
+<li><p><strong>App</strong>: Edit &gt; Parameters… (or Parameters… in the Designer) edits the table of parameters and environments. Once there is an environment, the Designer shows an Environment list; previews, checks and runs in every pane use the one chosen there.</p></li>
+<li><p><strong>Command line</strong>:</p>
+<pre class="sh"><code>dbdb-cli run-job project.json export                       # defaults
+dbdb-cli run-job project.json export --env production
+dbdb-cli run-job project.json export --env production --param tag=X</code></pre>
+<p><code>--param name=value</code> may be repeated and wins over the environment.</p></li>
+<li><p><strong>MCP</strong>: <code>run_job</code>, <code>preview_source</code> and <code>check_source</code> take <code>"environment"</code> and <code>"parameters": {"name": "value"}</code>. The <code>set_parameters</code> command replaces the project's parameters and environments.</p></li>
+</ul>
+<p>A job run as a Sub-job step uses the same values as the job that runs it.</p>
+</main>
+</body>
+</html>

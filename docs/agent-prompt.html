@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Asking an AI assistant for a project · dbdb</title>
+<meta name="description" content="What to ask an AI assistant that has dbdb-cli, to build a whole project.">
+<style>
+:root{--bg:#fbfaf7;--fg:#1d1f21;--muted:#62666d;--line:#dcd9d2;--code:#f0eee8;--accent:#a8401a;--head:#f3f1eb}
+@media (prefers-color-scheme:dark){:root{--bg:#16181b;--fg:#e4e2dd;--muted:#9a9ea6;--line:#33373d;--code:#22252a;--accent:#f0935f;--head:#1e2125}}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font:17px/1.6 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+main{max-width:46rem;margin:0 auto;padding:2.5rem 1rem 4rem}
+h1,h2,h3{line-height:1.25;text-wrap:balance}
+h1{font-size:2.1rem;margin:0 0 .4rem}
+h2{font-size:1.5rem;margin:2.8rem 0 .8rem;padding-top:1.4rem;border-top:1px solid var(--line)}
+h3{font-size:1.15rem;margin:2rem 0 .5rem}
+p.lede{color:var(--muted);font-size:1.1rem;margin:0 0 .3rem}
+p.date{color:var(--muted);font-size:.9rem;margin:0 0 2rem}
+a{color:var(--accent);text-underline-offset:2px}
+img{max-width:100%;height:auto;border:1px solid var(--line);border-radius:6px;display:block}
+figure{margin:1.6rem 0}
+@media (min-width:52rem){figure.wide{width:min(72rem,calc(100vw - 2rem));margin-left:50%;transform:translateX(-50%)}}
+figcaption{color:var(--muted);font-size:.88rem;margin-top:.45rem;text-align:center}
+code{font:0.88em/1.45 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;background:var(--code);padding:.1em .3em;border-radius:4px}
+p code,li code{overflow-wrap:anywhere}
+pre{background:var(--code);padding:.9rem 1rem;border-radius:6px;overflow-x:auto}
+pre code{background:none;padding:0;font-size:.84rem}
+.table{overflow-x:auto;margin:1.2rem 0}
+table{border-collapse:collapse;width:100%;min-width:34rem;font-size:.93rem}
+th,td{text-align:left;vertical-align:top;padding:.45rem .7rem;border-bottom:1px solid var(--line)}
+th{background:var(--head);font-weight:600;white-space:nowrap}
+td:first-child{white-space:nowrap}
+table.wrap td:first-child{white-space:normal;overflow-wrap:anywhere}
+li{margin:.3rem 0}
+td img{width:9.5rem;height:3.6rem;object-fit:contain;background:#fff;border:1px solid var(--line);border-radius:6px}
+td:nth-child(2){white-space:nowrap}
+figure.scroll{overflow-x:auto}
+figure.scroll img{min-width:46rem}
+small{display:block;color:var(--muted);font-size:.82rem;line-height:1.5}
+</style>
+<style>
+nav.site{max-width:46rem;margin:0 auto;padding:1rem 1rem 0;display:flex;flex-wrap:wrap;gap:.3rem 1.1rem;font-size:.95rem}
+nav.site a{text-decoration:none}
+nav.site a:first-child{font-weight:700;margin-right:auto}
+td:first-child,td:nth-child(2){white-space:normal}
+dl.pages dt{margin-top:1rem;font-weight:600}
+dl.pages dd{margin:.15rem 0 0;color:var(--muted)}
+</style>
+</head>
+<body>
+<nav class="site"><a href="../">dbdb</a><a href="../docs/">Documentation</a><a href="../flatpak.html">Flatpak</a><a href="https://github.com/koziserek/dbdb/releases">Download</a><a href="https://github.com/koziserek/dbdb/issues">Issues</a></nav>
+<main>
+<h1>Asking an AI assistant for a project</h1>
+<p class="lede">What to ask an AI assistant that has dbdb-cli, to build a whole project.</p>
+<p>An assistant that has <code>dbdb-cli</code> (or the MCP server) can build a whole project from your input files. It learns dbdb's format by itself, from <code>dbdb-cli guide</code> (<a href="agents.html">agents.md</a>), so your request does not have to explain dbdb. This page is about what the request does have to say, with a prompt to copy.</p>
+<h2 id="what-the-prompt-has-to-carry">What the prompt has to carry</h2>
+<p>A project file encodes decisions that are in nobody's input files. An assistant can find the joins and the date formats by looking at the data; it cannot find out that helicopter chapters are out of scope, or that the importing system wants ICAO codes where the source has IATA codes. Whatever you would have decided while clicking a job together has to be in the prompt, or the assistant will decide it for you, quietly.</p>
+<p>So a prompt that gives a result you can sign off has five parts:</p>
+<ol type="1">
+<li><strong>Where the instructions are.</strong> One line: run <code>dbdb-cli guide</code> first.</li>
+<li><strong>The specification of the outputs.</strong> Best as files: the schema XML of each fixed-width layout, whose column comments say what each column holds, or the layout document of the importing system.</li>
+<li><strong>The business rules</strong>: what is in scope, which codes translate to which, what a date looks like. One line each; these are the lines only you can write.</li>
+<li><strong>The conventions</strong>: how jobs are named, where outputs and rejected rows go, which parameters there are.</li>
+<li><strong>How to work and what to hand over</strong>: check after every job, never drop a row without saying so, ask instead of guessing, and report row counts and assumptions.</li>
+</ol>
+<p>The last part matters most. "Never drop rows silently" and "write the question down, do not guess" are what separate a migration that can be signed off from one that merely runs, and <code>validate</code> with 0 errors and 0 warnings gives the assistant a test for being done.</p>
+<h2 id="a-prompt-to-copy">A prompt to copy</h2>
+<p>This one asks for what the Showcase project (<code>Showcase.zip</code>, which the maintainer hands out on request) does, given only the binary and the Showcase's <code>Inputs</code> folder: the workbook, the SQLite database, the airport list and the eight schema files. No project file is given.</p>
+<pre class="text"><code>You have ./dbdb-cli and a folder Inputs/. Run `./dbdb-cli guide` first and
+follow it; read `guide expressions` and `guide parameters` before writing
+jobs. Do not write project JSON from memory of other tools.
+
+Goal: a dbdb project, project.json in this folder, that produces one
+fixed-width transfer file per layout in Inputs/schemas/*.xml, for the
+operator described by the inputs. The schema files are the specification:
+column names, widths, keys, mandatory columns, and the comment on each
+column says what it must hold (`./dbdb-cli schema FILE` prints them).
+
+Inputs: master_data.xlsx (master data kept by hand), utilization.sqlite
+(the operations system), airports.csv (a reference list). Look at every
+sheet and table before designing anything.
+
+Business rules:
+- XATA: only the chapters for fixed-wing turboprops; titles in capitals,
+  cut to the column width; one row per chapter.
+- XADDRESS: the address list, plus every airport as an address.
+- XAC, XACDAY: aircraft types use the master data&#39;s codes, not the ICAO
+  designators of the operations system; the Type mapping sheet translates.
+  Stations are ICAO codes; the operations system has IATA codes.
+- Dates are DD.MM.YYYY in every transfer file.
+- Cancelled legs are not utilization.
+
+Conventions:
+- One job per transfer file, named after its layout, plus a job
+  &quot;Run everything&quot; that runs them one after another and stops on warnings.
+- Outputs go to Outputs/${exportsDestination}/, a parameter that is
+  dataLoad_001 unless a run says otherwise. The operator&#39;s code is a
+  parameter too.
+- Rows left out on purpose, and rows that fail a check, go to a CSV file
+  under rejected/ with the reason. Never drop rows silently.
+- Add project rules for every format the layouts imply: the shape of
+  codes, date formats, allowed values, columns that are mandatory only in
+  some cases.
+- Lay the steps out left to right, so that a person can read each job in
+  the app.
+- Use a query as a source where one database can do the join or the
+  running total itself.
+
+Working method: build one job at a time. After each, run `validate` and
+preview its steps; fix it until `validate` reports 0 errors and 0
+warnings, or stop and tell me why a warning is right. Where a rule above
+is ambiguous or the data contradicts it, do not guess: write the question
+down, take the cautious reading, and mark it in your report.
+
+Deliver: project.json; the Outputs/ of a real run of &quot;Run everything&quot;;
+and a report that says, for each job, what it reads, the rows in and out,
+what was rejected and why, and every assumption you made.</code></pre>
+<p>For your own migration keep the skeleton and replace three things: the goal and the inputs, the business rules, and the conventions you care about.</p>
+<p>Through MCP the prompt is the same, with this as its first paragraph:</p>
+<pre class="text"><code>Use the dbdb tools. Call `guide` first and follow it; read its topics
+&quot;expressions&quot; and &quot;parameters&quot; before writing jobs. Check your work with
+validate_project and preview_step. Do not write project JSON from memory
+of other tools.</code></pre>
+<h2 id="what-to-give-it">What to give it</h2>
+<ul>
+<li>The Linux <code>dbdb-cli</code> of a release, which runs on any distribution with glibc 2.31 or later, so in the usual sandboxes of chat and coding assistants. On your own machine, the one you have.</li>
+<li>The input files, in a folder <code>Inputs</code>, with the schema files of the layouts to write in <code>Inputs/schemas</code>.</li>
+<li>No password. For a database, run the assistant on your own machine and give the connection as <code>env:NAME</code>; a sandbox reaches no database of yours.</li>
+</ul>
+<h2 id="what-to-check-when-it-comes-back">What to check when it comes back</h2>
+<ul>
+<li>Open the project in the app and read each job; the layout is yours to judge, and the Designer shows the rows at every step.</li>
+<li>Run <code>dbdb-cli validate project.json</code> yourself.</li>
+<li>Read the report's assumptions and the files under <code>rejected/</code> first: the questions a migration raises are there.</li>
+<li>Compare row counts with what you know of the source.</li>
+</ul>
+<h2 id="how-far-this-is-tested">How far this is tested</h2>
+<p>The guide's own worked example is built, validated and run by a test on every build. The prompt above has not yet been run against a fresh assistant and compared with the Showcase's outputs file by file; until it has, take it as a well-founded starting point, not a guarantee.</p>
+</main>
+</body>
+</html>

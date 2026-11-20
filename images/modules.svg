@@ -1,0 +1,238 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1040 880" width="1040" height="880" role="img" aria-labelledby="t d" font-family="system-ui,-apple-system,'Segoe UI',Roboto,sans-serif">
+<title id="t">How the parts of dbdb fit together</title>
+<desc id="d">People, scripts and AI assistants use two programs, dbdb-app and dbdb-cli. Both are built on three libraries: dbdb-assist for assistants, which asks the models through connectors; dbdb-sync for keeping open copies of a project the same; and dbdb-core, the engine, which reads and writes files and databases and reads REST APIs and OData services, each through a source's own connection or one kept in Connectors. dbdb-sync reaches the other copies of a project three ways: through a sync folder, through a relay, and through a direct link from copy to copy. Changes, runs asked of another machine and pushed files travel there.</desc>
+<style>
+.bg{fill:#fbfaf7} .box{fill:#fff;stroke:#cfcbc2} .core{fill:#fdf3ec;stroke:#a8401a} .sync{fill:#eaf5f4;stroke:#1f6f78}
+.out{fill:none;stroke:#b9b5ac;stroke-dasharray:5 4} .outs{fill:none;stroke:#1f6f78;stroke-dasharray:5 4}
+.chip{fill:#f0eee8} .chipc{fill:#f8e2d3} .chips{fill:#d3ebe8}
+text{fill:#1d1f21;font-size:13px} .h{font-size:17px;font-weight:650} .m{fill:#62666d} .s{font-size:12px} .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+.ln{stroke:#7b7f86;stroke-width:1.5;fill:none} .lns{stroke:#1f6f78;stroke-width:1.5;fill:none} .ah{fill:#7b7f86} .ahs{fill:#1f6f78}
+.lab{font-size:11px;font-weight:650;letter-spacing:.08em;fill:#62666d}
+@media (prefers-color-scheme:dark){
+.bg{fill:#16181b} .box{fill:#1e2125;stroke:#3d4249} .core{fill:#2a1f19;stroke:#f0935f} .sync{fill:#16282a;stroke:#5fbfc7}
+.out{stroke:#555a62} .outs{stroke:#5fbfc7} .chip{fill:#2a2e34} .chipc{fill:#40291c} .chips{fill:#1f3d40}
+text{fill:#e4e2dd} .m{fill:#9a9ea6} .lab{fill:#9a9ea6} .ln{stroke:#8a8f97} .lns{stroke:#5fbfc7} .ah{fill:#8a8f97} .ahs{fill:#5fbfc7}
+}
+</style>
+
+<rect class="bg" width="1040" height="880"/>
+<text x="30" y="28" class="lab" text-anchor="start">WHO USES IT</text>
+<rect class="out" x="30" y="40" width="470" height="54" rx="8"/>
+<text x="265.0" y="62" class="" text-anchor="middle">People</text>
+<text x="265.0" y="81" class="s m" text-anchor="middle">at the desktop, or in a web browser</text>
+<rect class="out" x="540" y="40" width="225" height="54" rx="8"/>
+<text x="652.5" y="62" class="" text-anchor="middle">Scripts and schedulers</text>
+<text x="652.5" y="81" class="s m" text-anchor="middle">run jobs, compare, validate</text>
+<rect class="out" x="785" y="40" width="225" height="54" rx="8"/>
+<text x="897.5" y="62" class="" text-anchor="middle">AI assistants</text>
+<text x="897.5" y="81" class="s m" text-anchor="middle">over MCP, or the command line</text>
+<polyline class="ln" points="265,94 265,128"/>
+<polygon class="ah" points="265,128 260.5,119 269.5,119"/>
+<polyline class="ln" points="652,94 652,128"/>
+<polygon class="ah" points="652,128 647.5,119 656.5,119"/>
+<polyline class="ln" points="897,94 897,128"/>
+<polygon class="ah" points="897,128 892.5,119 901.5,119"/>
+<rect class="box" x="30" y="130" width="470" height="138" rx="8"/>
+<text x="46" y="156" class="h mono" text-anchor="start">dbdb-app</text>
+<text x="140" y="156" class="s m" text-anchor="start">the app: desktop, and WebAssembly in a browser</text>
+<rect class="chip" x="46" y="170" width="100" height="23" rx="11.5"/>
+<text x="96.0" y="186" class="s" text-anchor="middle">Job designer</text>
+<rect class="chip" x="153" y="170" width="65" height="23" rx="11.5"/>
+<text x="185.5" y="186" class="s" text-anchor="middle">Browser</text>
+<rect class="chip" x="225" y="170" width="52" height="23" rx="11.5"/>
+<text x="251.0" y="186" class="s" text-anchor="middle">Query</text>
+<rect class="chip" x="284" y="170" width="52" height="23" rx="11.5"/>
+<text x="310.0" y="186" class="s" text-anchor="middle">Graph</text>
+<rect class="chip" x="343" y="170" width="65" height="23" rx="11.5"/>
+<text x="375.5" y="186" class="s" text-anchor="middle">Compare</text>
+<rect class="chip" x="415" y="170" width="52" height="23" rx="11.5"/>
+<text x="441.0" y="186" class="s" text-anchor="middle">Notes</text>
+<rect class="chip" x="46" y="200" width="45" height="23" rx="11.5"/>
+<text x="68.5" y="216" class="s" text-anchor="middle">Runs</text>
+<rect class="chip" x="98" y="200" width="58" height="23" rx="11.5"/>
+<text x="127.0" y="216" class="s" text-anchor="middle">Issues</text>
+<rect class="chip" x="163" y="200" width="100" height="23" rx="11.5"/>
+<text x="213.0" y="216" class="s" text-anchor="middle">Job schedule</text>
+<rect class="chip" x="270" y="200" width="86" height="23" rx="11.5"/>
+<text x="313.0" y="216" class="s" text-anchor="middle">Connectors</text>
+<rect class="chip" x="46" y="230" width="127" height="23" rx="11.5"/>
+<text x="109.5" y="246" class="s" text-anchor="middle">API Call Builder</text>
+<rect class="chip" x="180" y="230" width="79" height="23" rx="11.5"/>
+<text x="219.5" y="246" class="s" text-anchor="middle">Assistant</text>
+<rect class="chip" x="266" y="230" width="93" height="23" rx="11.5"/>
+<text x="312.5" y="246" class="s" text-anchor="middle">Command log</text>
+<rect class="box" x="540" y="130" width="470" height="138" rx="8"/>
+<text x="556" y="156" class="h mono" text-anchor="start">dbdb-cli</text>
+<text x="650" y="156" class="s m" text-anchor="start">the command line</text>
+<rect class="chip" x="556" y="170" width="69" height="23" rx="11.5"/>
+<text x="590.5" y="186" class="s mono" text-anchor="middle">run-job</text>
+<rect class="chip" x="632" y="170" width="76" height="23" rx="11.5"/>
+<text x="670.0" y="186" class="s mono" text-anchor="middle">validate</text>
+<rect class="chip" x="715" y="170" width="69" height="23" rx="11.5"/>
+<text x="749.5" y="186" class="s mono" text-anchor="middle">preview</text>
+<rect class="chip" x="791" y="170" width="69" height="23" rx="11.5"/>
+<text x="825.5" y="186" class="s mono" text-anchor="middle">compare</text>
+<rect class="chip" x="867" y="170" width="54" height="23" rx="11.5"/>
+<text x="894.0" y="186" class="s mono" text-anchor="middle">apply</text>
+<rect class="chip" x="556" y="200" width="121" height="23" rx="11.5"/>
+<text x="616.5" y="216" class="s mono" text-anchor="middle">import-talaxie</text>
+<rect class="chip" x="684" y="200" width="121" height="23" rx="11.5"/>
+<text x="744.5" y="216" class="s mono" text-anchor="middle">export-talaxie</text>
+<rect class="chip" x="812" y="200" width="54" height="23" rx="11.5"/>
+<text x="839.0" y="216" class="s mono" text-anchor="middle">guide</text>
+<rect class="chip" x="873" y="200" width="39" height="23" rx="11.5"/>
+<text x="892.5" y="216" class="s mono" text-anchor="middle">mcp</text>
+<rect class="chip" x="556" y="230" width="76" height="23" rx="11.5"/>
+<text x="594.0" y="246" class="s mono" text-anchor="middle">schedule</text>
+<rect class="chip" x="639" y="230" width="54" height="23" rx="11.5"/>
+<text x="666.0" y="246" class="s mono" text-anchor="middle">vault</text>
+<rect class="chip" x="700" y="230" width="61" height="23" rx="11.5"/>
+<text x="730.5" y="246" class="s mono" text-anchor="middle">runner</text>
+<rect class="chip" x="768" y="230" width="54" height="23" rx="11.5"/>
+<text x="795.0" y="246" class="s mono" text-anchor="middle">relay</text>
+<polyline class="ln" points="265,268 265,290 827,290"/>
+<polyline class="ln" points="775,268 775,290"/>
+<polyline class="ln" points="265,290 265,318"/>
+<polygon class="ah" points="265,318 260.5,309 269.5,309"/>
+<polyline class="ln" points="827,290 827,318"/>
+<polygon class="ah" points="827,318 822.5,309 831.5,309"/>
+<rect class="box" x="30" y="320" width="570" height="142" rx="8"/>
+<text x="46" y="346" class="h mono" text-anchor="start">dbdb-assist</text>
+<text x="168" y="346" class="s m" text-anchor="start">what an assistant works with, the same in the app and over MCP</text>
+<rect class="chip" x="46" y="360" width="252" height="23" rx="11.5"/>
+<text x="172.0" y="376" class="s" text-anchor="middle">tools to read and change a project</text>
+<rect class="chip" x="305" y="360" width="79" height="23" rx="11.5"/>
+<text x="344.5" y="376" class="s" text-anchor="middle">the guide</text>
+<rect class="chip" x="391" y="360" width="114" height="23" rx="11.5"/>
+<text x="448.0" y="376" class="s" text-anchor="middle">project checks</text>
+<text x="46" y="408" class="s m" text-anchor="start">asks the models, for the Assistant pane and a job's Prompt steps, each through a connector:</text>
+<rect class="chip" x="46" y="420" width="58" height="23" rx="11.5"/>
+<text x="75.0" y="436" class="s" text-anchor="middle">Ollama</text>
+<rect class="chip" x="111" y="420" width="79" height="23" rx="11.5"/>
+<text x="150.5" y="436" class="s" text-anchor="middle">llama.cpp</text>
+<rect class="chip" x="197" y="420" width="58" height="23" rx="11.5"/>
+<text x="226.0" y="436" class="s" text-anchor="middle">Claude</text>
+<rect class="chip" x="262" y="420" width="93" height="23" rx="11.5"/>
+<text x="308.5" y="436" class="s" text-anchor="middle">Claude Code</text>
+<rect class="chip" x="362" y="420" width="114" height="23" rx="11.5"/>
+<text x="419.0" y="436" class="s" text-anchor="middle">GitHub Copilot</text>
+<polyline class="ln" points="265,462 265,498"/>
+<polygon class="ah" points="265,498 260.5,489 269.5,489"/>
+<rect class="core" x="30" y="500" width="570" height="170" rx="8"/>
+<text x="46" y="526" class="h mono" text-anchor="start">dbdb-core</text>
+<text x="148" y="526" class="s m" text-anchor="start">the engine: everything dbdb can do lives here</text>
+<rect class="chipc" x="46" y="540" width="231" height="23" rx="11.5"/>
+<text x="161.5" y="556" class="s" text-anchor="middle">project and commands, with undo</text>
+<rect class="chipc" x="284" y="540" width="162" height="23" rx="11.5"/>
+<text x="365.0" y="556" class="s" text-anchor="middle">jobs on Arrow batches</text>
+<rect class="chipc" x="46" y="570" width="148" height="23" rx="11.5"/>
+<text x="120.0" y="586" class="s" text-anchor="middle">sources and outputs</text>
+<rect class="chipc" x="201" y="570" width="293" height="23" rx="11.5"/>
+<text x="347.5" y="586" class="s" text-anchor="middle">connectors to databases, APIs and models</text>
+<rect class="chipc" x="501" y="570" width="52" height="23" rx="11.5"/>
+<text x="527.0" y="586" class="s" text-anchor="middle">vault</text>
+<rect class="chipc" x="46" y="600" width="79" height="23" rx="11.5"/>
+<text x="85.5" y="616" class="s" text-anchor="middle">schedules</text>
+<rect class="chipc" x="132" y="600" width="127" height="23" rx="11.5"/>
+<text x="195.5" y="616" class="s" text-anchor="middle">checks and rules</text>
+<rect class="chipc" x="266" y="600" width="93" height="23" rx="11.5"/>
+<text x="312.5" y="616" class="s" text-anchor="middle">expressions</text>
+<rect class="chipc" x="366" y="600" width="86" height="23" rx="11.5"/>
+<text x="409.0" y="616" class="s" text-anchor="middle">SQL checks</text>
+<rect class="chipc" x="459" y="600" width="93" height="23" rx="11.5"/>
+<text x="505.5" y="616" class="s" text-anchor="middle">comparisons</text>
+<rect class="chipc" x="46" y="630" width="52" height="23" rx="11.5"/>
+<text x="72.0" y="646" class="s" text-anchor="middle">notes</text>
+<rect class="chipc" x="105" y="630" width="93" height="23" rx="11.5"/>
+<text x="151.5" y="646" class="s" text-anchor="middle">run history</text>
+<rect class="chipc" x="205" y="630" width="79" height="23" rx="11.5"/>
+<text x="244.5" y="646" class="s" text-anchor="middle">key files</text>
+<rect class="chipc" x="291" y="630" width="190" height="23" rx="11.5"/>
+<text x="386.0" y="646" class="s" text-anchor="middle">Talaxie import and export</text>
+<polyline class="ln" points="622,290 622,522 602,522"/>
+<polygon class="ah" points="602,522 611,517.5 611,526.5"/>
+<rect class="sync" x="645" y="320" width="365" height="264" rx="8"/>
+<text x="661" y="346" class="h mono" text-anchor="start">dbdb-sync</text>
+<text x="661" y="366" class="s m" text-anchor="start">keeps the open copies of a project the same</text>
+<rect class="chips" x="661" y="382" width="196" height="23" rx="11.5"/>
+<text x="759.0" y="398" class="s" text-anchor="middle">the project as a Loro CRDT</text>
+<rect class="chips" x="864" y="382" width="127" height="23" rx="11.5"/>
+<text x="927.5" y="398" class="s" text-anchor="middle">who else is here</text>
+<rect class="chips" x="661" y="412" width="217" height="23" rx="11.5"/>
+<text x="769.5" y="428" class="s" text-anchor="middle">runs asked of another machine</text>
+<rect class="chips" x="885" y="412" width="100" height="23" rx="11.5"/>
+<text x="935.0" y="428" class="s" text-anchor="middle">pushed files</text>
+<rect class="chips" x="661" y="442" width="203" height="23" rx="11.5"/>
+<text x="762.5" y="458" class="s" text-anchor="middle">sealed with the project key</text>
+<text x="661" y="498" class="s m" text-anchor="start">changes from two copies at once are both kept;</text>
+<text x="661" y="514" class="s m" text-anchor="start">undo is your own</text>
+<polyline class="lns" points="645,562 602,562"/>
+<polygon class="ahs" points="602,562 611,557.5 611,566.5"/>
+<text x="134" y="720" class="lab" text-anchor="start">WHAT IT REACHES</text>
+<rect class="out" x="30" y="732" width="180" height="86" rx="8"/>
+<text x="120.0" y="758" class="" text-anchor="middle">Files</text>
+<text x="120.0" y="776" class="s m" text-anchor="middle">Excel, ODS, CSV, JSON,</text>
+<text x="120.0" y="792" class="s m" text-anchor="middle">Parquet, PDF, fixed-width,</text>
+<text x="120.0" y="808" class="s m" text-anchor="middle">MS Access, SQLite</text>
+<polyline class="ln" points="120,670 120,730"/>
+<polygon class="ah" points="120,730 115.5,721 124.5,721"/>
+<polygon class="ah" points="120,670 124.5,679 115.5,679"/>
+<rect class="out" x="224" y="732" width="180" height="86" rx="8"/>
+<text x="314.0" y="758" class="" text-anchor="middle">Databases</text>
+<text x="314.0" y="776" class="s m" text-anchor="middle">PostgreSQL, SQL Server,</text>
+<text x="314.0" y="792" class="s m" text-anchor="middle">SQLite, MariaDB / MySQL,</text>
+<text x="314.0" y="808" class="s m" text-anchor="middle">Oracle</text>
+<polyline class="ln" points="314,670 314,730"/>
+<polygon class="ah" points="314,730 309.5,721 318.5,721"/>
+<polygon class="ah" points="314,670 318.5,679 309.5,679"/>
+<rect class="out" x="418" y="732" width="180" height="86" rx="8"/>
+<text x="508.0" y="758" class="" text-anchor="middle">Web APIs</text>
+<text x="508.0" y="776" class="s m" text-anchor="middle">REST APIs that answer</text>
+<text x="508.0" y="792" class="s m" text-anchor="middle">with JSON, and</text>
+<text x="508.0" y="808" class="s m" text-anchor="middle">OData services</text>
+<polyline class="ln" points="508,670 508,730"/>
+<polygon class="ah" points="508,730 503.5,721 512.5,721"/>
+<polygon class="ah" points="508,670 512.5,679 503.5,679"/>
+<text x="411.0" y="840" class="s m" text-anchor="middle">a connection or a key is the source's own, or kept once in Connectors</text>
+<rect class="outs" x="645" y="620" width="115" height="118" rx="8"/>
+<text x="702.5" y="644" class="" text-anchor="middle">Sync folder</text>
+<text x="702.5" y="662" class="s m" text-anchor="middle">beside the</text>
+<text x="702.5" y="678" class="s m" text-anchor="middle">project file,</text>
+<text x="702.5" y="694" class="s m" text-anchor="middle">no server</text>
+<polyline class="lns" points="702,584 702,618"/>
+<polygon class="ahs" points="702,618 697.5,609 706.5,609"/>
+<polygon class="ahs" points="702,584 706.5,593 697.5,593"/>
+<polyline class="lns" points="702,738 702,772"/>
+<polygon class="ahs" points="702,772 697.5,763 706.5,763"/>
+<polygon class="ahs" points="702,738 706.5,747 697.5,747"/>
+<rect class="outs" x="770" y="620" width="115" height="118" rx="8"/>
+<text x="827.5" y="644" class="" text-anchor="middle">Relay</text>
+<text x="827.5" y="662" class="s m" text-anchor="middle">dbdb-cli relay,</text>
+<text x="827.5" y="678" class="s m" text-anchor="middle">cannot read it;</text>
+<text x="827.5" y="694" class="s m" text-anchor="middle">browser pages</text>
+<text x="827.5" y="710" class="s m" text-anchor="middle">join here</text>
+<polyline class="lns" points="827,584 827,618"/>
+<polygon class="ahs" points="827,618 822.5,609 831.5,609"/>
+<polygon class="ahs" points="827,584 831.5,593 822.5,593"/>
+<polyline class="lns" points="827,738 827,772"/>
+<polygon class="ahs" points="827,772 822.5,763 831.5,763"/>
+<polygon class="ahs" points="827,738 831.5,747 822.5,747"/>
+<rect class="outs" x="895" y="620" width="115" height="118" rx="8"/>
+<text x="952.5" y="644" class="" text-anchor="middle">Direct link</text>
+<text x="952.5" y="662" class="s m" text-anchor="middle">copy to copy</text>
+<text x="952.5" y="678" class="s m" text-anchor="middle">over iroh, when</text>
+<text x="952.5" y="694" class="s m" text-anchor="middle">turned on; relay</text>
+<text x="952.5" y="710" class="s m" text-anchor="middle">helps through</text>
+<text x="952.5" y="726" class="s m" text-anchor="middle">routers</text>
+<polyline class="lns" points="952,584 952,618"/>
+<polygon class="ahs" points="952,618 947.5,609 956.5,609"/>
+<polygon class="ahs" points="952,584 956.5,593 947.5,593"/>
+<polyline class="lns" points="952,738 952,772"/>
+<polygon class="ahs" points="952,772 947.5,763 956.5,763"/>
+<polygon class="ahs" points="952,738 956.5,747 947.5,747"/>
+<rect class="outs" x="645" y="774" width="365" height="82" rx="8"/>
+<text x="827" y="798" class="" text-anchor="middle">Other copies of the project</text>
+<text x="827" y="817" class="s m" text-anchor="middle">another window, another computer, a browser page,</text>
+<text x="827" y="833" class="s m" text-anchor="middle">or a runner without a window (dbdb-cli runner);</text>
+<text x="827" y="849" class="s m" text-anchor="middle">a pushed file lands in the Incoming folder there</text>
+</svg>

@@ -1,0 +1,370 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>One project open in several places · dbdb</title>
+<meta name="description" content="Two windows, two computers, the app and the command line, on one project.">
+<style>
+:root{--bg:#fbfaf7;--fg:#1d1f21;--muted:#62666d;--line:#dcd9d2;--code:#f0eee8;--accent:#a8401a;--head:#f3f1eb}
+@media (prefers-color-scheme:dark){:root{--bg:#16181b;--fg:#e4e2dd;--muted:#9a9ea6;--line:#33373d;--code:#22252a;--accent:#f0935f;--head:#1e2125}}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font:17px/1.6 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+main{max-width:46rem;margin:0 auto;padding:2.5rem 1rem 4rem}
+h1,h2,h3{line-height:1.25;text-wrap:balance}
+h1{font-size:2.1rem;margin:0 0 .4rem}
+h2{font-size:1.5rem;margin:2.8rem 0 .8rem;padding-top:1.4rem;border-top:1px solid var(--line)}
+h3{font-size:1.15rem;margin:2rem 0 .5rem}
+p.lede{color:var(--muted);font-size:1.1rem;margin:0 0 .3rem}
+p.date{color:var(--muted);font-size:.9rem;margin:0 0 2rem}
+a{color:var(--accent);text-underline-offset:2px}
+img{max-width:100%;height:auto;border:1px solid var(--line);border-radius:6px;display:block}
+figure{margin:1.6rem 0}
+@media (min-width:52rem){figure.wide{width:min(72rem,calc(100vw - 2rem));margin-left:50%;transform:translateX(-50%)}}
+figcaption{color:var(--muted);font-size:.88rem;margin-top:.45rem;text-align:center}
+code{font:0.88em/1.45 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;background:var(--code);padding:.1em .3em;border-radius:4px}
+p code,li code{overflow-wrap:anywhere}
+pre{background:var(--code);padding:.9rem 1rem;border-radius:6px;overflow-x:auto}
+pre code{background:none;padding:0;font-size:.84rem}
+.table{overflow-x:auto;margin:1.2rem 0}
+table{border-collapse:collapse;width:100%;min-width:34rem;font-size:.93rem}
+th,td{text-align:left;vertical-align:top;padding:.45rem .7rem;border-bottom:1px solid var(--line)}
+th{background:var(--head);font-weight:600;white-space:nowrap}
+td:first-child{white-space:nowrap}
+table.wrap td:first-child{white-space:normal;overflow-wrap:anywhere}
+li{margin:.3rem 0}
+td img{width:9.5rem;height:3.6rem;object-fit:contain;background:#fff;border:1px solid var(--line);border-radius:6px}
+td:nth-child(2){white-space:nowrap}
+figure.scroll{overflow-x:auto}
+figure.scroll img{min-width:46rem}
+small{display:block;color:var(--muted);font-size:.82rem;line-height:1.5}
+</style>
+<style>
+nav.site{max-width:46rem;margin:0 auto;padding:1rem 1rem 0;display:flex;flex-wrap:wrap;gap:.3rem 1.1rem;font-size:.95rem}
+nav.site a{text-decoration:none}
+nav.site a:first-child{font-weight:700;margin-right:auto}
+td:first-child,td:nth-child(2){white-space:normal}
+dl.pages dt{margin-top:1rem;font-weight:600}
+dl.pages dd{margin:.15rem 0 0;color:var(--muted)}
+</style>
+</head>
+<body>
+<nav class="site"><a href="../">dbdb</a><a href="../docs/">Documentation</a><a href="../flatpak.html">Flatpak</a><a href="https://github.com/koziserek/dbdb/releases">Download</a><a href="https://github.com/koziserek/dbdb/issues">Issues</a></nav>
+<main>
+<h1>One project open in several places</h1>
+<p class="lede">Two windows, two computers, the app and the command line, on one project.</p>
+<p>A project file can be open in more than one place at once: two windows of the app, the app on two computers that reach the same folder, the app and <code>dbdb-cli</code>, the app and an MCP client.</p>
+<p>Copies of the app that have the same project open are <strong>synced</strong>: what one changes shows in the others in about a second, and what two change at the same moment is both kept. Programs that only read and write the project file (<code>dbdb-cli</code>, an MCP client, git, a text editor) are <strong>merged</strong> with: what they write is taken in, and what they read is always up to date.</p>
+<h2 id="synced-copies">Synced copies</h2>
+<p>Every project that has a file is synced, unless it says otherwise.</p>
+<ul>
+<li><strong>Changes travel through a folder next to the project file.</strong> The folder of <code>plan.json</code> is <code>plan.json.sync</code>. Each copy of the app appends what it changes to a file of its own in it, and reads the files of the others a few times a second. No file has two writers, so a network share or a synced drive does as well as a local folder. Nothing is sent anywhere else, and there is no server.</li>
+<li><strong>The project file is saved by itself</strong>, about a second after the last change. <em>Save</em> writes it at once. The file is always the whole project, for git and for every program that knows nothing of the sync.</li>
+<li><strong>Two changes at once are both kept.</strong> Different sources, jobs, steps, settings and notes never get in each other's way. Two people can type into the same note, into the same line of it. When two change the very same setting, such as the place of one step, the later change stands. Nobody is asked, but the copy whose change gave way says so in the status bar: <em>Changed at the same time in another copy, whose change was kept: job "load": name</em>. A change made after seeing yours is no clash, and is told as any other change.</li>
+<li><strong>Undo takes back what you did</strong>, not what another copy did since.</li>
+<li><strong>What another program writes into the project file is taken in</strong> by one of the open copies, and reaches the others through the sync. When no copy is open, the next one to open the project takes it in.</li>
+<li><strong>A copy that opens later</strong> reads the sync folder and has everything, also what never reached the project file because a computer went down.</li>
+</ul>
+<p>What the copies make together need not hold together, and is put right the same way on every copy: of two sources, jobs, views, comparisons or notes that were given the same name at the same moment, the later one gets a number after its name; a wire to a step that another copy removed is dropped; of two steps that were given the same number, one gets the next.</p>
+<p>When one copy removes a note, a job or a source while another changes it, it is removed. For a note there is a way back: the copy that was writing in it is told that the note was removed in a copy that did not have what was written, and can <strong>bring it back</strong> with its text, for everyone. A note removed by a copy that had the text is simply removed.</p>
+<p>The window says next to the name of the project whether it is <strong>synced</strong>, or <strong>shared</strong> through a relay and whether the relay is reached.</p>
+<h3 id="who-else-is-here">Who else is here</h3>
+<p>Next to that, the window says how many other copies of the app have the project open now: <strong>synced · 2 others here</strong>. Point at it for who they are, and click it for the list: what each copy is called, and the pane it works in, such as <em>Job designer · load</em> or <em>Notes · Plan</em>.</p>
+<ul>
+<li><strong>A copy is called</strong> after who is logged in and the computer, as the system says them: <em>anna on laptop</em>. In a browser page it is <em>Someone in a browser</em>. Say otherwise in the same window, under <em>What the others see you as</em>; the app keeps it with its own settings, for every project.</li>
+<li><strong>What a copy looks at</strong> is the pane last clicked: its kind, and the job, view, note, source, comparison or query in it. Nothing else of what is on the screen is told, and no pointer and no selection.</li>
+<li><strong>It goes where the changes go, and nowhere else</strong>: into the sync folder, and through the relay of a project that is shared, sealed with the key like every change. The relay sees that a copy is connected, which it saw before, and not what it is called. A copy that hears of another both ways shows it once.</li>
+<li><strong>It is not in the project.</strong> Not in the project file, not in the history, and the relay does not keep it: when the last copy closes, nothing of it is left.</li>
+<li><strong>A copy that closes is gone at once.</strong> One that went without a word, when its computer slept or lost the network, is gone after 35 seconds: a copy says that it is here every 10 seconds, and what it looks at when that changes, at most once a second.</li>
+<li>Programs that are merged with and not synced (<code>dbdb-cli</code>, an MCP client) do not show.</li>
+</ul>
+<h3 id="the-sync-folder">The sync folder</h3>
+<pre><code>plan.json
+plan.json.sync/
+  base.loro               the project with its history, as one copy had it
+  3f9a1c2b7d104e55.log    what one copy changed since, record after record
+  3f9a1c2b7d104e55.wrote  the project file as that copy last wrote it
+  3f9a1c2b7d104e55.here   that this copy is open, what it is called and looks at</code></pre>
+<p>The folder holds the project as a <a href="https://loro.dev">Loro</a> document. It can be deleted while no copy is open: the next copy makes it again from the project file, and only the history is lost. Keep it out of git (<code>*.sync/</code> in <code>.gitignore</code>): the project file is what belongs there. To give someone the project, send the project file; with the folder they get its history as well.</p>
+<p>A copy is a writer under a new name each time it opens the project. Logs of copies that closed are folded into <code>base.loro</code> now and then, by a copy that opens the project.</p>
+<h3 id="turning-it-off">Turning it off</h3>
+<p><em>File &gt; Sync with other open copies</em> turns the sync of the open project off and on, for every copy: it is the setting <code>"no_sync": true</code> in the project file. Without the sync a project is saved when you save, and merged then, as the next section says. The sync costs a folder next to the file and a look into it a few times a second.</p>
+<p>The browser build does not sync through a folder: a browser page has none. It does sync a project that is shared through a relay, as the next section says.</p>
+<h2 id="shared-through-a-relay">Shared through a relay</h2>
+<p>Copies that do not reach the same folder, such as two people in two places, sync through a <strong>relay</strong>: a small program that one of them, or someone they trust, runs on a computer both can reach. This is off unless you turn it on for a project, and the app connects to no relay that you did not allow.</p>
+<ol type="1">
+<li><p>Someone runs the relay. It prints its address:</p>
+<pre><code>$ dbdb-cli relay --host relay.example.org
+dbdb relay, listening at UDP port 4433
+Its address, for File &gt; Share through a relay in the app:
+3f9a…c2b7@relay.example.org:4433</code></pre></li>
+<li><p>In the app, <em>File &gt; Share through a relay…</em>, paste the address, <strong>Share</strong>. The address and a new key are now in the project file:</p>
+<pre class="json"><code>&quot;live&quot;: { &quot;relay&quot;: &quot;3f9a…c2b7@relay.example.org:4433&quot;, &quot;key&quot;: &quot;8d41…&quot; }</code></pre>
+<p>Paste the address whole, with the <code>#wss://…</code> at its end if it has one: copies of the app use the part before <code>#</code>, and browser pages only the part after it. The window shows both, so check the part after <code>#</code> there too.</p></li>
+<li><p>Send the project file to those who should work on the project, by mail or any other way. When they open it, the app asks once whether it may connect to that relay, and then shows the project as it is now, not as it was when the file was sent. From then on everyone sees what the others do, as with a shared folder.</p></li>
+</ol>
+<p>What to know:</p>
+<ul>
+<li><strong>The project file is the permission.</strong> Whoever has a file with the key in it can read and change the project. There are no accounts. Keep such a file out of a public git repository. <em>Stop sharing</em>, in the same window, takes the address and the key out for every copy that is connected. What was shared until then stays on the relay, and whoever still has a file with the old key can read that much. To go on without someone, stop sharing, share again, which makes a new key, and send the new file to the others. To give the project to someone who should not join, <em>Save a copy without the key…</em> in the same window writes it as another file with no address and no key in it. <a href="sharing-and-trust.html">What sharing a project allows</a> says what someone with the file can read, change and have run on other machines, and how to hand over less.</li>
+<li><strong>A wrong address is corrected without a new key.</strong> In the same window, paste the address as the relay prints it and <strong>Change address</strong>: for a mistyped address, or a relay that moved to another computer or name. The key stays, and so does the project: the copies that are connected take the new address with it, and each asks once whether it may connect there. A copy that was not connected still has the old address in its file; send it the file again, or correct the address there too. A relay that moved needs its folder (<code>--dir</code>), or it is a new relay that has nothing yet, and the copies bring the project to it.</li>
+<li><strong>The relay cannot read the project.</strong> Every change is sealed with the key before it leaves the app (XChaCha20-Poly1305), and the relay does not have the key. It knows a project by a number made from the key, and sees how much is sent, when, and from which addresses.</li>
+<li><strong>The copies need not be open at the same time.</strong> The relay keeps what was sent and hands it to a copy that comes later.</li>
+<li><strong>Everything goes through the relay</strong>, unless you let the copies connect to each other as well (<a href="#directly-between-copies">Directly between copies</a>). So being behind different routers is no hindrance: each copy only needs to reach the relay, which needs a UDP port that can be reached from outside (4433 unless <code>--listen</code> says otherwise).</li>
+<li><strong>The connection</strong> is an <a href="https://iroh.computer">iroh</a> connection (QUIC), encrypted and made to the relay's own key, which is the first part of its address. No certificate is needed. The app is set up to use no relay or name server of iroh's makers, only the address given.</li>
+<li>A copy still keeps its own sync folder, and copies that share a folder still sync through it. A copy that is offline works on, and brings its changes when it is back.</li>
+<li><strong>Who else is here</strong> goes through the relay as well: it hands what a copy says of itself to the copies that are connected, tells them when one is gone, and keeps none of it. A relay of a dbdb from before this knows nothing of it: the copies sync through it as before and do not see each other. Run the <code>dbdb-cli relay</code> of the new version to have it.</li>
+<li><strong>A file that a job pushes to another machine</strong> (<a href="push.html">push.md</a>) goes through the relay too, sealed, to the one copy that takes it. The relay hands it on and keeps none of it, so it does not count towards what a project may keep. A relay of a dbdb from before this does not hand files on: the run that pushes says so.</li>
+</ul>
+<p><code>dbdb-cli relay</code> keeps its key and the projects in a folder (<code>--dir</code>, <code>dbdb-relay</code> unless said): with the same folder it has the same address after a restart. <code>--password</code> lets in only copies whose relay address ends in <code>/&lt;password&gt;</code>. <code>--room-megabytes</code> limits what one project may keep (256), and <code>--forget-after-days</code> forgets projects nobody wrote to for that long.</p>
+<h3 id="from-the-browser-build">From the browser build</h3>
+<p>The app in a browser page joins and shares a project through a relay as well, with what a page is allowed to do:</p>
+<ul>
+<li><p><strong>The relay needs a second door.</strong> A page cannot open the connection the app uses, only a WebSocket. <code>--web</code> makes the relay listen for those, and its address then ends in the URL of that door:</p>
+<pre><code>$ dbdb-cli relay --host relay.example.org --web 127.0.0.1:8080 --web-url wss://relay.example.org
+3f9a…c2b7@relay.example.org:4433#wss://relay.example.org</code></pre>
+<p>The app on a computer uses the first part of the address and a page the last, and both are in the same project. The same sealed records go through either door, so the relay can read neither.</p></li>
+<li><p><strong>A page that came over https needs <code>wss://</code></strong>, and so a certificate. The relay has none: put a proxy in front of the <code>--web</code> port that has one. With <a href="https://caddyserver.com">Caddy</a> that is two lines, and it gets and renews the certificate by itself:</p>
+<pre><code>relay.example.org {
+    reverse_proxy 127.0.0.1:8080
+}</code></pre>
+<p>The relay pings a page every 30 seconds, so a proxy that drops idle connections after a minute, as nginx does unless told otherwise, keeps them all the same.</p>
+<p>A page that came over plain http, as from <code>python3 -m http.server</code> on your own computer, may use a <code>ws://</code> address, and needs no proxy.</p></li>
+<li><p><strong>The page keeps the project in the browser's storage.</strong> It has no sync folder, so it keeps the project with its history there (IndexedDB) instead, sealed with the project's key and written within a second of each change. When the page is loaded again, or the project is opened on a later visit, the page takes what it kept first, also while the relay is not reached, and then what the relay has. What you changed while the relay was not reached is sent when it is next reached, and the status bar says what was taken from the browser. Two pages with the same project keep one entry each, and the next page to open the project brings them together.</p></li>
+<li><p><strong>What is kept is the browser's.</strong> It is there for the pages of one site in one browser on one computer, and goes when the site's data is cleared, or when the sharing is stopped. A private window keeps nothing after it closes. Where the browser's storage cannot be used, the status bar says so, and what you change while the relay is not reached is in the page only, as it is for a project that is not shared.</p></li>
+<li><p><strong>A page that has never reached the relay keeps nothing yet.</strong> Until the page has the project from the relay once, the project of the relay replaces what the page has when it is reached, as for every copy that first joins.</p></li>
+<li><p><strong>The project file is saved when you save</strong>, not by itself. After <em>Share</em> in a page, save the project: the file you send has to hold the address and the key.</p></li>
+</ul>
+<p>Limits of sharing through a relay:</p>
+<ul>
+<li>A relay adds to what it keeps for a project, a few bytes for each keystroke. When that is some hundred records, a copy that has them all sends the project as one record, and the relay keeps that in their place. The history stays in it, so the project still grows with its history, as the sync folder does.</li>
+<li>When a copy first joins, the project of the others replaces what its file held. Had the file been changed meanwhile, the file as it was is kept beside it as <code>&lt;file&gt;.before-sharing</code>.</li>
+<li>A project that the relay forgot, or that is shared anew through another relay while some copies are away, is a new project to the relay. Copies that come back with the old one bring everything a second time.</li>
+<li>It was tried with a relay and copies on one computer. It was not tried across the internet or through routers. The door for browser pages was tried with a page and a relay on one computer, without a proxy and through nginx (see <a href="#running-a-relay-on-a-server">Running a relay on a server</a>).</li>
+</ul>
+<h3 id="running-a-relay-on-a-server">Running a relay on a server</h3>
+<p>This is how to run a relay on a Linux server that the app and browser pages both reach, here by the name <code>relay.example.org</code>. Parts of it were not tried, and the end of this section says which.</p>
+<p><strong>1. Build it.</strong> On the server, or on a computer of the same kind:</p>
+<pre><code>cargo build --release --locked -p dbdb-cli
+sudo install target/release/dbdb-cli /usr/local/bin/</code></pre>
+<p><strong>2. Open the ports.</strong></p>
+<div class="table">
+<table>
+<thead>
+<tr>
+<th>Port</th>
+<th>For</th>
+<th>Open to</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>UDP 4433</td>
+<td>the app on a computer (<code>--listen</code>)</td>
+<td>everyone</td>
+</tr>
+<tr>
+<td>TCP 443 and 80</td>
+<td>the proxy, for browser pages and its certificate</td>
+<td>everyone</td>
+</tr>
+<tr>
+<td>TCP 8080</td>
+<td>the relay's door for browser pages (<code>--web</code>)</td>
+<td>this server only</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>With ufw: <code>sudo ufw allow 4433/udp</code>, <code>sudo ufw allow 80/tcp</code>, <code>sudo ufw allow 443/tcp</code>. Port 8080 stays closed, because the relay listens at <code>127.0.0.1:8080</code> and the proxy talks to it there. Without browser pages, only UDP 4433 is needed, and no proxy.</p>
+<p><strong>3. Run it once by hand</strong> to see the address:</p>
+<pre><code>$ dbdb-cli relay --host relay.example.org --dir /var/lib/dbdb-relay \
+    --web 127.0.0.1:8080 --web-url wss://relay.example.org
+dbdb relay, listening at UDP port 4433
+and for browser pages at TCP port 8080 (WebSocket)
+Its address, for File &gt; Share through a relay in the app:
+3f9a…c2b7@relay.example.org:4433#wss://relay.example.org</code></pre>
+<p>The first part of the address is the relay's own key. It is made the first time and kept in <code>--dir</code> as <code>relay.key</code>: keep that file, and keep the folder when you move the relay, or the relay has a new address and the project files that hold the old one no longer reach it. The other flags:</p>
+<ul>
+<li><code>--password &lt;word&gt;</code> lets in only copies that give it. The address then has <code>/&lt;word&gt;</code> after the port.</li>
+<li><code>--room-megabytes &lt;n&gt;</code> is how much one project may keep (256 unless said).</li>
+<li><code>--forget-after-days &lt;n&gt;</code> forgets a project nobody wrote to for that long. Without it projects are kept for good.</li>
+<li><code>--listen &lt;address:port&gt;</code> is where the app connects, <code>0.0.0.0:4433</code> unless said. Another port changes the address.</li>
+</ul>
+<p>Always give <code>--dir</code>: without it the folder is <code>dbdb-relay</code> in the folder the relay is started from, so a relay started from elsewhere makes a new key and has another address.</p>
+<p>A copy that connects and does not say which project it is for within 30 seconds is let go. To see that the door for pages answers, as <code>curl</code> can, ask it for a WebSocket and stop after a few seconds:</p>
+<pre><code>curl -sN --http1.1 --max-time 3 -o /dev/null -w &#39;%{http_code}\n&#39; \
+  -H &quot;Connection: Upgrade&quot; -H &quot;Upgrade: websocket&quot; \
+  -H &quot;Sec-WebSocket-Version: 13&quot; -H &quot;Sec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==&quot; \
+  https://relay.example.org/</code></pre>
+<p><code>101</code> is the relay answering; 502 is nginx without the relay, or without the <code>Upgrade</code> lines below. Without <code>--max-time</code> curl waits, since a WebSocket stays open.</p>
+<p><strong>4. Put a proxy in front of the door for pages.</strong> It holds the certificate that <code>wss://</code> needs and passes the connection on to <code>127.0.0.1:8080</code>.</p>
+<p>With nginx, a server block of its own, with the certificate lines as certbot or your own setup writes them:</p>
+<pre class="nginx"><code>server {
+    listen 443 ssl;
+    server_name relay.example.org;
+    # ssl_certificate and ssl_certificate_key here
+
+    location / {
+        proxy_pass http://127.0.0.1:8080;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection &quot;upgrade&quot;;
+        proxy_set_header Host $host;
+        proxy_read_timeout 1d;
+        proxy_send_timeout 1d;
+    }
+}</code></pre>
+<p><code>proxy_http_version</code> and the <code>Upgrade</code> and <code>Connection</code> lines are what let a WebSocket through: without them nginx answers the page with an error (502). The two timeouts are there because nginx closes a connection that carries nothing for 60 seconds, unless told otherwise, and a page whose project nobody changes can be quiet for longer than that. With them set long it does not matter whether the relay and the page send something now and then; they do no harm if they do.</p>
+<p>The relay does not look at the path of the URL, so the door can also hang under a path of a site nginx already serves, with no name or certificate of its own. Put the same <code>location</code> block, as <code>location /dbdb-relay { … }</code>, in that site's server block, and start the relay with <code>--web-url wss://www.example.org/dbdb-relay</code>.</p>
+<p>With Caddy, which gets and renews the certificate by itself and passes WebSockets on and leaves them open without being told:</p>
+<pre><code>relay.example.org {
+    reverse_proxy 127.0.0.1:8080
+}</code></pre>
+<p><strong>5. Keep it running with systemd.</strong> As <code>/etc/systemd/system/dbdb-relay.service</code>:</p>
+<pre class="ini"><code>[Unit]
+Description=dbdb relay
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+ExecStart=/usr/local/bin/dbdb-cli relay --host relay.example.org --dir /var/lib/dbdb-relay --web 127.0.0.1:8080 --web-url wss://relay.example.org
+DynamicUser=yes
+StateDirectory=dbdb-relay
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target</code></pre>
+<p>Then <code>sudo systemctl enable --now dbdb-relay</code>. <code>DynamicUser</code> runs it as a user of its own that can write nowhere but <code>StateDirectory</code>, which is <code>/var/lib/dbdb-relay</code> and stays when the service stops. If you ran the relay by hand with that folder first, systemd takes the folder over and the address stays the same. The address is in the log: <code>journalctl -u dbdb-relay</code>.</p>
+<p><strong>6. Point the apps at it.</strong> In the app, <em>File &gt; Share through a relay…</em>, paste the address, <strong>Share</strong>, and send the project file to the others, as above. The app on a computer uses the part before <code>#</code> and a page the part after it.</p>
+<p><strong>7. Help copies behind routers to each other</strong> (only for <a href="#directly-between-copies">direct connections</a>). The relay can run a relay of iroh's own protocol beside its rooms. Copies that have direct connections on then reach each other through it when neither can reach an address of the other, as two people at home behind their routers.</p>
+<pre><code>$ dbdb-cli relay --host relay.example.org --dir /var/lib/dbdb-relay \
+    --web 127.0.0.1:8080 --web-url wss://relay.example.org \
+    --iroh 127.0.0.1:3340 --iroh-url https://relay.example.org \
+    --iroh-quic 0.0.0.0:7842 \
+    --iroh-cert /etc/letsencrypt/live/relay.example.org/fullchain.pem \
+    --iroh-key /etc/letsencrypt/live/relay.example.org/privkey.pem</code></pre>
+<ul>
+<li><p><code>--iroh</code> is where it listens, in plain HTTP, and <code>--iroh-url</code> the URL the copies reach that by. The host of the URL has to be the host of the relay's address: a copy does not follow a relay to another host. The address of the relay stays what it was, and project files need no change: the relay tells its copies when they connect.</p></li>
+<li><p>The proxy passes three paths on to it. With nginx, in the server block above, before <code>location /</code>:</p>
+<pre class="nginx"><code>location ~ ^/(relay|ping|generate_204)$ {
+    proxy_pass http://127.0.0.1:3340;
+    proxy_http_version 1.1;
+    proxy_set_header Upgrade $http_upgrade;
+    proxy_set_header Connection &quot;upgrade&quot;;
+    proxy_set_header Host $host;
+    proxy_read_timeout 1d;
+    proxy_send_timeout 1d;
+}</code></pre>
+<p>So the door for pages must not hang under <code>/relay</code> or <code>/ping</code>.</p></li>
+<li><p><code>--iroh-quic</code> is what lets two copies go on directly, through both routers: there the relay tells a copy the address its router shows to the outside. It is UDP, with no proxy in front, so it needs the certificate of the host itself, in files the relay can read, and the port open (<code>sudo ufw allow 7842/udp</code>). Start the relay again when the certificate is renewed. Without <code>--iroh-quic</code> two copies behind routers still connect, and everything they send each other goes through the relay.</p></li>
+<li><p>Only copies of this relay's projects are let in: the relay tells them a word when they connect to a room, a new one each time it starts, and the relay of iroh's protocol asks for it. With <code>--password</code>, a copy needs that first.</p></li>
+<li><p>What goes through it is encrypted between the two copies. The relay sees which two talk and how much.</p></li>
+</ul>
+<p>What was tried and what was not: the build, the flags and the address are as the code has them. The relay of iroh's protocol was tried on one computer, in plain HTTP with no proxy: two copies that were given no address of each other connected through it, and a copy without the relay's word was turned away. <code>--iroh-quic</code> was only started, with a certificate made for the purpose. nginx in front of it, a real certificate, and two copies behind two real routers were not tried. A page and a copy of the app synced through nginx on one computer, both with nginx's own server block and under a path, with the <code>location</code> block above but plain <code>ws://</code> and no certificate. Without the <code>Upgrade</code> lines nginx answered 502, and without the timeouts it closed a quiet connection after 60 seconds. The certificate, Caddy, the systemd unit, the firewall and a relay across the internet were not tried.</p>
+<h2 id="directly-between-copies">Directly between copies</h2>
+<p>Copies of a synced project can also connect to each other, so that a change goes from the copy that made it straight to the others, and not by way of the sync folder or the relay. This is off. Turn it on with <em>File &gt; Connect directly to the other copies</em>, in each copy that should do it: it is a setting of the app, kept between runs, and not of the project. For a runner without a window it is <code>dbdb-cli runner --direct</code>.</p>
+<p>A copy that has it on listens at a UDP port the system picks, and tells the address where it says that it is here: in its file in the sync folder, and through the relay, sealed. It goes to every other copy that tells an address. Two copies are connected when both have it on and one of them can reach the other. <em>Who else is here</em> says for each copy whether it is connected directly, when the pointer rests on its name.</p>
+<p>What to know:</p>
+<ul>
+<li><strong>It adds to the sync folder and the relay, and replaces neither.</strong> The copies find each other through one of the two, and a copy that is not open when a change is made still gets it there. Every change goes both ways, and arriving twice does no harm.</li>
+<li><strong>Who has the project is let in, and nobody else.</strong> A project that is shared through a relay has a key, and both sides show each other that they have it before anything of the project is sent. A project that syncs through a folder only gets a key of its own for this, in the file <code>direct.key</code> of its sync folder: who reaches the folder has it.</li>
+<li><strong>Your address is told to the copies of the project.</strong> Whoever has the project open learns the network addresses of your computer, and the port. The relay hands them on and cannot read them. A copy that has this off tells no address and listens for nobody.</li>
+<li><strong>No server of anyone else is asked.</strong> The connection is an <a href="https://iroh.computer">iroh</a> connection (QUIC) to the other copy's own key, which it makes anew each time it opens the project, at the addresses it told. No relay or name server of iroh's makers is used.</li>
+<li><strong>By itself it works where one copy can reach the other</strong>: on one computer, in one network, over a VPN, or where one of the two has an address that is reached from outside. A firewall on the computer has to let the app receive UDP.</li>
+<li><strong>Through routers it needs the project's relay to help.</strong> Two copies behind two different routers reach no address of each other. When the relay of the project runs a relay of iroh's protocol beside its rooms (<code>dbdb-cli relay --iroh</code>, see <a href="#running-a-relay-on-a-server">Running a relay on a server</a>), a copy that has direct connections on is told so when it connects, keeps a connection to it, and the two meet there: they then try to go on directly through both routers, and until that works what they send each other passes through the relay, encrypted between the two. A copy takes this help only from the host of the relay you allowed. Without it such copies are not connected, and sync through the relay as before, without a word.</li>
+</ul>
+<h3 id="finding-each-other-in-the-local-network">Finding each other in the local network</h3>
+<p>Copies find each other through the sync folder or the relay. When neither is there, as when the way to the internet is lost and the relay with it, copies that are already connected stay connected, but a copy that is started then, or one whose connection broke, finds nobody.</p>
+<p><em>File &gt; Announce this copy in the local network</em> closes that gap, for copies that have direct connections on. It is off, and a setting of the app like the other; for a runner it is <code>dbdb-cli runner --direct --announce</code>. Such a copy calls out every five seconds to the copies of the project in the network it is in, and hears their calls: each then goes to the other as if the relay had told it.</p>
+<ul>
+<li><strong>It stays in the network.</strong> The call is IPv4 multicast (group 239.255.77.68, UDP port 47474), which a router does not pass on. Some networks, guest Wi-Fi among them, do not let computers hear each other at all, and then nobody is found.</li>
+<li><strong>Only copies of the project can read it.</strong> The address in the call is sealed with the project's key. Others in the network can see that a computer has a copy of some project open, always the same number for one project, and not which project or what is in it.</li>
+<li><strong>It needs a project that was synced before.</strong> The copies have to hold the same project already, with its key: a copy that only got the project file and never reached the relay still needs the relay once. A project that syncs through a folder only has its key in that folder, so its copies know each other through the folder anyway.</li>
+<li>When the relay is back, each copy brings it what it lacks, and the copies elsewhere catch up.</li>
+<li>The system's firewall may ask whether the app may receive from the network.</li>
+</ul>
+<p>Tried here: on one computer, copies that share a folder, copies that share only a relay, three copies with no folder and no relay between them once they knew each other's addresses, and two copies that were given only the relay's help as each other's address, and two copies that had synced before, with a relay that was not there, which found each other by calling out and went on syncing. Two computers in one network, a VPN, a firewall and two real routers were not tried.</p>
+<h2 id="what-is-not-synced-merging-on-save">What is not synced: merging on save</h2>
+<p>This is how <code>dbdb-cli</code>, the MCP tools and the app with a project that is not synced work with a file that others write to. Each works on its own copy, and a save keeps what the others saved.</p>
+<h3 id="what-happens">What happens</h3>
+<ul>
+<li><strong>The app looks at the file.</strong> Every couple of seconds while you work, and when you come back to its window. If the file changed and you have nothing unsaved, the project is read again and the status bar says what changed. If you have unsaved changes, the status bar says the file changed, and nothing else happens until you save.</li>
+<li><strong>A save merges.</strong> Before it writes, the app looks whether the file is still what it last read or wrote. If another program saved in between, the two copies are brought together and the result is saved: its changes and yours. The status bar lists what came from the file.</li>
+<li><strong>Only a real conflict asks.</strong> When both changed the very same value, a window lists what the other program changed and the values both changed, and you choose: <strong>Keep mine</strong>, <strong>Take theirs</strong> or <strong>Cancel</strong>. Everything that only one side changed is kept either way.</li>
+<li><strong><code>dbdb-cli apply</code>, <code>dbdb-cli notes --import</code> and the MCP tools</strong> do the same when the file changes between their read and their write, which takes a moment only. They keep their own value in a conflict and say so on standard error.</li>
+<li><strong>The file is replaced in one step.</strong> It is written beside itself and then renamed, so a reader never sees half a file and a crash leaves the old one. A network share may refuse the rename while another computer has the file open (an SMB share mounted on macOS does). It is then tried again a few times, and at last the file is written as it is.</li>
+</ul>
+<p>After a merge the steps to undo are gone: they were steps of the project as it was before.</p>
+<h3 id="what-counts-as-the-same-value">What counts as the same value</h3>
+<p>Changes to different things do not conflict:</p>
+<div class="table">
+<table>
+<thead>
+<tr>
+<th>Both change</th>
+<th>Result</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>different sources, jobs, views, comparisons, notes</td>
+<td>both kept</td>
+</tr>
+<tr>
+<td>different steps of one job, or different settings of one step</td>
+<td>both kept</td>
+</tr>
+<tr>
+<td>the place of one step, each to another place</td>
+<td>conflict</td>
+</tr>
+<tr>
+<td>different lines of one note</td>
+<td>both kept</td>
+</tr>
+<tr>
+<td>the same lines of one note</td>
+<td>both versions kept, yours first, and listed as a conflict</td>
+</tr>
+<tr>
+<td>different parameters</td>
+<td>both kept</td>
+</tr>
+<tr>
+<td>one renames an item, the other changes it</td>
+<td>renamed and changed</td>
+</tr>
+<tr>
+<td>one removes an item, the other changes it</td>
+<td>the changed item is kept, and listed</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>Two things are put right after a merge, and said in the status bar: when each side added an item of the same name, the later one gets a number after its name; and a wire to a step the other side removed is dropped. When each side added a step to one job, yours gets the next free number.</p>
+<h2 id="ids">Ids</h2>
+<p>To tell a renamed item from one that was removed and another added, every source, job, view, comparison and note has an <code>id</code> in the project file:</p>
+<pre class="json"><code>{ &quot;name&quot;: &quot;customers&quot;, &quot;id&quot;: &quot;3f9a1c2b7d10&quot;, &quot;source&quot;: { &quot;kind&quot;: &quot;csv&quot;, &quot;path&quot;: &quot;customers.csv&quot; } }</code></pre>
+<p>An id is given once and never changes. A project file from before ids gets them when it is next saved; they are made from each item's name, so two programs that open the old file at the same time give the same ids. Commands need not carry an id: <code>add_job</code> gives one, and <code>update_job</code> keeps the one the job has. A copy of an item gets an id of its own.</p>
+<h2 id="a-layout-in-the-project">A layout in the project</h2>
+<p>The arrangement of the window is each copy's own and is not synced. A copy can write its workspaces into the project (<em>View &gt; Write layout to project file</em>), and then they travel with it like any other part: to the copies that sync through the folder or a relay, and to whoever is sent the file. A copy shows them only if <em>View &gt; Load project layouts when opening</em> is ticked there, and only when it opens the project. What another copy writes while the project is open changes nothing on screen. While a project's workspaces show, the copy's own are set aside, and they come back with the next project that keeps no layout, or when the tick is taken away and a project is opened.</p>
+<p>Showing a project's layout writes nothing: what is rearranged afterwards stays with the copy until someone writes the layout again. Two copies that write a layout at the same time are merged like everything else, tile by tile, so write it from one place.</p>
+<p>A dbdb from before layouts does not know this part of the file. It opens the project as always, and leaves the layout out when it saves it.</p>
+<h2 id="the-format-number">The format number</h2>
+<p>The project file begins with <code>"format": 1</code>. The number goes up when a file of the new format would lose something if an older dbdb read it and saved it again. So far: a project that holds connectors for the Assistant (<a href="assistant.html">assistant.md</a>) is written as <code>"format": 2</code>, one that holds schedules (<a href="schedule.html">schedule.md</a>) as <code>"format": 3</code>, one that holds a vault (<a href="vault.html">vault.md</a>) as <code>"format": 4</code>, one with a job that pushes a file to another machine (<a href="push.html">push.md</a>) as <code>"format": 5</code>, and one that holds a connector to a database, or a setting that one machine keeps for itself (<a href="connectors.html">connectors.md</a>), as <code>"format": 6</code>, and one with a job that writes HTML from a template (<a href="html-output.html">html-output.md</a>) as <code>"format": 7</code>. A file is written in the lowest format that holds what is in it, so a project with none of them still begins with <code>"format": 1</code> and opens in an older dbdb. An older dbdb then refuses the file and says a newer dbdb wrote it. It does not save over such a file either: not on Save, not under Save as, and not when the file changed while the project was open in the older dbdb. A file without the number is format 1.</p>
+<p>The synced copies of a project carry the same number among them. A newer dbdb that changes a synced project writes its number into what the copies share, in the sync folder, on the relay and in what a browser keeps. An older copy that has the project open then stops syncing and says that a newer dbdb has written to the project. From then on it takes nothing in and sends nothing that would take the newer copy's changes away; what was changed in it since is still there, and can be saved under another name. While the newer dbdb has changed nothing, the older copies go on as before.</p>
+<h2 id="limits">Limits</h2>
+<ul>
+<li>The check and the write are two steps. Two programs that save within the same few milliseconds can still miss each other; the next save of either brings the copies together again, as long as one of them still has its changes in memory.</li>
+<li>The browser build works on its own copies of the files and does not look for changes by other programs.</li>
+<li>A file changed outside is noticed by its time and size. On a file system that keeps times to the second, a change of the same length in the same second is noticed at the next save, not before.</li>
+<li>A file outside the project's folder is named by its full path, and only the copies on computers that have that path can read it. A copy on another kind of computer (Windows beside macOS or Linux) keeps such a path as it is written and cannot read the source; the project checks name it. Files in the project's folder are found by every copy.</li>
+<li>A synced project needs every copy to reach the same folder. Two people who each have the file, sent by mail, have two projects.</li>
+<li>The copies sync as fast as the folder does: at once on one computer or a network share, and as fast as the drive syncs with a synced drive.</li>
+<li>Who else is here shows through a synced drive only as fast as the drive syncs. With one that takes longer than half a minute to carry a file over, the other copies come and go in the list, or do not show.</li>
+<li>When two copies change the same setting, one change is lost. The copy that lost it names the setting, except for the place of a step on the canvas and an item of a plain list, such as the columns of a key, which give way without a word. Settings that belong together, such as the kind of a source and what that kind needs, can in rare cases come together as something that is not a source. The copies then keep what they had and say that they could not sync, and the next change by any of them puts it right.</li>
+</ul>
+</main>
+</body>
+</html>

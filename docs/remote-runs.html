@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Runs on another machine · dbdb</title>
+<meta name="description" content="Asking another machine to run a job, and being the machine that runs it.">
+<style>
+:root{--bg:#fbfaf7;--fg:#1d1f21;--muted:#62666d;--line:#dcd9d2;--code:#f0eee8;--accent:#a8401a;--head:#f3f1eb}
+@media (prefers-color-scheme:dark){:root{--bg:#16181b;--fg:#e4e2dd;--muted:#9a9ea6;--line:#33373d;--code:#22252a;--accent:#f0935f;--head:#1e2125}}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font:17px/1.6 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+main{max-width:46rem;margin:0 auto;padding:2.5rem 1rem 4rem}
+h1,h2,h3{line-height:1.25;text-wrap:balance}
+h1{font-size:2.1rem;margin:0 0 .4rem}
+h2{font-size:1.5rem;margin:2.8rem 0 .8rem;padding-top:1.4rem;border-top:1px solid var(--line)}
+h3{font-size:1.15rem;margin:2rem 0 .5rem}
+p.lede{color:var(--muted);font-size:1.1rem;margin:0 0 .3rem}
+p.date{color:var(--muted);font-size:.9rem;margin:0 0 2rem}
+a{color:var(--accent);text-underline-offset:2px}
+img{max-width:100%;height:auto;border:1px solid var(--line);border-radius:6px;display:block}
+figure{margin:1.6rem 0}
+@media (min-width:52rem){figure.wide{width:min(72rem,calc(100vw - 2rem));margin-left:50%;transform:translateX(-50%)}}
+figcaption{color:var(--muted);font-size:.88rem;margin-top:.45rem;text-align:center}
+code{font:0.88em/1.45 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;background:var(--code);padding:.1em .3em;border-radius:4px}
+p code,li code{overflow-wrap:anywhere}
+pre{background:var(--code);padding:.9rem 1rem;border-radius:6px;overflow-x:auto}
+pre code{background:none;padding:0;font-size:.84rem}
+.table{overflow-x:auto;margin:1.2rem 0}
+table{border-collapse:collapse;width:100%;min-width:34rem;font-size:.93rem}
+th,td{text-align:left;vertical-align:top;padding:.45rem .7rem;border-bottom:1px solid var(--line)}
+th{background:var(--head);font-weight:600;white-space:nowrap}
+td:first-child{white-space:nowrap}
+table.wrap td:first-child{white-space:normal;overflow-wrap:anywhere}
+li{margin:.3rem 0}
+td img{width:9.5rem;height:3.6rem;object-fit:contain;background:#fff;border:1px solid var(--line);border-radius:6px}
+td:nth-child(2){white-space:nowrap}
+figure.scroll{overflow-x:auto}
+figure.scroll img{min-width:46rem}
+small{display:block;color:var(--muted);font-size:.82rem;line-height:1.5}
+</style>
+<style>
+nav.site{max-width:46rem;margin:0 auto;padding:1rem 1rem 0;display:flex;flex-wrap:wrap;gap:.3rem 1.1rem;font-size:.95rem}
+nav.site a{text-decoration:none}
+nav.site a:first-child{font-weight:700;margin-right:auto}
+td:first-child,td:nth-child(2){white-space:normal}
+dl.pages dt{margin-top:1rem;font-weight:600}
+dl.pages dd{margin:.15rem 0 0;color:var(--muted)}
+</style>
+</head>
+<body>
+<nav class="site"><a href="../">dbdb</a><a href="../docs/">Documentation</a><a href="../flatpak.html">Flatpak</a><a href="https://github.com/koziserek/dbdb/releases">Download</a><a href="https://github.com/koziserek/dbdb/issues">Issues</a></nav>
+<main>
+<h1>Runs on another machine</h1>
+<p class="lede">Asking another machine to run a job, and being the machine that runs it.</p>
+<p>A copy of a project can ask another machine to run a job: one that has the files, the network and the passwords the job needs. A page in a browser, which cannot run a job that writes to a database, has one run this way. So does a laptop that should not carry a night's load.</p>
+<p>The machine that runs is a <strong>runner</strong>: <code>dbdb-cli runner</code> with the project, or the app left open there. The copy that asks needs nothing but the project and its sync.</p>
+<h2 id="how-an-ask-travels">How an ask travels</h2>
+<p>An ask goes where the changes to the project go: through the sync folder next to the project file, and through the relay of a project that is shared through one (<a href="shared-projects.html">shared-projects.md</a>). The answer comes back the same way. So:</p>
+<ul>
+<li>no port is opened on the runner, and nothing new listens anywhere;</li>
+<li>on a relay, an ask is sealed with the project's key like every change;</li>
+<li>the project has to be synced. A project kept out of the sync (<code>no_sync</code>) can neither ask nor be asked.</li>
+</ul>
+<p>An ask is never in the project file. It lies beside the project in what the copies sync, and is forgotten there after a week.</p>
+<h2 id="what-an-ask-holds">What an ask holds</h2>
+<p>The job's name, the environment and parameter values the asker chose, whether it is a check only (a dry run), the machine that is asked and the machine that asks. Passwords do not travel: a connection that reads <code>env:NAME</code> reads it on the machine that runs.</p>
+<p>The runner runs the job as the copies have it at that moment. A change that has not reached the runner yet is not in the run.</p>
+<h2 id="being-a-runner">Being a runner</h2>
+<p>A machine runs what is asked of it only after its user said so, there, for that project. A project file that someone sent starts nothing.</p>
+<ul>
+<li><strong><code>dbdb-cli runner project.json</code></strong> stays, synced with the project's other copies, and runs both this machine's schedules (<a href="schedule.html">schedule.md</a>) and what is asked of this machine. Unlike <code>schedule run</code> it follows what other copies change through the relay too, so a schedule edited in a browser is the one that runs. <code>--no-schedules</code> and <code>--no-asked</code> leave one of the two out, <code>--no-relay</code> keeps it to the sync folder, and <code>--machine NAME</code> makes it the runner of another name.</li>
+<li><strong>The app</strong>, while it is open with the project, once <em>Run what is asked</em> is ticked in the Job schedule pane. The tick is for this copy and this project, saved with the app and never in the project. The app says so each time the project is opened, and asks again when the project is no longer the one the tick was given for (<a href="sharing-and-trust.html#the-ticks-in-the-app">sharing-and-trust.md</a>).</li>
+</ul>
+<p>Whoever has the project file can ask a runner of that project. That is no more than they could do already: they could change the job.</p>
+<p>So a runner runs whatever jobs the project holds, as the user it runs as, for everyone who has the project file. Before you start one on a machine that is not yours, read <a href="sharing-and-trust.html">What sharing a project allows</a>: what a job can read and write there, and how to give a runner a user, a folder and a database user of its own.</p>
+<p>A runner runs one job at a time. A schedule that comes due during a run starts when that run is over. So does what is asked, if the run is over within the quarter of an hour an ask waits (see below); the runner takes an ask only when it can start it.</p>
+<p><code>dbdb-cli runner</code> stays in the foreground and writes a line for each run to standard error. To keep it running, hand it to the system:</p>
+<pre><code># systemd: ~/.config/systemd/user/dbdb-runner.service
+[Unit]
+Description=dbdb runner for the ETL project
+After=network-online.target
+
+[Service]
+ExecStart=/usr/local/bin/dbdb-cli runner /srv/etl/project.json
+# The passwords the project reads as env:NAME, in a file only this user reads.
+EnvironmentFile=%h/.config/dbdb/etl.env
+# Environment=DBDB_MACHINE=etl-box
+Restart=on-failure
+
+[Install]
+WantedBy=default.target</code></pre>
+<p>A user's service runs only while that user is logged in, and does not start with the computer, unless the system is told otherwise once: <code>sudo loginctl enable-linger $USER</code>. <code>network-online.target</code> means nothing to a user's service; a runner that starts before the network tries the relay again by itself.</p>
+<p>A machine that only got the project file of a shared project takes the project from its relay when the runner first starts, as the app does.</p>
+<h2 id="asking">Asking</h2>
+<ul>
+<li><strong>The app, and the page in a browser:</strong> <em>Run on…</em> in the Job designer lists the machines that have a runner here now, each with Check and Run. The run uses the environment chosen in the designer. The status bar says what becomes of it; the menu shows what was asked from here and is not over, and takes back an ask that no runner has taken.</li>
+<li><strong>The command line:</strong> <code>dbdb-cli run-job project.json load --on etl-box</code> asks and waits. It writes each step to standard error and exits as <code>run-job</code> does: 0, 1 when the written data has issues, 2 when the run failed or nobody took the ask. <code>--no-wait</code> prints the ask's id and exits. <code>--dry-run</code>, <code>--env</code> and <code>--param</code> mean what they mean here.</li>
+<li><strong>An assistant:</strong> the <code>ask_run</code> tool, with <code>wait_seconds</code> to wait for the end, and <code>list_asked_runs</code> for what became of it.</li>
+</ul>
+<pre class="sh"><code>dbdb-cli asked-runs project.json                 # what was asked, and the runners here now
+dbdb-cli asked-runs project.json --json
+dbdb-cli asked-runs project.json --take-back ID  # before a runner took it</code></pre>
+<h2 id="what-becomes-of-an-ask">What becomes of an ask</h2>
+<div class="table">
+<table>
+<thead>
+<tr>
+<th>State</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>waiting</td>
+<td>No runner has taken it yet</td>
+</tr>
+<tr>
+<td>running</td>
+<td>A runner took it and has not said how it ended</td>
+</tr>
+<tr>
+<td>done</td>
+<td>It ran: the record says how</td>
+</tr>
+<tr>
+<td>expired</td>
+<td>No runner took it within 15 minutes. It will not run</td>
+</tr>
+<tr>
+<td>taken back</td>
+<td>The asker took it back before a runner took it</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><strong>Not later.</strong> An ask waits 15 minutes for a runner. A runner that starts tomorrow does not run what was asked today. The clocks of the two machines have to agree to within that quarter of an hour.</p>
+<p><strong>Once.</strong> A runner takes an ask before it runs it, waits two seconds, and runs only if the ask is still its own. Of two runners on machines of one name that take it at the same moment, the copies agree on one. Two runners that cannot hear each other for longer than that, as with one of them cut off from the relay, can both run it.</p>
+<p><strong>A runner that stops.</strong> A run that was going on when its runner was stopped stays "running": the runner is not there to say more. Ask again.</p>
+<h2 id="how-far-a-run-is">How far a run is</h2>
+<p>While it runs what was asked, a runner says how far the run is: the job it is in, and the rows read and written so far. Where the ask is shown, "running" becomes</p>
+<pre><code>load on etl-box: running, 1200 rows read, 1100 written</code></pre>
+<p>in the "Run on" menu of the app, in "Who else is here" beside the runner, and in the lines <code>dbdb-cli run --on</code> prints while it waits. The numbers follow the run about once a second; the command prints a line at most every five seconds.</p>
+<p>This goes the way "who else is here" goes, to the copies that are there at that moment, and is kept nowhere: not by the relay, not in the sync folder beyond the small file a copy rewrites while it is there, and not in what the copies sync. A copy that opens the project later sees "running" and then the numbers of that moment. A copy older than this shows "running" alone.</p>
+<h2 id="the-record">The record</h2>
+<p>The run is recorded on the machine that ran, in the <code>runs</code> folder beside its project file, like a run made there (<a href="runs.html">runs.md</a>), with <code>machine</code> and, under <code>asked</code>, the ask and who asked. A check leaves no record there, as a check made by hand leaves none.</p>
+<p>The record also goes back to the asker with the answer, and shows in the Runs pane of every copy while the ask is kept: a week. A record of more than 32 KB goes back without the lines of its issues; their count stays, and the whole record is on the machine that ran.</p>
+<p>The runs a runner makes for a schedule are not sent back this way: a schedule that runs every minute would add to what the copies sync without end. Copies that share only a relay still see each other's scheduled runs only where the <code>runs</code> folder is shared.</p>
+<h2 id="files-for-another-machine">Files for another machine</h2>
+<p>A runner also takes the files that jobs on other machines push to it, into the folder <code>Incoming</code> beside its project file: see <a href="push.html">push.md</a>.</p>
+<h2 id="not-yet">Not yet</h2>
+<ul>
+<li>No way to stop a run from the asker's side. It can be stopped on the machine that runs it.</li>
+<li>A runner started by <code>dbdb-cli runner</code> keeps no log of its own beyond what it writes to standard error; the system that starts it keeps that.</li>
+</ul>
+</main>
+</body>
+</html>

@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The vault · dbdb</title>
+<meta name="description" content="Where passwords live, and how they travel sealed.">
+<style>
+:root{--bg:#fbfaf7;--fg:#1d1f21;--muted:#62666d;--line:#dcd9d2;--code:#f0eee8;--accent:#a8401a;--head:#f3f1eb}
+@media (prefers-color-scheme:dark){:root{--bg:#16181b;--fg:#e4e2dd;--muted:#9a9ea6;--line:#33373d;--code:#22252a;--accent:#f0935f;--head:#1e2125}}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font:17px/1.6 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+main{max-width:46rem;margin:0 auto;padding:2.5rem 1rem 4rem}
+h1,h2,h3{line-height:1.25;text-wrap:balance}
+h1{font-size:2.1rem;margin:0 0 .4rem}
+h2{font-size:1.5rem;margin:2.8rem 0 .8rem;padding-top:1.4rem;border-top:1px solid var(--line)}
+h3{font-size:1.15rem;margin:2rem 0 .5rem}
+p.lede{color:var(--muted);font-size:1.1rem;margin:0 0 .3rem}
+p.date{color:var(--muted);font-size:.9rem;margin:0 0 2rem}
+a{color:var(--accent);text-underline-offset:2px}
+img{max-width:100%;height:auto;border:1px solid var(--line);border-radius:6px;display:block}
+figure{margin:1.6rem 0}
+@media (min-width:52rem){figure.wide{width:min(72rem,calc(100vw - 2rem));margin-left:50%;transform:translateX(-50%)}}
+figcaption{color:var(--muted);font-size:.88rem;margin-top:.45rem;text-align:center}
+code{font:0.88em/1.45 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;background:var(--code);padding:.1em .3em;border-radius:4px}
+p code,li code{overflow-wrap:anywhere}
+pre{background:var(--code);padding:.9rem 1rem;border-radius:6px;overflow-x:auto}
+pre code{background:none;padding:0;font-size:.84rem}
+.table{overflow-x:auto;margin:1.2rem 0}
+table{border-collapse:collapse;width:100%;min-width:34rem;font-size:.93rem}
+th,td{text-align:left;vertical-align:top;padding:.45rem .7rem;border-bottom:1px solid var(--line)}
+th{background:var(--head);font-weight:600;white-space:nowrap}
+td:first-child{white-space:nowrap}
+table.wrap td:first-child{white-space:normal;overflow-wrap:anywhere}
+li{margin:.3rem 0}
+td img{width:9.5rem;height:3.6rem;object-fit:contain;background:#fff;border:1px solid var(--line);border-radius:6px}
+td:nth-child(2){white-space:nowrap}
+figure.scroll{overflow-x:auto}
+figure.scroll img{min-width:46rem}
+small{display:block;color:var(--muted);font-size:.82rem;line-height:1.5}
+</style>
+<style>
+nav.site{max-width:46rem;margin:0 auto;padding:1rem 1rem 0;display:flex;flex-wrap:wrap;gap:.3rem 1.1rem;font-size:.95rem}
+nav.site a{text-decoration:none}
+nav.site a:first-child{font-weight:700;margin-right:auto}
+td:first-child,td:nth-child(2){white-space:normal}
+dl.pages dt{margin-top:1rem;font-weight:600}
+dl.pages dd{margin:.15rem 0 0;color:var(--muted)}
+</style>
+</head>
+<body>
+<nav class="site"><a href="../">dbdb</a><a href="../docs/">Documentation</a><a href="../flatpak.html">Flatpak</a><a href="https://github.com/koziserek/dbdb/releases">Download</a><a href="https://github.com/koziserek/dbdb/issues">Issues</a></nav>
+<main>
+<h1>The vault</h1>
+<p class="lede">Where passwords live, and how they travel sealed.</p>
+<p>A project file is text that everyone with the project can read, and it travels: through a shared folder, a relay, a browser, git, an email. A password typed into a connection travels with it.</p>
+<p>The vault is the place in a project for such values. A secret has a name in plain text and a value that is sealed with a password of your choice. Everyone who has the project and the password can use the secrets. Nobody else can read them, in the file or anywhere it goes.</p>
+<pre class="json"><code>&quot;vault&quot;: {
+  &quot;id&quot;: &quot;29a5223690c3&quot;,
+  &quot;lock&quot;: &quot;argon2id$m=65536,t=3,p=1$qLWc…$daRk…&quot;,
+  &quot;secrets&quot;: [
+    {&quot;name&quot;: &quot;pg_prod&quot;, &quot;id&quot;: &quot;9d414374d7be&quot;, &quot;sealed&quot;: &quot;7o7IAYjR…&quot;}
+  ]
+}</code></pre>
+<h2 id="using-a-secret">Using a secret</h2>
+<p>Write <code>${vault:name}</code> where the secret goes in a connection:</p>
+<pre class="json"><code>{&quot;kind&quot;: &quot;postgres_table&quot;, &quot;url&quot;: &quot;postgresql://etl:${vault:pg_prod}@db.example.org/sales&quot;, &quot;table&quot;: &quot;public.orders&quot;}</code></pre>
+<ul>
+<li>It works in the connection of a source and of a database output, and in a parameter that a connection uses, so test and production can each have their own secret (see <a href="parameters.html">parameters</a>).</li>
+<li>It works nowhere else. A secret in a path, a query or an expression could end up in an output file, so <code>validate</code> refuses it there.</li>
+<li>In a URL the value is encoded for you: a password with <code>@</code> or <code>/</code> in it is typed into the vault as it is.</li>
+<li>A connector to a model can take its key from a secret: set <code>key_secret</code> to the secret's name, and the connection of a connector to a database takes its password as <code>${vault:name}</code> like any connection (see <a href="connectors.html">connectors</a>).</li>
+</ul>
+<p><code>env:NAME</code> stays, and stays the right choice for a value that differs from machine to machine: it is read from that machine's environment.</p>
+<h2 id="when-the-password-is-asked-for">When the password is asked for</h2>
+<p>Opening a project, editing it, saving and syncing never ask. The vault has to be open only when something connects with a secret: reading or previewing such a source, running a job that uses one, or starting the Assistant with a connector whose key is in the vault.</p>
+<ul>
+<li><strong>App.</strong> The Vault window opens by itself the first time a secret is needed. <em>Edit &gt; Vault…</em> opens it at any time. The vault stays open until dbdb closes or you choose <em>Lock vault</em>; the status bar shows 🔓 or 🔒. The password and the opened key are kept in memory only.</li>
+<li><strong><code>dbdb-cli</code> at a terminal</strong> asks, without showing what you type.</li>
+<li><strong><code>dbdb-cli</code> in a script, the MCP server, a schedule.</strong> Give the password in the variable <code>DBDB_VAULT_PASSWORD</code>, or as the first line of a file named with <code>--vault-password-file</code>. A password that is wrong is an error at once.</li>
+</ul>
+<p>A job that needs a secret of a locked vault stops before it reads or writes anything, and names the secret:</p>
+<pre><code>error: `${vault:pg_prod}` is needed, and the vault is locked. Unlock it in the app (Edit &gt; Vault), or give `dbdb-cli` its password in the variable DBDB_VAULT_PASSWORD or with --vault-password-file</code></pre>
+<p>A job that uses no secret runs with the vault locked.</p>
+<p>A machine that runs jobs with nobody there has to hold the password somewhere, and a variable is no safer for it than <code>env:NAME</code> was. What changes is that it is one value for the machine instead of one for each connection.</p>
+<h2 id="managing-the-vault">Managing the vault</h2>
+<p>In the app, everything is in <em>Edit &gt; Vault…</em>: make the vault, seal a secret, show or replace one, remove one, change the password, and move the passwords that are written in connections into the vault.</p>
+<p>From the command line:</p>
+<pre class="sh"><code>dbdb-cli vault project.json create              # asks for a password, twice
+dbdb-cli vault project.json set pg_prod         # asks for the value, or reads it from standard input
+dbdb-cli vault project.json status              # the secrets by name, and what uses each; no password needed
+dbdb-cli vault project.json rename pg_prod pg   # the connections that name it follow
+dbdb-cli vault project.json remove pg
+dbdb-cli vault project.json move-in             # every password written in a connection or a connector becomes a secret
+dbdb-cli vault project.json change-password
+dbdb-cli vault project.json reset --forget-values</code></pre>
+<p><code>set</code> never takes the value as an argument, which would stay in the shell's history.</p>
+<p>The commands behind these (<code>set_vault</code>, <code>set_vault_lock</code>, <code>set_secret</code>, <code>rename_secret</code>, <code>remove_secret</code>) carry a value sealed, never in plain text. So the command log, undo, the sync and an assistant that applies commands only ever see what the file holds. An assistant can name a secret in a connection; it cannot read one or set one.</p>
+<p><strong>Moving passwords in.</strong> <code>validate</code> warns about each connection that holds a password in plain text. <em>Move passwords to the vault</em> (or <code>vault move-in</code>) seals each under the name of its source or connector and writes <code>${vault:name}</code> in its place, as one step that one Undo takes back. The password is still in older copies of the file, in git and in the sync folder: change it at the database if the file was ever shared.</p>
+<h2 id="changing-the-password">Changing the password</h2>
+<p>A new password rewrites one line, the <code>lock</code>, and no secret. The other copies of the project get it with the next sync and ask for the new password the next time they unlock.</p>
+<p>It does not take back what an old copy could read: copies of the file from before still open with the old password. If the old password may be known to someone who should not have it, change the secrets themselves, at the database or the provider.</p>
+<h2 id="a-lost-password">A lost password</h2>
+<p>There is no way back to a lost password. That is what the seal is worth.</p>
+<p>What is lost is the values, and nothing else: the project opens and works as before. <em>Lost the password?</em> in the Vault window (or <code>vault reset --forget-values</code>) gives the vault a new password and keeps every secret's name with no value. Each connection still points at its secret, and the window lists the ones to enter again.</p>
+<h2 id="what-it-protects-and-what-not">What it protects, and what not</h2>
+<ul>
+<li><strong>Protected:</strong> the project file wherever it lies or goes, the sync folder, what a relay or a browser keeps, backups, git history, run records, and what an assistant is shown.</li>
+<li><strong>Not protected:</strong> the names of the secrets, and everything else in the project: hosts, user names, tables, queries, notes. The file stays readable on purpose, so that it can be compared, merged and worked on without the password.</li>
+<li><strong>A weak password.</strong> Whoever has the file can try passwords without limit, only slowly. Choose a long one.</li>
+<li><strong>An open vault.</strong> Whoever sits at the machine while the vault is open can use the secrets, and see them in the Vault window.</li>
+</ul>
+<h2 id="how-it-is-sealed">How it is sealed</h2>
+<ul>
+<li>Making a vault draws a random 256-bit vault key. It seals every secret with XChaCha20-Poly1305 and a fresh random nonce, and never changes.</li>
+<li>The password becomes a second key through Argon2id, with a random salt, 64 MiB of memory and 3 passes. That key seals the vault key. The result is the <code>lock</code>, with the salt and the settings in it.</li>
+<li>A secret is sealed together with the vault's id and its own id, so a sealed value copied under another secret, or into another vault, does not open.</li>
+<li>A project with a vault is written as <code>"format": 4</code>, so that an older dbdb leaves it alone instead of saving it without its secrets (see <a href="shared-projects.html#the-format-number">shared projects</a>).</li>
+</ul>
+</main>
+</body>
+</html>

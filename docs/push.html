@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pushing a file to another machine · dbdb</title>
+<meta name="description" content="A job that sends its result to another machine.">
+<style>
+:root{--bg:#fbfaf7;--fg:#1d1f21;--muted:#62666d;--line:#dcd9d2;--code:#f0eee8;--accent:#a8401a;--head:#f3f1eb}
+@media (prefers-color-scheme:dark){:root{--bg:#16181b;--fg:#e4e2dd;--muted:#9a9ea6;--line:#33373d;--code:#22252a;--accent:#f0935f;--head:#1e2125}}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font:17px/1.6 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+main{max-width:46rem;margin:0 auto;padding:2.5rem 1rem 4rem}
+h1,h2,h3{line-height:1.25;text-wrap:balance}
+h1{font-size:2.1rem;margin:0 0 .4rem}
+h2{font-size:1.5rem;margin:2.8rem 0 .8rem;padding-top:1.4rem;border-top:1px solid var(--line)}
+h3{font-size:1.15rem;margin:2rem 0 .5rem}
+p.lede{color:var(--muted);font-size:1.1rem;margin:0 0 .3rem}
+p.date{color:var(--muted);font-size:.9rem;margin:0 0 2rem}
+a{color:var(--accent);text-underline-offset:2px}
+img{max-width:100%;height:auto;border:1px solid var(--line);border-radius:6px;display:block}
+figure{margin:1.6rem 0}
+@media (min-width:52rem){figure.wide{width:min(72rem,calc(100vw - 2rem));margin-left:50%;transform:translateX(-50%)}}
+figcaption{color:var(--muted);font-size:.88rem;margin-top:.45rem;text-align:center}
+code{font:0.88em/1.45 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;background:var(--code);padding:.1em .3em;border-radius:4px}
+p code,li code{overflow-wrap:anywhere}
+pre{background:var(--code);padding:.9rem 1rem;border-radius:6px;overflow-x:auto}
+pre code{background:none;padding:0;font-size:.84rem}
+.table{overflow-x:auto;margin:1.2rem 0}
+table{border-collapse:collapse;width:100%;min-width:34rem;font-size:.93rem}
+th,td{text-align:left;vertical-align:top;padding:.45rem .7rem;border-bottom:1px solid var(--line)}
+th{background:var(--head);font-weight:600;white-space:nowrap}
+td:first-child{white-space:nowrap}
+table.wrap td:first-child{white-space:normal;overflow-wrap:anywhere}
+li{margin:.3rem 0}
+td img{width:9.5rem;height:3.6rem;object-fit:contain;background:#fff;border:1px solid var(--line);border-radius:6px}
+td:nth-child(2){white-space:nowrap}
+figure.scroll{overflow-x:auto}
+figure.scroll img{min-width:46rem}
+small{display:block;color:var(--muted);font-size:.82rem;line-height:1.5}
+</style>
+<style>
+nav.site{max-width:46rem;margin:0 auto;padding:1rem 1rem 0;display:flex;flex-wrap:wrap;gap:.3rem 1.1rem;font-size:.95rem}
+nav.site a{text-decoration:none}
+nav.site a:first-child{font-weight:700;margin-right:auto}
+td:first-child,td:nth-child(2){white-space:normal}
+dl.pages dt{margin-top:1rem;font-weight:600}
+dl.pages dd{margin:.15rem 0 0;color:var(--muted)}
+</style>
+</head>
+<body>
+<nav class="site"><a href="../">dbdb</a><a href="../docs/">Documentation</a><a href="../flatpak.html">Flatpak</a><a href="https://github.com/koziserek/dbdb/releases">Download</a><a href="https://github.com/koziserek/dbdb/issues">Issues</a></nav>
+<main>
+<h1>Pushing a file to another machine</h1>
+<p class="lede">A job that sends its result to another machine.</p>
+<p>A job can hand its result to another machine that has the same project. The step <em>Push to another dbdb</em> writes its rows as a file, as a File output does, and sends the file to the machine it names. There it is saved in the folder <code>Incoming</code> beside the project file, and a job of that machine reads it as any file.</p>
+<p>Use it when one machine can read the data and another has to have it: a laptop inside a network reads a database and pushes the rows to a server outside it, or the other way round.</p>
+<h2 id="the-step">The step</h2>
+<pre class="json"><code>{&quot;type&quot;: &quot;push&quot;, &quot;machine&quot;: &quot;etl-box&quot;, &quot;name&quot;: &quot;customers.csv&quot;, &quot;format&quot;: {&quot;kind&quot;: &quot;csv&quot;}}</code></pre>
+<ul>
+<li><code>machine</code>: what the other machine is called. That is the computer's name, or what <code>DBDB_MACHINE</code> says there, as for schedules and runs on another machine. Capital letters do not matter.</li>
+<li><code>name</code>: what the file is called there. It is a name and never a path: what is pushed goes into <code>Incoming</code> and nowhere else, so nothing that another machine sends can reach the project file or anything beside it. A name may hold a parameter, as <code>customers-${day}.csv</code>.</li>
+<li><code>format</code>: as for a File output (<code>write</code>): CSV, JSON, Excel, Parquet or an SQLite file. CSV unless said.</li>
+</ul>
+<p>The step has the <code>rejected</code> port of a File output, and the project's checks decide what goes there.</p>
+<p>In the Job designer it is <em>Push to another dbdb</em> among the steps. Its settings list the machines that are listening now.</p>
+<h2 id="what-happens-in-a-run">What happens in a run</h2>
+<ol type="1">
+<li>Before a row is read, the run looks whether the other machine is there. If it is not, the run stops and says what to start there.</li>
+<li>The rows are written to a file on this machine, in the folder for temporary files (<code>DBDB_TEMP_DIR</code>).</li>
+<li>When the input has ended, the whole file is sent. On the other machine it is written beside its place and takes the place of a file of the same name only when all of it has arrived and is what was sent. Whoever reads <code>Incoming</code> there sees the old file or the new one, never half of one.</li>
+<li>The file on this machine is removed.</li>
+</ol>
+<p>A dry run and <code>validate</code> check the rows and send nothing. They do not need the other machine.</p>
+<p><strong>Not later.</strong> The other machine has to be there when the job runs. A file is not kept to be sent when the machine comes back: the run fails, and its record says why. Run the job again.</p>
+<h2 id="the-machine-that-takes-the-file">The machine that takes the file</h2>
+<p>A machine takes what is pushed to it only after its user said so, there, for that project. It is the same word as for runs on another machine (<a href="remote-runs.html">remote-runs.md</a>): a machine that runs what other copies ask of it also takes their files.</p>
+<ul>
+<li><code>dbdb-cli runner project.json</code> takes them, and writes a line for each file that arrived. With <code>--no-asked</code> it takes none.</li>
+<li>The app takes them while the project is open there and <em>Run what is asked</em> is ticked in the Job schedule pane. The status bar says what arrived.</li>
+</ul>
+<p>To read what arrives, add a source there with the path <code>Incoming/customers.csv</code>, as for any file.</p>
+<p>Whoever has the project file can push to such a machine, into that one folder. That is less than they could do already: they could ask the machine to run a job that writes any file.</p>
+<h2 id="how-the-file-travels">How the file travels</h2>
+<p>The first of these that is there:</p>
+<ol type="1">
+<li><strong>To this machine itself</strong>, when <code>machine</code> is its own name: the file is written into <code>Incoming</code> beside the project file. This is how to try a job out.</li>
+<li><strong>Through the project's folder</strong>, when a runner on the other machine says in the sync folder that it is here. The two machines then reach the same project folder, and the file is written into its <code>Incoming</code>.</li>
+<li><strong>Through the relay</strong> of a project that is shared through one (<a href="shared-projects.html#shared-through-a-relay">shared-projects.md</a>). The file goes in pieces of 256 KB, each sealed with the project's key, to the one copy that takes it. The relay hands each piece on and keeps nothing: the file is never in the project's room, never in what the copies sync, and the relay cannot read it. The sender waits for the other machine to say it has a piece before it sends the next.</li>
+</ol>
+<p>The file is never in the project file and never in what the copies sync. Only the step is.</p>
+<p>The relay has to be the <code>dbdb-cli relay</code> of this version or a later one. An older relay does not hand files on, and the run says so.</p>
+<p>Copies that are connected directly (<a href="shared-projects.html#directly-between-copies">shared-projects.md</a>) still push through the relay. Sending the file over the direct connection is not built yet.</p>
+<h2 id="a-page-in-a-browser">A page in a browser</h2>
+<p>A page cannot push a file, and takes none: it has no folder to keep a file in, and a job that writes does not run in a page. Have a machine run the job: <em>Run on…</em> in the Job designer. The page can build the job, check it with a dry run, and ask.</p>
+<h2 id="from-the-command-line-and-an-assistant">From the command line and an assistant</h2>
+<p><code>dbdb-cli run-job project.json send</code> pushes like a run in the app, and so do schedules and the <code>run_job</code> tool. No copy of the project has to be open on the sending machine: for a relay, the command goes to it for the time of the push only.</p>
+<h2 id="limits">Limits</h2>
+<ul>
+<li>One file for each Push step, and one machine. To send to two machines, use two steps.</li>
+<li>A project that is not shared through a relay pushes only to itself and to machines that reach its folder.</li>
+<li>Nothing tells the other machine to run a job when a file has arrived. Schedule the job there (<a href="schedule.html">schedule.md</a>), or ask for it with <em>Run on…</em> after the push.</li>
+<li>A push that is stopped half way leaves nothing on the other machine. One that the other machine's power cut stops can leave a file whose name begins with a dot and ends in <code>.part</code> in <code>Incoming</code>. It can be deleted.</li>
+<li>With two runners on machines of one name, the file goes to the one that came to the relay first.</li>
+<li>It was tried with a relay and both machines on one computer, not across the internet.</li>
+<li>A project with a Push step is written as <code>"format": 5</code>, so a dbdb from before the step says that a newer one is needed.</li>
+</ul>
+</main>
+</body>
+</html>

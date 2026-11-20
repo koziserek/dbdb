@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Documentation · dbdb</title>
+<meta name="description" content="How each part of dbdb works.">
+<style>
+:root{--bg:#fbfaf7;--fg:#1d1f21;--muted:#62666d;--line:#dcd9d2;--code:#f0eee8;--accent:#a8401a;--head:#f3f1eb}
+@media (prefers-color-scheme:dark){:root{--bg:#16181b;--fg:#e4e2dd;--muted:#9a9ea6;--line:#33373d;--code:#22252a;--accent:#f0935f;--head:#1e2125}}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font:17px/1.6 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+main{max-width:46rem;margin:0 auto;padding:2.5rem 1rem 4rem}
+h1,h2,h3{line-height:1.25;text-wrap:balance}
+h1{font-size:2.1rem;margin:0 0 .4rem}
+h2{font-size:1.5rem;margin:2.8rem 0 .8rem;padding-top:1.4rem;border-top:1px solid var(--line)}
+h3{font-size:1.15rem;margin:2rem 0 .5rem}
+p.lede{color:var(--muted);font-size:1.1rem;margin:0 0 .3rem}
+p.date{color:var(--muted);font-size:.9rem;margin:0 0 2rem}
+a{color:var(--accent);text-underline-offset:2px}
+img{max-width:100%;height:auto;border:1px solid var(--line);border-radius:6px;display:block}
+figure{margin:1.6rem 0}
+@media (min-width:52rem){figure.wide{width:min(72rem,calc(100vw - 2rem));margin-left:50%;transform:translateX(-50%)}}
+figcaption{color:var(--muted);font-size:.88rem;margin-top:.45rem;text-align:center}
+code{font:0.88em/1.45 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;background:var(--code);padding:.1em .3em;border-radius:4px}
+p code,li code{overflow-wrap:anywhere}
+pre{background:var(--code);padding:.9rem 1rem;border-radius:6px;overflow-x:auto}
+pre code{background:none;padding:0;font-size:.84rem}
+.table{overflow-x:auto;margin:1.2rem 0}
+table{border-collapse:collapse;width:100%;min-width:34rem;font-size:.93rem}
+th,td{text-align:left;vertical-align:top;padding:.45rem .7rem;border-bottom:1px solid var(--line)}
+th{background:var(--head);font-weight:600;white-space:nowrap}
+td:first-child{white-space:nowrap}
+table.wrap td:first-child{white-space:normal;overflow-wrap:anywhere}
+li{margin:.3rem 0}
+td img{width:9.5rem;height:3.6rem;object-fit:contain;background:#fff;border:1px solid var(--line);border-radius:6px}
+td:nth-child(2){white-space:nowrap}
+figure.scroll{overflow-x:auto}
+figure.scroll img{min-width:46rem}
+small{display:block;color:var(--muted);font-size:.82rem;line-height:1.5}
+</style>
+<style>
+nav.site{max-width:46rem;margin:0 auto;padding:1rem 1rem 0;display:flex;flex-wrap:wrap;gap:.3rem 1.1rem;font-size:.95rem}
+nav.site a{text-decoration:none}
+nav.site a:first-child{font-weight:700;margin-right:auto}
+td:first-child,td:nth-child(2){white-space:normal}
+dl.pages dt{margin-top:1rem;font-weight:600}
+dl.pages dd{margin:.15rem 0 0;color:var(--muted)}
+</style>
+</head>
+<body>
+<nav class="site"><a href="../">dbdb</a><a href="../docs/">Documentation</a><a href="../flatpak.html">Flatpak</a><a href="https://github.com/koziserek/dbdb/releases">Download</a><a href="https://github.com/koziserek/dbdb/issues">Issues</a></nav>
+<main>
+<h1>Documentation</h1>
+<p class="lede">How each part of dbdb works.</p>
+<p>dbdb's pages on one subject each. The <a href="../">intro article</a> says what dbdb is and how to get it.</p>
+<h2 id="working-with-data">Working with data</h2>
+<ul>
+<li><a href="expressions.html">Expressions</a>: The language of Map columns and Filter conditions.</li>
+<li><a href="parameters.html">Parameters and environments</a>: ${name} in paths, connections and table names, and environments for test and production.</li>
+<li><a href="compare.html">Comparing two sources</a>: A target against its source after a load: which rows differ, and which only one side has.</li>
+<li><a href="database-output.html">Database output</a>: Writing rows to PostgreSQL, SQL Server and SQLite tables.</li>
+<li><a href="html-output.html">HTML output: a template filled with rows</a>: A report, a list, a letter for each customer, as HTML.</li>
+<li><a href="rest.html">REST API and OData sources</a>: Sources that read a REST API or an OData service.</li>
+<li><a href="runs.html">Run history</a>: The record every run leaves, and what it shows.</li>
+<li><a href="notes.html">Notes</a>: Pages of Markdown that travel with the project.</li>
+</ul>
+<h2 id="running-jobs">Running jobs</h2>
+<ul>
+<li><a href="schedule.html">Job schedule</a>: Running a job by itself, at set times, on one machine.</li>
+<li><a href="remote-runs.html">Runs on another machine</a>: Asking another machine to run a job, and being the machine that runs it.</li>
+<li><a href="push.html">Pushing a file to another machine</a>: A job that sends its result to another machine.</li>
+</ul>
+<h2 id="sharing-and-safety">Sharing and safety</h2>
+<ul>
+<li><a href="shared-projects.html">One project open in several places</a>: Two windows, two computers, the app and the command line, on one project.</li>
+<li><a href="sharing-and-trust.html">What sharing a project allows</a>: What sharing a project hands over, and what a machine agrees to.</li>
+<li><a href="vault.html">The vault</a>: Where passwords live, and how they travel sealed.</li>
+<li><a href="connectors.html">Connectors</a>: Models, servers and services a project reaches, set up once and named.</li>
+</ul>
+<h2 id="assistants">Assistants</h2>
+<ul>
+<li><a href="assistant.html">The assistant</a>: The Assistant pane: a conversation that can look at the project and build in it.</li>
+<li><a href="agent-prompt.html">Asking an AI assistant for a project</a>: What to ask an AI assistant that has dbdb-cli, to build a whole project.</li>
+<li><a href="agents.html">Building a dbdb project: a guide for AI assistants</a>: The guide an assistant reads: steps, the project file and every command. dbdb-cli guide prints it.</li>
+</ul>
+</main>
+</body>
+</html>

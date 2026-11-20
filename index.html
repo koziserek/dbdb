@@ -1,0 +1,656 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>dbdb: a data migration tool in pure Rust</title>
+<meta name="description" content="dbdb is an ETL and data migration tool with a desktop designer, a command line, a browser build, an MCP server and an AI assistant. What it does, a showcase project to try, and where to download it.">
+<style>
+:root{--bg:#fbfaf7;--fg:#1d1f21;--muted:#62666d;--line:#dcd9d2;--code:#f0eee8;--accent:#a8401a;--head:#f3f1eb}
+@media (prefers-color-scheme:dark){:root{--bg:#16181b;--fg:#e4e2dd;--muted:#9a9ea6;--line:#33373d;--code:#22252a;--accent:#f0935f;--head:#1e2125}}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font:17px/1.6 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+main{max-width:46rem;margin:0 auto;padding:2.5rem 1rem 4rem}
+h1,h2,h3{line-height:1.25;text-wrap:balance}
+h1{font-size:2.1rem;margin:0 0 .4rem}
+h2{font-size:1.5rem;margin:2.8rem 0 .8rem;padding-top:1.4rem;border-top:1px solid var(--line)}
+h3{font-size:1.15rem;margin:2rem 0 .5rem}
+p.lede{color:var(--muted);font-size:1.1rem;margin:0 0 .3rem}
+p.date{color:var(--muted);font-size:.9rem;margin:0 0 2rem}
+a{color:var(--accent);text-underline-offset:2px}
+img{max-width:100%;height:auto;border:1px solid var(--line);border-radius:6px;display:block}
+figure{margin:1.6rem 0}
+@media (min-width:52rem){figure.wide{width:min(72rem,calc(100vw - 2rem));margin-left:50%;transform:translateX(-50%)}}
+figcaption{color:var(--muted);font-size:.88rem;margin-top:.45rem;text-align:center}
+code{font:0.88em/1.45 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;background:var(--code);padding:.1em .3em;border-radius:4px}
+p code,li code{overflow-wrap:anywhere}
+pre{background:var(--code);padding:.9rem 1rem;border-radius:6px;overflow-x:auto}
+pre code{background:none;padding:0;font-size:.84rem}
+.table{overflow-x:auto;margin:1.2rem 0}
+table{border-collapse:collapse;width:100%;min-width:34rem;font-size:.93rem}
+th,td{text-align:left;vertical-align:top;padding:.45rem .7rem;border-bottom:1px solid var(--line)}
+th{background:var(--head);font-weight:600;white-space:nowrap}
+td:first-child{white-space:nowrap}
+table.wrap td:first-child{white-space:normal;overflow-wrap:anywhere}
+li{margin:.3rem 0}
+td img{width:9.5rem;height:3.6rem;object-fit:contain;background:#fff;border:1px solid var(--line);border-radius:6px}
+td:nth-child(2){white-space:nowrap}
+figure.scroll{overflow-x:auto}
+figure.scroll img{min-width:46rem}
+small{display:block;color:var(--muted);font-size:.82rem;line-height:1.5}
+</style>
+</head>
+<body>
+<style>
+nav.site{max-width:46rem;margin:0 auto;padding:1rem 1rem 0;display:flex;flex-wrap:wrap;gap:.3rem 1.1rem;font-size:.95rem}
+nav.site a{text-decoration:none}
+nav.site a:first-child{font-weight:700;margin-right:auto}
+td:first-child,td:nth-child(2){white-space:normal}
+dl.pages dt{margin-top:1rem;font-weight:600}
+dl.pages dd{margin:.15rem 0 0;color:var(--muted)}
+</style><nav class="site"><a href="./">dbdb</a><a href="./docs/">Documentation</a><a href="./flatpak.html">Flatpak</a><a href="https://github.com/koziserek/dbdb/releases">Download</a><a href="https://github.com/koziserek/dbdb/issues">Issues</a></nav>
+<main>
+<h1>dbdb: a data migration tool in pure Rust</h1>
+<p class="lede">dbdb is an ETL and data migration tool with a desktop designer, a command line, a browser build, an MCP server and an AI assistant. What it does, a showcase project to try, and where to download it.</p>
+<p class="date">2026-11-21</p>
+<p>dbdb is a new-generation ETL and data migration tool written in pure Rust, with a desktop interface built on <a href="https://github.com/emilk/egui">egui</a>. You point it at the files and databases you have, look around in the data, design jobs that reshape it, and get checked output files or database tables at the other end.</p>
+<p>It is inspired by Talaxie and Talend Open Studio, reads their schema files and imports their projects, but it shares no code with them. It starts in a moment, it is a single program with nothing else to install, and everything runs on your own machine: no account, no server, nothing sent anywhere unless you ask for it.</p>
+<figure class="wide">
+<img src="images/designer.png" alt="The job designer: joins that bring the operations database and the master data together, one with its description on the step, and the rows coming out of it below" />
+<figcaption aria-hidden="true">The job designer: joins that bring the operations database and the master data together, one with its description on the step, and the rows coming out of it below</figcaption>
+</figure>
+<p>dbdb comes in four shapes that share one engine and one project file:</p>
+<ul>
+<li><strong><code>dbdb-app</code></strong>, the desktop designer.</li>
+<li><strong><code>dbdb-cli</code></strong>, the command line: look into sources, check files, run jobs from a script or a scheduler.</li>
+<li><strong>The browser build</strong>, the same app compiled to WebAssembly: a folder of static files for any web server.</li>
+<li><strong>An MCP server</strong> (<code>dbdb-cli mcp</code>), so that an AI assistant can look at your data and drive a migration with the same commands the app uses.</li>
+</ul>
+<p>Around the jobs it keeps what a migration needs: notes, comparisons of the target against the source, a history of every run, schedules that run jobs by themselves, a vault for the passwords, connectors that hold the connections to databases and models, and an assistant pane that can talk to a local model or to Claude.</p>
+<p>The current release is <strong>0.42.0</strong>. The screenshots show the Showcase project described below.</p>
+<h2 id="what-it-does">What it does</h2>
+<h3 id="read-from-where-the-data-is">Read from where the data is</h3>
+<div class="table">
+<table>
+<thead>
+<tr>
+<th>Source</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Excel and ODS</td>
+<td>one sheet per source</td>
+</tr>
+<tr>
+<td>CSV and other delimited text</td>
+<td>any one-character delimiter, optional header, types guessed from the values, any text encoding</td>
+</tr>
+<tr>
+<td>JSON</td>
+<td>an array of objects, or JSON Lines</td>
+</tr>
+<tr>
+<td>Parquet</td>
+<td>typed columns; snappy, gzip, LZ4 and brotli compression, not zstd</td>
+</tr>
+<tr>
+<td>Fixed-width files</td>
+<td>laid out by a Talend/Talaxie schema XML file, any text encoding</td>
+</tr>
+<tr>
+<td>SQLite</td>
+<td>a table or a query</td>
+</tr>
+<tr>
+<td>PostgreSQL</td>
+<td>a table or a query; encrypted connections, with libpq's <code>sslmode</code> settings to insist on it or to check the server</td>
+</tr>
+<tr>
+<td>SQL Server</td>
+<td>a table or a query; queries are limited to one <code>SELECT</code> and always rolled back</td>
+</tr>
+<tr>
+<td>MariaDB and MySQL</td>
+<td>a table or a query; one <code>SELECT</code> in a read-only transaction; encrypted connections, tried against MariaDB 10.11, MySQL 8.0 and MySQL 8.4</td>
+</tr>
+<tr>
+<td>MS Access</td>
+<td><code>.mdb</code> and <code>.accdb</code> files, read directly without Access or a driver; no password-protected files yet</td>
+</tr>
+<tr>
+<td>REST APIs</td>
+<td>an API that answers with JSON, read page after page to the last one; the key, or an OAuth sign-in of a program, is kept in a connector and never in the source</td>
+</tr>
+<tr>
+<td>OData services</td>
+<td>version 2 or 4, as SAP, Microsoft Dynamics and SharePoint speak it: name the service and an entity set, and the rows and pages are found by themselves</td>
+</tr>
+<tr>
+<td>Oracle</td>
+<td><strong>experimental</strong>, on the driver Oracle maintains, which is still a beta; tested against Oracle Free 23 only, where every row of a table or query comes over; encrypted connections; a failed connection says what Oracle answered; desktop and CLI only</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>Text files need not be UTF-8: CSV and fixed-width files, read or written, take an encoding such as <code>windows-1250</code> or <code>iso-8859-2</code>. A character the output's encoding lacks stops the run, naming the character and its line.</p>
+<p>A query kept as a source behaves like a table everywhere else in the app. Database reads run in the background, so the window never waits for a slow server. Of a large source the app shows the first 100,000 rows, marked as a sample, with "Load all" for the rest; a run always reads every row.</p>
+<p><strong>Connectors</strong> hold a database connection once, under a name, and every source and database output that names it reads and writes through it. Each setting is for everybody or for one machine alone, so a database that the office reaches by its own address and a laptop through a tunnel is one connector, and the same project works on both. The Connectors pane tests a connection, shows what reads through it, and makes a connector of the connection a source already has.</p>
+<p><strong>The API Call Builder</strong> pane builds a REST or an OData source and tests it against the API. It shows the address that is asked and, page by page, what the API answered and the rows that came of it. For a REST API it proposes where the rows are and how the pages follow from the first answer, and starts a call from a pasted <code>curl</code> command, without keeping its key, or from a call listed in an OpenAPI file, in JSON or YAML. An OData call is clicked together from what the service says it holds: its entity sets, columns, conditions, order and related rows. It is counted before it is read, and a filter that a job applies right after reading can be handed to the service instead. A REST source only reads: it asks with GET, and with POST, for an API that searches that way, only at the hosts a machine lists in <code>DBDB_REST_POST</code>.</p>
+<p><strong>Snapshot</strong> copies a database into one SQLite file, to work from when the database is slow, far away or soon gone: every table with its rows, column types and keys. The database is only read, and the project gets a source for the copy.</p>
+<p><strong>The vault</strong> keeps passwords and keys in the project, each sealed with a password of your choice, and a connection uses one as <code>${vault:name}</code>. So the project file can be shared, synced and kept in git without them. Only connecting asks for the password, and a run that nobody watches gets it from <code>DBDB_VAULT_PASSWORD</code> or a file.</p>
+<p>Tables of rows, wherever they appear, work like a spreadsheet: pick cells by clicking, dragging or Shift+click, and Ctrl+C copies them as cells a spreadsheet pastes, with or without the column names.</p>
+<figure>
+<img src="images/cells.png" alt="A block of cells picked in a preview, with the copy menu" />
+<figcaption aria-hidden="true">A block of cells picked in a preview, with the copy menu</figcaption>
+</figure>
+<h3 id="browse-joined-data">Browse joined data</h3>
+<p>The Browser pane shows a source as a table and nests joined rows under each parent row, so you see a customer with its orders, or an aircraft type with its aircraft, without writing a query. Column headers have menus for sorting, filtering by a checklist of values or by "contains", hiding and joining. Joins are suggested from matching values in other sources and from declared relations, and each one switches between inner and left. Joined rows can also be laid out side by side.</p>
+<figure class="wide">
+<img src="images/browser.png" alt="The Browser pane: each aircraft with its flights nested beside it" />
+<figcaption aria-hidden="true">The Browser pane: each aircraft with its flights nested beside it</figcaption>
+</figure>
+<h3 id="design-jobs">Design jobs</h3>
+<p>A job is a canvas of steps joined by wires. Drag a source onto the canvas, add steps, and wire outputs to inputs.</p>
+<div class="table">
+<table>
+<thead>
+<tr>
+<th>Step</th>
+<th>What it does</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Input</td>
+<td>reads a source</td>
+</tr>
+<tr>
+<td>Filter</td>
+<td>keeps the rows that meet a condition; the rest leave through a second output</td>
+</tr>
+<tr>
+<td>Sort</td>
+<td>orders rows</td>
+</tr>
+<tr>
+<td>Remove duplicates</td>
+<td>by key</td>
+</tr>
+<tr>
+<td>Join</td>
+<td>a main flow and a lookup, inner or left, on one column or several; an <code>unmatched</code> output gives the main rows that found no lookup row</td>
+</tr>
+<tr>
+<td>Append rows</td>
+<td>one input under another, columns matched by name</td>
+</tr>
+<tr>
+<td>Aggregate</td>
+<td>groups rows and counts, sums, averages, or takes the smallest, largest, first or last value</td>
+</tr>
+<tr>
+<td>Map columns</td>
+<td>pick, rename, reorder, fixed text, or an expression</td>
+</tr>
+<tr>
+<td>Prompt</td>
+<td>asks a model for rows, through one of the project's AI connectors, from up to eight inputs; it is told what the next step needs, so its answer fits there</td>
+</tr>
+<tr>
+<td>File or folder input</td>
+<td>a file, or every file of a folder, as one row per file: path, name, size and content; a PDF can come as one row for each page, with the page's text</td>
+</tr>
+<tr>
+<td>Fixed-width output</td>
+<td>a file laid out by a Talend schema</td>
+</tr>
+<tr>
+<td>File output</td>
+<td>CSV or TSV, JSON or JSON Lines, an Excel sheet, an SQLite table, or a Parquet file</td>
+</tr>
+<tr>
+<td>File or folder output</td>
+<td>one file for each row, into a folder, or all rows as one file</td>
+</tr>
+<tr>
+<td>HTML output</td>
+<td>a page from a template you write, filled with the rows: one file, or a file for each row or group</td>
+</tr>
+<tr>
+<td>Push to another dbdb</td>
+<td>a file in a format of File output, sent to another machine that has the project and saved in its Incoming folder</td>
+</tr>
+<tr>
+<td>Database output</td>
+<td>add, update-or-add by key, or replace the rows of a PostgreSQL, SQL Server or SQLite table; see below</td>
+</tr>
+<tr>
+<td>Sub-job</td>
+<td>runs another job of the project</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>Every step shows its row count, and the rows of the selected step appear under the canvas, so you see what each step did to the data. Errors such as an unwired input or an unknown column show on the step itself. The panel under the canvas holds the step's data, its settings, its description and the last run, and folds away to leave the canvas to the job. The canvas zooms with the wheel or a pinch. "Add step" offers the steps as Extract, Transform, Load and Sub-jobs, and a right-click goes from a Sub-job step to the job it runs and back to a job that runs this one. A step can carry a description of what it is for, shown on the canvas or when the pointer is over it.</p>
+<p>More on jobs:</p>
+<ul>
+<li><p><strong>Check before you write.</strong> "Check outputs" runs the whole job without writing anything. Schema checks and the project's own rules run on what would be written: duplicate keys, missing mandatory values, values too long for their column, formats that do not match, fields that must or must not be filled depending on another field.</p></li>
+<li><p><strong>Every check in one list.</strong> The Issues pane lists each check with what came of it: passed, found something, does not apply or not run yet, and under a check what it found. The checks of the project itself, such as names, wires and paths another computer cannot read, need no data and are made again after every change.</p></li>
+<li><p><strong>Rejected rows</strong>. Each output has a <code>rejected</code> port. Wire it to a file and the rows the checks object to go there, with the row number and the reason, instead of into the output.</p></li>
+<li><p><strong>Expressions</strong> in Map columns and Filter conditions: join, cut, trim and pad text, change its case, reformat dates, convert types, exact decimal arithmetic, <code>if</code> and <code>case</code>. They are checked as you type.</p></li>
+<li><p><strong>Loading databases.</strong> A Database output writes in one transaction, so a load is all or nothing, and a dry run goes through the whole write and takes it back. Loading a table again writes only the rows that changed, says how many it added and changed, and deletes the rows gone from the source when asked to. Its <code>written</code> port gives the rows with the ids the database made, so the rows of other tables get the new id of their parent. For a very large load it can instead commit every so many rows, and it sends the rows to the database as they arrive.</p></li>
+<li><p><strong>Parameters and environments</strong>: <code>${name}</code> in file paths, connections, table names and expressions, with other values for production. A path can also hold a formula, such as <code>${format_date(today(), 'yyyyMMdd')}</code> for the day of the run.</p>
+<figure>
+<img src="images/parameters.png" alt="The Parameters window: two parameters, with other values for the environment secondLoad" />
+<figcaption aria-hidden="true">The Parameters window: two parameters, with other values for the environment secondLoad</figcaption>
+</figure></li>
+<li><p><strong>Run history.</strong> Every run that writes leaves a record beside the project: when, how long, the environment and parameters, and for each step its rows, rejected rows, issues and time. The Runs pane lists them and marks the slowest step. A run is one table: each job has a line with what it and its sub-jobs wrote in all, and the sub-jobs are set in under the job that ran them.</p>
+<figure>
+<img src="images/runs.png" alt="The Runs pane: three runs, and the steps of the first with their rows and times" />
+<figcaption aria-hidden="true">The Runs pane: three runs, and the steps of the first with their rows and times</figcaption>
+</figure></li>
+<li><p><strong>Large tables</strong>. Jobs run on batches of rows instead of whole tables. CSV, fixed-width, Parquet, SQLite and PostgreSQL sources are read a batch at a time, and CSV, fixed-width and Parquet files and SQLite and PostgreSQL tables are written as the rows arrive, so a file of millions of rows needs no more memory than a small one. Remove duplicates, Aggregate and the unique-key checks keep only keys and totals. A file is written beside its place and renamed only when complete, so a failed run leaves the old file as it was.</p></li>
+<li><p><strong>Larger than memory.</strong> What a run holds counts against a memory limit. Past it, a Sort writes sorted runs to disk and merges them, and a Join keeps its lookup rows on disk; the result is the same, row for row. What cannot go to disk stops the run with a message naming the step, before the system would kill the program. Rows travel through a job as Arrow columns, which takes about a third of the memory rows did before.</p></li>
+<li><p><strong>Runs in the background.</strong> In the desktop app a job runs while the window stays free; the status bar counts the rows read and written and has a Cancel button.</p></li>
+<li><p><strong>A run on the canvas.</strong> With Run progress ticked in the Job designer, a wire fills up as its rows pass, measured against the rows it carried the last time the job got through, and says how many rows and how many a second. A step at work pulses, one that has ended gets a tick, and the step a run stopped in turns red. A Sub-job step shows the same for the job it runs, so a job made of sub-jobs lights up step by step. It is off until ticked, and not in a browser.</p></li>
+<li><p><strong>Jobs inside jobs.</strong> Sub-job steps wired one after another run as a series. Each one chooses whether issues in the data it wrote stop the series, or only a failed run does.</p></li>
+<li><p><strong>Schedules.</strong> A schedule runs a job by itself: once, every so often, or on the days and times of a cron pattern that a form writes for you. It is kept in the project and names the one machine that runs it, while the app is open there or with <code>dbdb-cli schedule run</code>. The Job schedule pane shows past runs and the times to come on a line of time, with the settings of the schedule you click in a panel under it.</p></li>
+<li><p><strong>Run on another machine.</strong> A copy can ask a machine that has the files, the network and the passwords to run a job, so that a laptop or a browser page can have a load run on the server. The ask travels with the project's sync, so no port is opened, and a machine runs for others only after its user said so there (<code>dbdb-cli runner</code>, or the app with Run what is asked ticked).</p></li>
+<li><p><strong>Push a file to another machine.</strong> A Push to another dbdb step writes its rows as a file and sends it to a machine that has the project, where it is saved in the folder <code>Incoming</code> beside the project file once all of it has arrived. It travels through the project's folder, or through the relay in sealed pieces that the relay cannot read and does not keep. A machine takes files only after its user said so there, as for runs.</p></li>
+<li><p><strong>PDFs.</strong> A Prompt step asks about a PDF of any length some pages at a time, with any model. A PDF given whole goes to Claude as the file, with its tables, diagrams and scans.</p></li>
+<li><p><strong>From the command line</strong>: <code>dbdb-cli run-job project.json "&lt;job&gt;" [--dry-run] [--env NAME] [--param NAME=VALUE]</code>, with exit code 1 when the data has issues and 2 when a sub-job failed.</p></li>
+</ul>
+<h3 id="bring-a-talaxie-project-along">Bring a Talaxie project along</h3>
+<p>File &gt; Import Talaxie project… in the app, or <code>dbdb-cli import-talaxie</code>, reads a Talaxie or Talend Open Studio project folder, or a single job, and adds it to a dbdb project:</p>
+<pre class="sh"><code>dbdb-cli import-talaxie path/to/TALAXIE_PROJECT migrated.json
+dbdb-cli run-job migrated.json load_chapters</code></pre>
+<ul>
+<li>Database connections and delimited, positional and Excel file definitions become sources. Positional layouts and generic schemas become schema files beside the project.</li>
+<li>Each job becomes a dbdb job. The common components are converted: file inputs and outputs (delimited, positional, Excel, JSON), the database inputs dbdb reads, PostgreSQL, SQL Server and SQLite outputs, <code>tFilterRow</code> with its rejected rows, <code>tSortRow</code>, <code>tUniqRow</code>, <code>tUnite</code>, <code>tJoin</code>, <code>tFilterColumns</code>, <code>tAggregateRow</code>, <code>tMap</code>, and <code>tRunJob</code> with its order.</li>
+<li>Of a <code>tMap</code>, lookups, the Var table, output filters, the rejects output and the column expressions are carried over. Java expressions are rewritten as dbdb expressions where they have a counterpart: comparisons, logic, arithmetic, the usual <code>String</code> methods and the common <code>StringHandling</code>, <code>Relational</code> and <code>TalendDate</code> routines.</li>
+<li>Context variables become project parameters, and every context other than the default becomes an environment.</li>
+<li>Passwords are never imported. A database server is read through an environment variable, and the report says what to set it to.</li>
+</ul>
+<p>The import prints a report naming every component: what it became, what differs and is worth checking, and what was not converted, such as Java components, expressions without a counterpart and triggers like Run if. A step that follows an unconverted component is left without an input, so the job stops there instead of writing wrong data. <code>--dry-run</code>, or Preview in the app, prints the report without writing anything. The importer is written from the format of the project files; no Talaxie code is used. So far it has been tested on hand-made samples, not yet on a real project export.</p>
+<figure>
+<img src="images/talaxie-import.png" alt="Importing a Talaxie project: the report of what was converted and what was not" />
+<figcaption aria-hidden="true">Importing a Talaxie project: the report of what was converted and what was not</figcaption>
+</figure>
+<p>The other way works too: File &gt; Export Talaxie project… in the app, or <code>dbdb-cli export-talaxie project.json path/to/PROJECT</code>, writes the jobs as a Talaxie project folder. Steps become components, parameters become context variables, and expressions become calls to a Java routine that goes with the export and does what dbdb's functions do. Passwords are not exported, and the report names what was not converted. It has been tested by importing its own files again, not yet in a Talaxie Studio.</p>
+<h3 id="write-sql-with-help">Write SQL with help</h3>
+<p>The Query pane is an SQL editor for SQLite, PostgreSQL, SQL Server and MariaDB / MySQL sources. It underlines parse errors in place and points out constructs that another database would reject (<code>TOP</code>, <code>LIMIT</code>, <code>::</code>, <code>ILIKE</code>, <code>NVL</code> and others) with the portable alternative. It suggests tables and columns as you type, and tables and columns drag in from a schema tree, which a filter narrows to the tables you name. Preview runs the query into a Browser below the editor without touching the project: the first 1000 rows, with the time it took and buttons for more, and Cancel for a query that runs too long. The pane only reads; a statement that would change data is refused.</p>
+<p>"To Query" turns what you have into SQL: the SQL typed into a source dialog, or a Browser view with its joins, filters, sorting and hidden columns.</p>
+<figure class="wide">
+<img src="images/query.png" alt="The Query pane: a query with window functions, checked against six SQL dialects, and its first 1000 rows" />
+<figcaption aria-hidden="true">The Query pane: a query with window functions, checked against six SQL dialects, and its first 1000 rows</figcaption>
+</figure>
+<p>An optional Blocks view shows the same query as clauses with typed holes. A hole says what it takes: a table, a value, a condition. Dropping a column of a table the query does not use yet joins that table on its foreign key. The query always runs, because parts that still have holes are left out of the SQL.</p>
+<figure>
+<img src="images/query-blocks.png" alt="The Blocks view: a join, a filter and an empty ORDER BY hole" />
+<figcaption aria-hidden="true">The Blocks view: a join, a filter and an empty ORDER BY hole</figcaption>
+</figure>
+<h3 id="see-how-the-inputs-hang-together">See how the inputs hang together</h3>
+<p>The Graph pane draws the sources of a project, or every table of one database, as boxes of columns joined by their keys. Lines are coloured by where a key comes from: the database, a key file, or a relation you declared. Guesses from column names are dashed. Drag from one column to another to declare a relation.</p>
+<figure class="wide">
+<img src="images/graph.png" alt="The Graph pane: the Showcase&#39;s Excel sheets, SQLite tables and CSV file, and the relations between them" />
+<figcaption aria-hidden="true">The Graph pane: the Showcase's Excel sheets, SQLite tables and CSV file, and the relations between them</figcaption>
+</figure>
+<ul>
+<li><strong>Large databases.</strong> The graph zooms and scrolls; a click on a line keeps it lit and takes you to its tables. Find looks for text in table and column names and goes to each place. Tables and Rules choose which tables show: by hand, or by what they are, such as "has a column containing <code>customer</code>", with the tables linked to them up to five links away.</li>
+<li><strong>Key files</strong> add the keys a database does not declare and describe its tables and columns. They are <a href="https://datapackage.org">Frictionless Data Package</a> descriptors, a key can depend on another column (<code>owner_type</code> says which table it points to), and a key file can hold a whole database's catalog, so a large database opens from the file instead of being read first. Blocks and the assistants use their keys too.</li>
+<li><strong>The Data Dictionary keys pane</strong> changes key files: descriptions, primary keys and foreign keys, table by table, each key under the file it is in. A change rewrites only that table, so the rest of the file stays as it was, to the letter. <code>dbdb-cli edit-keys</code> makes the same changes.</li>
+<li><strong>What is this?</strong> The pointer over a table, a column or a line says what it is and who says so: the database, a key file, a relation of the project or a guess.</li>
+<li><strong>Export</strong> writes what the graph shows as a key file, for another project or another tool.</li>
+</ul>
+<h3 id="compare-the-target-with-the-source">Compare the target with the source</h3>
+<p>A comparison answers the question after a load: does the target hold the same rows as the source? It matches the rows of two sources by key columns and shows the rows that differ, with both values, and the rows only one side has. Columns can be paired across names or skipped, and numbers compared with a tolerance, such as <code>0.01</code> or <code>2%</code>. It only reads. <code>dbdb-cli compare project.json "&lt;name&gt;"</code> exits with 1 on differences, so a script can stop on them.</p>
+<figure>
+<img src="images/compare.png" alt="The Compare pane: the fleet in the database against the authority&#39;s register" />
+<figcaption aria-hidden="true">The Compare pane: the fleet in the database against the authority's register</figcaption>
+</figure>
+<h3 id="notes-in-the-project">Notes in the project</h3>
+<p>A project carries its own notes: pages of Markdown, in folders, for what was decided and what to check before a load. They are written the way Obsidian writes them (links between notes, callouts, tags, task boxes) and shown as source, split, edited in place or read. They travel with the project file, and every change to them can be undone.</p>
+<p>The rest of the app sends to them: a right-click on picked cells, a query, a source, a table in the Graph, a step, a run or an answer of the Assistant offers "Send to new note" and "Append to", and the note gets it as a table, a block of SQL or a short description.</p>
+<figure>
+<img src="images/notes.png" alt="A note in the Showcase: the checklist for a load, with links to the other notes" />
+<figcaption aria-hidden="true">A note in the Showcase: the checklist for a load, with links to the other notes</figcaption>
+</figure>
+<h3 id="an-assistant-in-the-app">An assistant in the app</h3>
+<p>The Assistant pane talks with a model on Ollama or llama.cpp on your own machine, with Claude (with an API key, or through Claude Code with a Claude plan) or with GitHub Copilot. It reads the open project and its databases with the same tools the MCP server offers, writes queries into a Query pane, and changes the project only after asking. It can guess the keys a database does not declare from a sample of its rows.</p>
+<p>Who answers is a connector, set up in the Connectors pane and kept in the project: a kind of model, your own instructions sent ahead of every conversation, and the machines it is for. A connector names the environment variable that holds its key, never the key, so the shared project holds no secret. The Prompt step of a job asks through the same connectors, and the same pane holds the connectors to databases.</p>
+<figure>
+<img src="images/assistant.png" alt="The Assistant pane beside the query it wrote" />
+<figcaption aria-hidden="true">The Assistant pane beside the query it wrote</figcaption>
+</figure>
+<h3 id="work-on-one-project-together">Work on one project together</h3>
+<p>Two windows of the app, or the app on several computers that reach the same folder, can have one project open at once: what one changes shows in the others within a second, two people can type into the same note, and undo takes back only your own changes. The changes travel through a folder next to the project file, with no server. People who do not share a folder can share a project through a relay that one of them runs (<code>dbdb-cli relay</code>); the relay passes the changes on and cannot read them. Sharing is off until turned on, and the app asks before it connects to a relay. The browser build joins a relay too, and keeps the project in the browser's storage, so that a reloaded page has it even while the relay is away.</p>
+<p>Copies on the desktop can also connect to each other, so that a change goes straight from the copy that made it to the others: File &gt; Connect directly to the other copies, or <code>dbdb-cli runner --direct</code>. It is off until turned on, it adds to the sync folder and the relay without replacing them, and it asks no server of anyone else. By itself it works where one copy can reach the other, on one network or over a VPN. Copies behind two different routers meet at the project's own relay when it is started with <code>dbdb-cli relay --iroh</code>. With File &gt; Announce this copy in the local network, copies in one network also find each other while the relay cannot be reached.</p>
+<p>The window says who else has the project open and which pane each works in, such as <em>anna on laptop · Job designer · load</em>. When two copies change the very same setting at the same moment, the later change stands, and the copy whose change gave way is told which setting it was. A project saved by a newer dbdb is left alone by an older one, which says so instead of dropping what it does not know. A project can be open on Windows and on macOS or Linux at once: a full path written on the other kind of computer is kept as it was written, and the project checks say so where a path will not work on both.</p>
+<p>A shared project has one permission, the project file: whoever has it can change every job, and a machine that runs jobs for others runs them as its own user. Opening a project starts nothing, and a machine runs for others only after its user said so there. So treat the project file of a shared project like an administrator password for every machine that runs its jobs.</p>
+<h3 id="a-workspace-that-stays-out-of-the-way">A workspace that stays out of the way</h3>
+<ul>
+<li>Panes that split, stack and rearrange by dragging, in named workspaces that are kept between runs. On the desktop a pane can move to a window of its own, for a second monitor.</li>
+<li>Undo and redo for every change to a project. Each change is a small JSON command, shown in a Command log pane. The CLI and the MCP server speak the same commands.</li>
+<li>Command search on F3, and keyboard shortcuts you can change for any command. Ctrl+Right and Ctrl+Down put a pane in a panel of its own, Ctrl+M shows only its panel, Ctrl+G adds a Graph pane, Ctrl+Shift+V opens the vault and Ctrl+L locks it. Tabs can be named, and a double click maximizes a panel.</li>
+<li>Pane search on Ctrl+S: type a few letters of a tab's name and Enter shows that workspace with the pane in front, also in another window.</li>
+<li>New pane: select from list, in the View menu, opens the same box over the kinds of pane you left switched on under View &gt; Modules.</li>
+<li>A project can keep its workspaces for whoever wants them: View &gt; Write layout to project file, and on the other side Load project layouts when opening. Nothing about your window goes into a project unless you ask.</li>
+<li>View &gt; Modules hides the pane types you never use, such as Assistant or Compare, and its grips let you drag the ones you use most to the top of the lists that offer them.</li>
+<li>The whole interface zooms with Ctrl and the wheel, Ctrl with <code>+</code>, <code>-</code> and <code>0</code>, or View &gt; Zoom, and the zoom is kept between runs.</li>
+<li>Dark and light themes, and Terminus as an optional sharp, unsmoothed font for the whole app. With Terminus the zoom stays at 100 %, where its pixels are sharp.</li>
+<li>An app icon for the windows and the taskbar or dock, and on Linux a menu entry that comes in the archive.</li>
+</ul>
+<h3 id="in-a-web-browser">In a web browser</h3>
+<p>The browser build is the whole app as WebAssembly. Unpack it onto any web server, for example:</p>
+<pre class="sh"><code>unzip dbdb-*-wasm32.zip &amp;&amp; python3 -m http.server -d dbdb-*-wasm32</code></pre>
+<p>Files are read inside the page and nothing is uploaded. Excel, ODS, SQLite, MS Access, CSV, JSON, Parquet and fixed-width sources work as on the desktop, and so do the file outputs. A REST API or an OData service is read from a page only where it allows calls from the page's address, which most do not.</p>
+<p>A page cannot open a database connection itself, so PostgreSQL, SQL Server, MariaDB and MySQL are reached through a small WebSocket-to-TCP proxy, on your own machine or beside the database. The proxy knows nothing about dbdb; <a href="https://github.com/novnc/websockify">websockify</a> and <a href="https://github.com/vi/websocat">websocat</a> both work:</p>
+<pre class="sh"><code>websockify localhost:6432 localhost:5432
+websocat --binary ws-l:127.0.0.1:6432 tcp:localhost:5432</code></pre>
+<p>You do not have to remember these: type a connection into a source, and the app shows both commands for that database, ready to copy, and a button that adds the proxy to the connection, as <code>postgresql://reader:secret@localhost/parts?ws_proxy=ws://localhost:6432</code>. A proxy on another machine is named with <code>wss://</code> and a certificate. The desktop app ignores <code>ws_proxy</code> and connects directly, so one project works in both.</p>
+<p>A project is opened by its folder (File &gt; Open project folder…), and in Chromium browsers the app saves and writes output files back into that folder, and after a reload reopens it with one click. In Firefox and Safari files are downloaded instead. The command line and the MCP server are not part of the browser build.</p>
+<h3 id="from-an-ai-assistant">From an AI assistant</h3>
+<p>An assistant can build a project for you: give it the inputs and say what should come out. From version 0.14.0 the <code>dbdb-cli</code> binary is all it needs besides your files, because the binary carries its own instructions:</p>
+<pre class="sh"><code>dbdb-cli guide                  # how to build a project, the file format, every command
+dbdb-cli validate project.json  # names every problem; reads the sources, dry-runs the jobs
+dbdb-cli preview project.json --job &quot;Export parts&quot; --step 4   # the rows at any step</code></pre>
+<p>So any assistant that can run a program will do: Claude Code, a chat or project with a sandbox, another model's agent. It reads the guide, looks at your files, writes the project, checks it and tells you what it found.</p>
+<p><code>dbdb-cli mcp</code> offers the same as a <a href="https://modelcontextprotocol.io">Model Context Protocol</a> server. An assistant such as Claude can read the guide, list tables, preview data, check SQL against each dialect, read schemas, check fixed-width files, import a Talaxie project, change the project, validate it, look at the rows of any step and run jobs. <code>--read-only</code> limits it to looking and to dry runs. Database locations given as <code>env:VAR</code> keep the password in the environment, where the assistant never sees it.</p>
+<pre class="sh"><code>claude mcp add dbdb -- dbdb-cli mcp --project /path/to/project.json</code></pre>
+<h4 id="what-to-ask-for">What to ask for</h4>
+<p>The assistant learns dbdb from the guide, so the request does not have to explain it. What the request has to carry is what no input file says: which outputs there are, which codes translate to which, what is out of scope, and what happens to rows that do not fit. Anything you leave out, the assistant decides for you.</p>
+<p>This prompt asks for what the Showcase below does, given only the binary and the Showcase's <code>Inputs</code> folder, without its project file:</p>
+<pre class="text"><code>You have ./dbdb-cli and a folder Inputs/. Run `./dbdb-cli guide` first and
+follow it; read `guide expressions` and `guide parameters` before writing
+jobs. Do not write project JSON from memory of other tools.
+
+Goal: a dbdb project, project.json in this folder, that produces one
+fixed-width transfer file per layout in Inputs/schemas/*.xml, for the
+operator described by the inputs. The schema files are the specification:
+column names, widths, keys, mandatory columns, and the comment on each
+column says what it must hold (`./dbdb-cli schema FILE` prints them).
+
+Inputs: master_data.xlsx (master data kept by hand), utilization.sqlite
+(the operations system), airports.csv (a reference list). Look at every
+sheet and table before designing anything.
+
+Business rules:
+- XATA: only the chapters for fixed-wing turboprops; titles in capitals,
+  cut to the column width; one row per chapter.
+- XADDRESS: the address list, plus every airport as an address.
+- XAC, XACDAY: aircraft types use the master data&#39;s codes, not the ICAO
+  designators of the operations system; the Type mapping sheet translates.
+  Stations are ICAO codes; the operations system has IATA codes.
+- Dates are DD.MM.YYYY in every transfer file.
+- Cancelled legs are not utilization.
+
+Conventions:
+- One job per transfer file, named after its layout, plus a job
+  &quot;Run everything&quot; that runs them one after another and stops on warnings.
+- Outputs go to Outputs/${exportsDestination}/, a parameter that is
+  dataLoad_001 unless a run says otherwise. The operator&#39;s code is a
+  parameter too.
+- Rows left out on purpose, and rows that fail a check, go to a CSV file
+  under rejected/ with the reason. Never drop rows silently.
+- Add project rules for every format the layouts imply: the shape of
+  codes, date formats, allowed values, columns that are mandatory only in
+  some cases.
+- Lay the steps out left to right, so that a person can read each job in
+  the app.
+- Use a query as a source where one database can do the join or the
+  running total itself.
+
+Working method: build one job at a time. After each, run `validate` and
+preview its steps; fix it until `validate` reports 0 errors and 0
+warnings, or stop and tell me why a warning is right. Where a rule above
+is ambiguous or the data contradicts it, do not guess: write the question
+down, take the cautious reading, and mark it in your report.
+
+Deliver: project.json; the Outputs/ of a real run of &quot;Run everything&quot;;
+and a report that says, for each job, what it reads, the rows in and out,
+what was rejected and why, and every assumption you made.</code></pre>
+<p>The schema files do most of the specifying, since their column comments say what each column holds. "Never drop rows silently" and "do not guess" are what make the result something to sign off, and <code>validate</code> with 0 errors and 0 warnings tells the assistant when it is done. For your own migration keep the skeleton and replace the goal, the business rules and the conventions. Through MCP, start with "Use the dbdb tools; call <code>guide</code> first" instead.</p>
+<p>The prompt has not yet been tried against a fresh assistant and compared with the Showcase's outputs; take it as a starting point.</p>
+<h2 id="the-showcase">The showcase</h2>
+<p>The Showcase is a project that is ready to run: the master data and one month of flying of an invented ATR 72 operator, Fantasy Flight Inc., turned into the data transfer files a maintenance system would import.</p>
+<p>It reads three kinds of sources that do not agree with each other, which is the point:</p>
+<ul>
+<li>an <strong>Excel workbook</strong> of master data kept by hand, eight sheets of it;</li>
+<li>an <strong>SQLite database</strong> from the operations system, with the fleet and 1,087 flight legs;</li>
+<li>a <strong>CSV file</strong> of the 10,668 airports of the world that have an ICAO code;</li>
+<li>a <strong>CSV register</strong> of the same aircraft from the authority, which does not quite agree with the database.</li>
+</ul>
+<p>The workbook names aircraft types as the type certificate does, the database uses ICAO designators. The database names stations by IATA code, the transfer files want ICAO codes. Dates and times are written differently on each side. The jobs sort that out.</p>
+<div class="table">
+<table>
+<thead>
+<tr>
+<th>Job</th>
+<th>What is worth a look</th>
+<th style="text-align: right;">Rows</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>01_01 XATA chapters</td>
+<td>a Filter condition; the 33 chapters it leaves out go to a file from its <code>rejected</code> port; an expression cuts titles and puts them in capitals</td>
+<td style="text-align: right;">272</td>
+</tr>
+<tr>
+<td>01_06 XACT aircraft types</td>
+<td>map columns, flags as fixed text</td>
+<td style="text-align: right;">2</td>
+</tr>
+<tr>
+<td>01_30 XREQ requirements</td>
+<td>sort and map</td>
+<td style="text-align: right;">17</td>
+</tr>
+<tr>
+<td>02_01 XADDRESS addresses</td>
+<td>two inputs mapped to one layout and appended; <code>left(name, 36)</code> fits names to the column</td>
+<td style="text-align: right;">10,679</td>
+</tr>
+<tr>
+<td>02_05 XADPROP address properties</td>
+<td>Aggregate counts departures per station, a join finds the airport, an expression writes both into the remarks</td>
+<td style="text-align: right;">14</td>
+</tr>
+<tr>
+<td>05_01 XAC aircraft</td>
+<td>five joins; Aggregate and expressions work out daily hours and cycles; parameters used in expressions</td>
+<td style="text-align: right;">6</td>
+</tr>
+<tr>
+<td>05_09 XACDAY utilization</td>
+<td>the same lookup joined twice; two legs to an airfield missing from the airport list fail a rule and go to a rejects file with the reason</td>
+<td style="text-align: right;">1,065</td>
+</tr>
+<tr>
+<td>05_12 XPANEL panels</td>
+<td>a join that fans out</td>
+<td style="text-align: right;">52</td>
+</tr>
+<tr>
+<td>Utilization report</td>
+<td>Aggregate with six kinds of totals, expressions for hours and averages, a Filter for the busiest aircraft</td>
+<td style="text-align: right;">6</td>
+</tr>
+<tr>
+<td><strong>Run everything</strong></td>
+<td>the nine jobs above as sub-jobs, in series</td>
+<td style="text-align: right;"></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><em>Run everything</em> writes eight fixed-width transfer files, an Excel report and a CSV of the busiest aircraft into <code>Outputs/dataLoad_001/</code>, and the rejected rows into a <code>rejected</code> folder beside them. The folder name is the parameter <code>exportsDestination</code>; the environment <code>secondLoad</code> changes it to <code>dataLoad_002</code>. The report's file name carries the day of the run, from a formula in its path. The transfer files stop the series on warnings, since a file with issues should not reach the system importing it.</p>
+<p>The project also has five views for the Browser, thirteen relations for the Graph pane, two queries to open in the Query pane, and rules that check what the jobs write. Beyond the jobs:</p>
+<ul>
+<li><strong>Notes</strong>: <em>Start here</em> is a checklist for a load, with links to notes on the naming differences, the technical log, the rejected rows, the comparison and the history of the loads.</li>
+<li><strong>A comparison</strong>: <em>Fleet against the register</em> puts the database's fleet beside the authority's register, with three columns paired by hand. It finds one aircraft with another number of seats, one only in the database and one only in the register.</li>
+<li><strong>Step descriptions</strong>: ten steps say what they are for, some of them on the canvas.</li>
+<li><strong>A key file</strong> (<code>Inputs/keys.json</code>) that describes the database's tables and columns and adds the keys it does not declare, one of them depending on another column.</li>
+</ul>
+<p>To try it, ask the maintainer for <code>Showcase.zip</code>, unpack it, and open <code>Showcase/Showcase.json</code> in the app, or run it from the command line:</p>
+<pre class="sh"><code>cd Showcase
+dbdb-cli run-job Showcase.json &quot;Run everything&quot;                    # writes into Outputs/dataLoad_001/
+dbdb-cli run-job Showcase.json &quot;Run everything&quot; --env secondLoad   # into Outputs/dataLoad_002/
+dbdb-cli run-job Showcase.json &quot;Run everything&quot; --dry-run          # only checks
+dbdb-cli compare Showcase.json &quot;Fleet against the register&quot;        # exits with 1: three differences</code></pre>
+<p>The Showcase needs dbdb 0.30.0 or newer. Its <code>README.md</code> says what is in it, and which parts of the data are invented and which are real.</p>
+<h2 id="how-the-parts-fit-together">How the parts fit together</h2>
+<p>dbdb is five building blocks, and each does one thing:</p>
+<figure class="wide scroll">
+<img src="images/modules.svg" alt="The parts of dbdb: two programs on top of three libraries, the files, databases and web APIs they reach, and the three ways copies of a project reach each other" />
+<figcaption aria-hidden="true">The parts of dbdb: two programs on top of three libraries, the files, databases and web APIs they reach, and the three ways copies of a project reach each other</figcaption>
+</figure>
+<ul>
+<li><strong><code>dbdb-core</code></strong> is the engine. Reading sources, running jobs, the checks, expressions, comparisons, notes, connectors, the vault, schedules and the Talaxie import and export all live here, so they behave the same wherever they are called from. A database, a REST API or an OData service is reached through a source's own connection or through one kept in Connectors, which is also where an API's key is. Every change to a project is a small JSON command, which is how undo works and why the app, the command line and an assistant can all do the same things.</li>
+<li><strong><code>dbdb-app</code></strong> and <strong><code>dbdb-cli</code></strong> are the two programs. They only ask the engine for things, and neither needs the other. The browser build is <code>dbdb-app</code> again, compiled to WebAssembly.</li>
+<li><strong><code>dbdb-assist</code></strong> holds what an assistant works with: the tools, the guide and the project checks. The Assistant pane and the MCP server both use it, so an assistant inside the app and one outside cannot drift apart. It is also what asks a model, for the Assistant pane and for a job's Prompt steps, each through a connector.</li>
+<li><strong><code>dbdb-sync</code></strong> is what lets several copies of dbdb work on one project at once. It keeps the project as a CRDT document, so that what two copies change at the same moment is both kept, and passes the changes on three ways: through a folder next to the project file, through a relay that one of you runs with <code>dbdb-cli relay</code>, and, where it is turned on, through a direct link from one desktop copy to another. Changes are sealed with a key from the project file before they leave, so the relay passes them on without being able to read them, and a direct link lets in only a copy that has that key. The same paths tell each copy who else has the project open and in which pane they are working, and carry a run that one copy asks another machine to do. A file that a job pushes to another machine goes through the folder or the relay, and is kept nowhere on the way.</li>
+</ul>
+<p>Nothing here is a server that dbdb needs: the sync folder is an ordinary folder, the relay is optional and yours, and a direct link goes from copy to copy.</p>
+<h2 id="standing-on-the-shoulders-of-giants">Standing on the shoulders of giants</h2>
+<p>dbdb is one program to unpack, but it is not the work of one project. Its <code>Cargo.lock</code> names <strong>925 Rust libraries</strong> written by other people, and <strong>792</strong> of them are compiled into the programs you receive; the rest are build tools, tests and code for other systems. Every one is open source, most under the MIT or Apache 2.0 licence. A few carry most of the weight:</p>
+<!-- LIBRARY COUNT: the numbers above are from main after release 0.42.0.
+     916 is the packages in Cargo.lock that have a source; 783 is the
+     number of components in crates/dbdb-core/third-party.json, which
+     tools/third-party.py writes. -->
+<div class="table">
+<table>
+<thead>
+<tr>
+<th></th>
+<th>Project</th>
+<th>What dbdb uses it for</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://arrow.apache.org/"><img src="images/logos/arrow.png" alt="Apache Arrow" /></a></td>
+<td><a href="https://arrow.apache.org/">Apache Arrow</a></td>
+<td>the columns that rows travel in while a job runs</td>
+</tr>
+<tr>
+<td><a href="https://parquet.apache.org/"><img src="images/logos/parquet.png" alt="Apache Parquet" /></a></td>
+<td><a href="https://parquet.apache.org/">Apache Parquet</a></td>
+<td>reading and writing Parquet files</td>
+</tr>
+<tr>
+<td><a href="https://www.sqlite.org/"><img src="images/logos/sqlite.png" alt="SQLite" /></a></td>
+<td><a href="https://www.sqlite.org/">SQLite</a></td>
+<td>SQLite sources and outputs, and database snapshots; it is compiled in, also in the browser build</td>
+</tr>
+<tr>
+<td><a href="https://loro.dev/"><img src="images/logos/loro.png" alt="Loro" /></a></td>
+<td><a href="https://loro.dev/">Loro</a></td>
+<td>the CRDT document that keeps open copies of a project the same</td>
+</tr>
+<tr>
+<td><a href="https://www.iroh.computer/"><img src="images/logos/iroh.png" alt="iroh" /></a></td>
+<td><a href="https://www.iroh.computer/">iroh</a></td>
+<td>the encrypted connection between the app and a relay, and between copies that connect directly</td>
+</tr>
+<tr>
+<td><a href="https://webassembly.org/"><img src="images/logos/webassembly.png" alt="WebAssembly" /></a></td>
+<td><a href="https://webassembly.org/">WebAssembly</a></td>
+<td>the whole app in a web browser</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>And many more without a picture here:</p>
+<ul>
+<li><strong><a href="https://www.rust-lang.org/">Rust</a></strong> itself, and <strong><a href="https://github.com/emilk/egui">egui</a></strong> with <code>eframe</code>, <code>egui_tiles</code> and <code>wgpu</code> for every window, pane and pixel of the app.</li>
+<li><strong>Databases</strong>: <code>tokio-postgres</code> for PostgreSQL, <code>tiberius</code> for SQL Server, Oracle's own <code>oracledb</code> driver, and <code>jetdb</code> for MS Access files. The MariaDB / MySQL client is dbdb's own.</li>
+<li><strong>Files</strong>: <code>calamine</code> and <code>rust_xlsxwriter</code> for Excel and ODS, <code>csv</code>, <code>quick-xml</code>, and <code>encoding_rs</code> for text that is not UTF-8.</li>
+<li><strong>SQL</strong>: <code>sqlparser</code> reads a query in each database's dialect for the Query pane.</li>
+<li><strong>Underneath</strong>: <code>tokio</code> for everything that waits, <code>rustls</code> for encrypted connections, <code>serde</code> for the project file, <code>rust_decimal</code> and <code>chrono</code> for exact numbers and dates.</li>
+</ul>
+<p>The full list, with every licence text, is in the app under Help &gt; Licences…, and <code>dbdb-cli licences --third-party</code> prints it.</p>
+<p><small>Apache®, Apache Arrow, Arrow, Apache Parquet, Parquet and their logos are either registered trademarks or trademarks of the Apache Software Foundation in the United States and/or other countries. SQLite is a registered trademark of Hipp, Wyrick &amp; Company, Inc. The other names and logos belong to their projects. They are shown to say what dbdb is built with; none of these projects is affiliated with dbdb or endorses it.</small></p>
+<h2 id="download">Download</h2>
+<p>dbdb is downloaded from the releases of its public repository, <a href="https://github.com/koziserek/dbdb">github.com/koziserek/dbdb</a>, which holds the programs and the issues, not the source.</p>
+<!-- RELEASE TABLE: docs/intro/build-html.sh --release makes this section
+     anew for a release, from the release's files. By hand: replace 0.42.0
+     everywhere in this section, then the date, the sizes and the checksums
+     (they are the lines of the release's SHA256SUMS file). Add or remove
+     rows to match the files the release has. -->
+<p>Version <strong>0.42.0</strong>, released on 21 November 2026. <a href="https://github.com/koziserek/dbdb/releases/tag/v0.42.0">Release notes</a> · <a href="https://github.com/koziserek/dbdb/releases">all releases</a></p>
+<div class="table">
+<table>
+<thead>
+<tr>
+<th>File</th>
+<th>For</th>
+<th style="text-align: right;">Size</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://github.com/koziserek/dbdb/releases/download/v0.42.0/dbdb-0.42.0-linux-x86_64.flatpak">dbdb-0.42.0-linux-x86_64.flatpak</a></td>
+<td>Linux, x86_64, as a Flatpak</td>
+<td style="text-align: right;">39.9 MB</td>
+</tr>
+<tr>
+<td><a href="https://github.com/koziserek/dbdb/releases/download/v0.42.0/dbdb-0.42.0-linux-x86_64.tar.xz">dbdb-0.42.0-linux-x86_64.tar.xz</a></td>
+<td>Linux, x86_64</td>
+<td style="text-align: right;">36.3 MB</td>
+</tr>
+<tr>
+<td><a href="https://github.com/koziserek/dbdb/releases/download/v0.42.0/dbdb-0.42.0-windows-x86_64.zip">dbdb-0.42.0-windows-x86_64.zip</a></td>
+<td>Windows, x86_64</td>
+<td style="text-align: right;">54.6 MB</td>
+</tr>
+<tr>
+<td><a href="https://github.com/koziserek/dbdb/releases/download/v0.42.0/dbdb-0.42.0-macos-arm64.tar.xz">dbdb-0.42.0-macos-arm64.tar.xz</a></td>
+<td>macOS, Apple Silicon</td>
+<td style="text-align: right;">22.1 MB</td>
+</tr>
+<tr>
+<td><a href="https://github.com/koziserek/dbdb/releases/download/v0.42.0/dbdb-0.42.0-wasm32.zip">dbdb-0.42.0-wasm32.zip</a></td>
+<td>the app for a web browser, on any system</td>
+<td style="text-align: right;">19.0 MB</td>
+</tr>
+<tr>
+<td><a href="https://github.com/koziserek/dbdb/releases/download/v0.42.0/SHA256SUMS">SHA256SUMS</a></td>
+<td>checksums of the files above</td>
+<td style="text-align: right;"></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>SHA-256 checksums:</p>
+<pre><code>85eaa86ecabe7075b31ba0e229115ff2d635fcce860d9aca057909206ccaf855  dbdb-0.42.0-linux-x86_64.flatpak
+6aa69974648903f476356f02dd853cf568554a7aeb161a129abd628b98a4c1de  dbdb-0.42.0-linux-x86_64.tar.xz
+3acc7d0a467c19a2ab43f09c08b86b957fe62887d26afecace61b00a4e8d1dd8  dbdb-0.42.0-windows-x86_64.zip
+b5a922cb55dd3c98f1ca84bb28e116c5c86e76f6b1565806481735324f1f0de6  dbdb-0.42.0-macos-arm64.tar.xz
+75605724fabd2fbcc15f811d2c140af34f5aa2fb31def9c01c008d668c92f4c6  dbdb-0.42.0-wasm32.zip</code></pre>
+<!-- END RELEASE TABLE -->
+<p>The desktop archives each hold the app and <code>dbdb-cli</code>. Unpack one and run the app; there is nothing else to install.</p>
+<ul>
+<li><strong>Linux</strong>: the programs run on other distributions too, also older ones (glibc 2.31 and newer). On a Wayland desktop (GNOME, KDE), run <code>./install-desktop.sh</code> from the unpacked folder once, so that dbdb gets its icon and a menu entry. The "…" buttons next to path fields use your desktop's own file dialog; typing a path always works.</li>
+<li><strong>Flatpak</strong>: from 0.27.0 on, dbdb also comes as a Flatpak that updates with your other Flatpaks: <code>flatpak install --user https://koziserek.github.io/dbdb/dbdb.flatpakref</code>. It is not on Flathub; it comes from a signed repository of its own.</li>
+<li><strong>Nix and NixOS</strong>: <code>nix run github:koziserek/dbdb</code> starts the app and <code>nix run github:koziserek/dbdb#cli</code> the command line. The flake takes the released programs and compiles nothing.</li>
+<li><strong>Windows</strong>: unpack the zip and start <code>dbdb-app.exe</code>. The programs are not signed, so Windows may warn about an unknown publisher the first time: choose "More info", then "Run anyway".</li>
+<li><strong>macOS</strong>: the archive holds <code>dbdb.app</code>; drag it into Applications and start it like any other app. It is for Apple Silicon Macs. dbdb is not signed with an Apple Developer ID, so macOS blocks a downloaded copy the first time. Clear that once with <code>xattr -dr com.apple.quarantine /Applications/dbdb.app</code>, or try to open it and allow it under System Settings &gt; Privacy &amp; Security &gt; Open Anyway.</li>
+<li><strong>The licence and its components</strong>: the app shows them under Help &gt; Licences…, and <code>dbdb-cli licences --third-party</code> lists them on the command line.</li>
+</ul>
+<h2 id="limits-to-know-about">Limits to know about</h2>
+<p>MariaDB / MySQL, MS Access and Oracle can be read but not written to. The Oracle source is experimental: it stands on a driver that is still a beta and has been tried against one version of Oracle. The Talaxie import has been tested on hand-made samples, not yet on a project exported from Talaxie itself, and the Talaxie export has not yet been opened in a Talaxie Studio. The macOS app is for Apple Silicon only, and none of the programs is signed.</p>
+<h2 id="licence">Licence</h2>
+<p>dbdb is shareware, as in the old days: try it, pass it on, and pay when you are big enough. It is proprietary software and its source is not published. The licence is still a draft:</p>
+<ul>
+<li><strong>Free</strong> for individuals, and for organisations with no more than 10 people and no more than 5 million Swiss francs of yearly revenue, for any purpose including commercial work.</li>
+<li><strong>Paid</strong> for larger organisations after 30 days of evaluation, and for work done for them by consultants.</li>
+<li><strong>Share it</strong>: you may give anyone a complete, unchanged copy, free of charge and with its licence. Selling it, changing it, offering it as a service or reverse engineering it needs permission.</li>
+</ul>
+<p>What you make with dbdb is yours. For a commercial licence, or anything else, write to Jakub Sadowski at <a href="mailto:admin@debi.lu">admin@debi.lu</a>, or open an <a href="https://github.com/koziserek/dbdb/issues">issue</a>.</p>
+</main>
+</body>
+</html>

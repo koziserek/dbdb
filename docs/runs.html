@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Run history · dbdb</title>
+<meta name="description" content="The record every run leaves, and what it shows.">
+<style>
+:root{--bg:#fbfaf7;--fg:#1d1f21;--muted:#62666d;--line:#dcd9d2;--code:#f0eee8;--accent:#a8401a;--head:#f3f1eb}
+@media (prefers-color-scheme:dark){:root{--bg:#16181b;--fg:#e4e2dd;--muted:#9a9ea6;--line:#33373d;--code:#22252a;--accent:#f0935f;--head:#1e2125}}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font:17px/1.6 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+main{max-width:46rem;margin:0 auto;padding:2.5rem 1rem 4rem}
+h1,h2,h3{line-height:1.25;text-wrap:balance}
+h1{font-size:2.1rem;margin:0 0 .4rem}
+h2{font-size:1.5rem;margin:2.8rem 0 .8rem;padding-top:1.4rem;border-top:1px solid var(--line)}
+h3{font-size:1.15rem;margin:2rem 0 .5rem}
+p.lede{color:var(--muted);font-size:1.1rem;margin:0 0 .3rem}
+p.date{color:var(--muted);font-size:.9rem;margin:0 0 2rem}
+a{color:var(--accent);text-underline-offset:2px}
+img{max-width:100%;height:auto;border:1px solid var(--line);border-radius:6px;display:block}
+figure{margin:1.6rem 0}
+@media (min-width:52rem){figure.wide{width:min(72rem,calc(100vw - 2rem));margin-left:50%;transform:translateX(-50%)}}
+figcaption{color:var(--muted);font-size:.88rem;margin-top:.45rem;text-align:center}
+code{font:0.88em/1.45 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;background:var(--code);padding:.1em .3em;border-radius:4px}
+p code,li code{overflow-wrap:anywhere}
+pre{background:var(--code);padding:.9rem 1rem;border-radius:6px;overflow-x:auto}
+pre code{background:none;padding:0;font-size:.84rem}
+.table{overflow-x:auto;margin:1.2rem 0}
+table{border-collapse:collapse;width:100%;min-width:34rem;font-size:.93rem}
+th,td{text-align:left;vertical-align:top;padding:.45rem .7rem;border-bottom:1px solid var(--line)}
+th{background:var(--head);font-weight:600;white-space:nowrap}
+td:first-child{white-space:nowrap}
+table.wrap td:first-child{white-space:normal;overflow-wrap:anywhere}
+li{margin:.3rem 0}
+td img{width:9.5rem;height:3.6rem;object-fit:contain;background:#fff;border:1px solid var(--line);border-radius:6px}
+td:nth-child(2){white-space:nowrap}
+figure.scroll{overflow-x:auto}
+figure.scroll img{min-width:46rem}
+small{display:block;color:var(--muted);font-size:.82rem;line-height:1.5}
+</style>
+<style>
+nav.site{max-width:46rem;margin:0 auto;padding:1rem 1rem 0;display:flex;flex-wrap:wrap;gap:.3rem 1.1rem;font-size:.95rem}
+nav.site a{text-decoration:none}
+nav.site a:first-child{font-weight:700;margin-right:auto}
+td:first-child,td:nth-child(2){white-space:normal}
+dl.pages dt{margin-top:1rem;font-weight:600}
+dl.pages dd{margin:.15rem 0 0;color:var(--muted)}
+</style>
+</head>
+<body>
+<nav class="site"><a href="../">dbdb</a><a href="../docs/">Documentation</a><a href="../flatpak.html">Flatpak</a><a href="https://github.com/koziserek/dbdb/releases">Download</a><a href="https://github.com/koziserek/dbdb/issues">Issues</a></nav>
+<main>
+<h1>Run history</h1>
+<p class="lede">The record every run leaves, and what it shows.</p>
+<p>Every run of a job that writes leaves a record: one JSON file in the <code>runs</code> folder beside the project file. It is the evidence that a load ran, with what, and what it did, and it shows which step takes the time.</p>
+<p>A record is made by Run job in the app and by <code>dbdb-cli run-job</code>. A check (Check outputs, <code>--dry-run</code>) writes nothing and leaves no record. A run that fails is recorded too, with its error.</p>
+<h2 id="what-a-record-holds">What a record holds</h2>
+<ul>
+<li>the job, when it started (UTC) and how long it took</li>
+<li>how it ended: <code>ok</code>, <code>issues</code> (the checks found problems in the written data), <code>stopped</code> (a sub-job's issues stopped the series) or <code>failed</code></li>
+<li>the environment and the parameter values used</li>
+<li>for each job of the run, the job itself and then its sub-jobs: the time it took to read the sources, and for each step the rows it passed on, the rows it did not (a Filter's, or the ones an output rejected) and the step's own time. For an output step that is the time to write, and the record also has the file or table written, the number of issues and the first 100 of them</li>
+<li>the dbdb version</li>
+</ul>
+<pre class="json"><code>{
+  &quot;job&quot;: &quot;export&quot;,
+  &quot;started&quot;: &quot;2026-11-12T16:42:46Z&quot;,
+  &quot;ms&quot;: 18.3,
+  &quot;result&quot;: &quot;ok&quot;,
+  &quot;environment&quot;: &quot;production&quot;,
+  &quot;parameters&quot;: { &quot;db&quot;: &quot;env:PROD_DB&quot;, &quot;out&quot;: &quot;/srv/export&quot; },
+  &quot;dbdb&quot;: &quot;0.12.0&quot;,
+  &quot;jobs&quot;: [
+    {
+      &quot;job&quot;: &quot;export&quot;,
+      &quot;read_ms&quot;: 11.8,
+      &quot;steps&quot;: [
+        { &quot;node&quot;: 1, &quot;step&quot;: &quot;Input&quot;, &quot;source&quot;: &quot;parts&quot;, &quot;rows&quot;: 306, &quot;ms&quot;: 0.07 },
+        { &quot;node&quot;: 2, &quot;step&quot;: &quot;Filter&quot;, &quot;rows&quot;: 273, &quot;rejected&quot;: 33, &quot;ms&quot;: 0.55 },
+        { &quot;node&quot;: 3, &quot;step&quot;: &quot;File output&quot;, &quot;wrote&quot;: &quot;/srv/export/parts.csv&quot;,
+          &quot;rows&quot;: 273, &quot;ms&quot;: 1.7, &quot;issues&quot;: 0 }
+      ]
+    }
+  ]
+}</code></pre>
+<p>A password written into a connection (<code>postgresql://user:password@host</code>, <code>password=...</code>) is saved as <code>***</code>. A value such as <code>env:PROD_DB</code> is kept, since it names the variable and not what is in it.</p>
+<p>The file is named after the start time and the job, <code>runs/20261112T164246Z-export.json</code>, so the folder sorts by time. Nothing removes old records: delete or archive the files as you see fit.</p>
+<h2 id="the-runs-pane">The Runs pane</h2>
+<p>Add a Runs pane with the ➕ of any panel, or switch a pane to it. The upper part lists the runs, newest first, with time, rows written, rows rejected, issues and result; the list can be narrowed to one job. A click opens a run below: its environment and parameters, then every job with its steps. The slowest part of the run is marked.</p>
+<p>The run is one table. Every job has a line of its own with what it and its sub-jobs wrote in all: rows, rejected rows, issues and time. Its steps follow, and the sub-jobs are set in under the job that ran them, with their numbers in the same columns. Both tables are as wide as the pane. In a narrow pane the names are cut short first; point at one to read all of it.</p>
+<p>⟳ reads the folder again, for runs made meanwhile with <code>dbdb-cli</code>.</p>
+<p>A project that has not been saved has no folder to keep records in, and a browser page cannot write them: there the runs are listed until the app is closed.</p>
+</main>
+</body>
+</html>

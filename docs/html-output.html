@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>HTML output: a template filled with rows · dbdb</title>
+<meta name="description" content="A report, a list, a letter for each customer, as HTML.">
+<style>
+:root{--bg:#fbfaf7;--fg:#1d1f21;--muted:#62666d;--line:#dcd9d2;--code:#f0eee8;--accent:#a8401a;--head:#f3f1eb}
+@media (prefers-color-scheme:dark){:root{--bg:#16181b;--fg:#e4e2dd;--muted:#9a9ea6;--line:#33373d;--code:#22252a;--accent:#f0935f;--head:#1e2125}}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font:17px/1.6 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+main{max-width:46rem;margin:0 auto;padding:2.5rem 1rem 4rem}
+h1,h2,h3{line-height:1.25;text-wrap:balance}
+h1{font-size:2.1rem;margin:0 0 .4rem}
+h2{font-size:1.5rem;margin:2.8rem 0 .8rem;padding-top:1.4rem;border-top:1px solid var(--line)}
+h3{font-size:1.15rem;margin:2rem 0 .5rem}
+p.lede{color:var(--muted);font-size:1.1rem;margin:0 0 .3rem}
+p.date{color:var(--muted);font-size:.9rem;margin:0 0 2rem}
+a{color:var(--accent);text-underline-offset:2px}
+img{max-width:100%;height:auto;border:1px solid var(--line);border-radius:6px;display:block}
+figure{margin:1.6rem 0}
+@media (min-width:52rem){figure.wide{width:min(72rem,calc(100vw - 2rem));margin-left:50%;transform:translateX(-50%)}}
+figcaption{color:var(--muted);font-size:.88rem;margin-top:.45rem;text-align:center}
+code{font:0.88em/1.45 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;background:var(--code);padding:.1em .3em;border-radius:4px}
+p code,li code{overflow-wrap:anywhere}
+pre{background:var(--code);padding:.9rem 1rem;border-radius:6px;overflow-x:auto}
+pre code{background:none;padding:0;font-size:.84rem}
+.table{overflow-x:auto;margin:1.2rem 0}
+table{border-collapse:collapse;width:100%;min-width:34rem;font-size:.93rem}
+th,td{text-align:left;vertical-align:top;padding:.45rem .7rem;border-bottom:1px solid var(--line)}
+th{background:var(--head);font-weight:600;white-space:nowrap}
+td:first-child{white-space:nowrap}
+table.wrap td:first-child{white-space:normal;overflow-wrap:anywhere}
+li{margin:.3rem 0}
+td img{width:9.5rem;height:3.6rem;object-fit:contain;background:#fff;border:1px solid var(--line);border-radius:6px}
+td:nth-child(2){white-space:nowrap}
+figure.scroll{overflow-x:auto}
+figure.scroll img{min-width:46rem}
+small{display:block;color:var(--muted);font-size:.82rem;line-height:1.5}
+</style>
+<style>
+nav.site{max-width:46rem;margin:0 auto;padding:1rem 1rem 0;display:flex;flex-wrap:wrap;gap:.3rem 1.1rem;font-size:.95rem}
+nav.site a{text-decoration:none}
+nav.site a:first-child{font-weight:700;margin-right:auto}
+td:first-child,td:nth-child(2){white-space:normal}
+dl.pages dt{margin-top:1rem;font-weight:600}
+dl.pages dd{margin:.15rem 0 0;color:var(--muted)}
+</style>
+</head>
+<body>
+<nav class="site"><a href="../">dbdb</a><a href="../docs/">Documentation</a><a href="../flatpak.html">Flatpak</a><a href="https://github.com/koziserek/dbdb/releases">Download</a><a href="https://github.com/koziserek/dbdb/issues">Issues</a></nav>
+<main>
+<h1>HTML output: a template filled with rows</h1>
+<p class="lede">A report, a list, a letter for each customer, as HTML.</p>
+<p>The HTML output step writes a page instead of a table: a report, a list, a letter for each customer. You write the page as a template, and the step fills it with the rows it is given.</p>
+<pre class="json"><code>{&quot;type&quot;: &quot;html&quot;, &quot;path&quot;: &quot;Outputs/orders.html&quot;,
+ &quot;template&quot;: &quot;&lt;h1&gt;{{ rows | length }} orders&lt;/h1&gt;\n{% for r in rows %}&lt;p&gt;{{ r.id }}: {{ r.customer }}&lt;/p&gt;\n{% endfor %}&quot;}</code></pre>
+<p>The template is text in the step, so it is part of the project file. In the app it is the Template box of the step's settings, which says what is wrong with it as you type.</p>
+<h2 id="the-language">The language</h2>
+<p>Templates are written in the language of MiniJinja, which is the language of Jinja:</p>
+<div class="table">
+<table>
+<thead>
+<tr>
+<th>Written as</th>
+<th>Does</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>{{ r.customer }}</code></td>
+<td>puts a value into the page</td>
+</tr>
+<tr>
+<td><code>{{ r["Unit Price"] }}</code></td>
+<td>the same, for a column whose name is not one word</td>
+</tr>
+<tr>
+<td><code>{% for r in rows %} ... {% endfor %}</code></td>
+<td>repeats what is between for each row</td>
+</tr>
+<tr>
+<td><code>{% if r.note %} ... {% else %} ... {% endif %}</code></td>
+<td>chooses</td>
+</tr>
+<tr>
+<td><code>{{ r.name | upper }}</code></td>
+<td>passes a value through a filter</td>
+</tr>
+<tr>
+<td><code>{# ... #}</code></td>
+<td>a comment, left out of the page</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>A template is given four things:</p>
+<div class="table">
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Is</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>rows</code></td>
+<td>the rows of the file, in the order they came</td>
+</tr>
+<tr>
+<td><code>row</code></td>
+<td>the first of them, for a file that is about one thing</td>
+</tr>
+<tr>
+<td><code>columns</code></td>
+<td>the names of the columns, to write a table of any input</td>
+</tr>
+<tr>
+<td><code>params</code></td>
+<td>the run's parameters: <code>{{ params.title }}</code></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>A column is always asked of a row: <code>row.customer</code>, or <code>r.customer</code> inside <code>{% for r in rows %}</code>. <code>{{ customer }}</code> by itself is an error.</p>
+<p>A table of whatever columns arrive:</p>
+<pre class="html"><code>&lt;table&gt;
+&lt;tr&gt;{% for c in columns %}&lt;th&gt;{{ c }}&lt;/th&gt;{% endfor %}&lt;/tr&gt;
+{% for r in rows %}&lt;tr&gt;{% for c in columns %}&lt;td&gt;{{ r[c] }}&lt;/td&gt;{% endfor %}&lt;/tr&gt;
+{% endfor %}&lt;/table&gt;</code></pre>
+<h2 id="values-are-text">Values are text</h2>
+<p>As everywhere in dbdb, a value is text and an empty value is the same as a missing one. In a template an empty value prints nothing, and <code>{% if r.note %}</code> is false for it.</p>
+<p>A number is text too. <code>{{ r.qty | int }}</code> and <code>{{ r.price | float }}</code> make numbers of them, and a comparison needs that: <code>{% if r.qty | int &gt; 10 %}</code>. Work sums and other figures out in the steps before (Map columns, Aggregate), which count in exact decimals, and let the template only place them. Filters such as <code>| float</code> and <code>| sum</code> count in floating point.</p>
+<h2 id="headings-for-groups">Headings for groups</h2>
+<p><code>groupby</code> puts the rows with one value together, the groups in the order of their values:</p>
+<pre class="html"><code>{% for g in rows | groupby(&quot;customer&quot;) %}
+&lt;h2&gt;{{ g.grouper }}&lt;/h2&gt;
+&lt;ul&gt;{% for r in g.list %}&lt;li&gt;{{ r.id }}&lt;/li&gt;{% endfor %}&lt;/ul&gt;
+{% endfor %}</code></pre>
+<h2 id="one-file-or-a-file-for-each-row-or-group">One file, or a file for each row or group</h2>
+<p>Without <code>name</code> the step writes the one file <code>path</code>, from every row. With <code>name</code>, <code>path</code> is a folder and <code>name</code> is a small template for the file name of each row. The rows that get one name make one file:</p>
+<pre class="json"><code>{&quot;type&quot;: &quot;html&quot;, &quot;path&quot;: &quot;Outputs/invoices&quot;,
+ &quot;name&quot;: &quot;{{ row.customer }}/invoice-{{ row.id }}.html&quot;,
+ &quot;template&quot;: &quot;&lt;h1&gt;Invoice {{ row.id }}&lt;/h1&gt;&quot;}</code></pre>
+<ul>
+<li>A name from a key is a file for each row; a name from a customer is a file for each customer, with that customer's rows as <code>rows</code>.</li>
+<li>In the file name, <code>row</code> is the row the name is for.</li>
+<li>The name has to be a place below the folder: <code>a.html</code> or <code>2026/a.html</code>. A name that is empty, has <code>..</code> in it or starts at the root stops the run, and nothing is written.</li>
+<li>With no rows, the one file is still written (<code>rows</code> is empty and there is no <code>row</code>: test with <code>{% if rows %}</code>), and no file for each.</li>
+</ul>
+<h2 id="what-is-written-into-the-page-is-escaped">What is written into the page is escaped</h2>
+<p>A value goes into the page with <code>&amp;</code>, <code>&lt;</code>, <code>&gt;</code>, the quotes and <code>/</code> escaped, so data cannot become markup or a script. <code>{{ r.note | safe }}</code> writes a value as it is: use it only for a column that holds HTML you trust. Inside a <code>&lt;script&gt;</code> write <code>{{ r.name | tojson }}</code>, and in the query of a link <code>{{ r.name | urlencode }}</code>.</p>
+<p>The file name is not HTML and is not escaped.</p>
+<p>The page is written as UTF-8: put <code>&lt;meta charset="utf-8"&gt;</code> in its head.</p>
+<h2 id="what-a-template-cannot-do">What a template cannot do</h2>
+<p>A template reaches only what it is given. It cannot take in another template or a file: <code>{% include %}</code>, <code>{% import %}</code> and <code>{% extends %}</code> are not part of the language here. It reads no database and no address. <code>{% macro %}</code> works, for a piece used several times in one template.</p>
+<p><code>${name}</code> in a template is left as it is, since JavaScript writes its own values that way. A parameter is <code>{{ params.name }}</code>. The <code>path</code> of the step takes <code>${name}</code> as every path does.</p>
+<h2 id="errors">Errors</h2>
+<p>What can be seen without rows is said before a row is read, and by <code>dbdb-cli lint</code>: a mistake in the grammar with its line, a name the template is not given, and a column asked of <code>row</code> that the input does not have.</p>
+<pre class="text"><code>step 2 (HTML output): its template uses `row.custmer`, and its input has no such column (it has `customer`, `id`)</code></pre>
+<p>A column asked of a row inside a loop (<code>r.custmer</code>) shows when the page is written. The run stops there, with the line, instead of leaving a gap. <code>{{ r.x | default("") }}</code> asks for a gap on purpose.</p>
+<h2 id="the-run">The run</h2>
+<ul>
+<li>The step holds its rows until its input has ended, since a page is written from all of them. They count against the run's memory limit.</li>
+<li>Each file is written beside its place as <code>&lt;name&gt;.part</code>, and all take their names when every one is written. A run that fails leaves what was there.</li>
+<li>A dry run fills every template and writes nothing.</li>
+<li>The preview shows each file's name and its text.</li>
+<li>In a browser the files go into the opened folder, or come as downloads.</li>
+<li>A project with the step is written as <code>"format": 7</code>, so that an older dbdb says a newer one is needed.</li>
+</ul>
+</main>
+</body>
+</html>

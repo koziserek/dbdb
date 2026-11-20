@@ -1,0 +1,203 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Job schedule · dbdb</title>
+<meta name="description" content="Running a job by itself, at set times, on one machine.">
+<style>
+:root{--bg:#fbfaf7;--fg:#1d1f21;--muted:#62666d;--line:#dcd9d2;--code:#f0eee8;--accent:#a8401a;--head:#f3f1eb}
+@media (prefers-color-scheme:dark){:root{--bg:#16181b;--fg:#e4e2dd;--muted:#9a9ea6;--line:#33373d;--code:#22252a;--accent:#f0935f;--head:#1e2125}}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font:17px/1.6 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+main{max-width:46rem;margin:0 auto;padding:2.5rem 1rem 4rem}
+h1,h2,h3{line-height:1.25;text-wrap:balance}
+h1{font-size:2.1rem;margin:0 0 .4rem}
+h2{font-size:1.5rem;margin:2.8rem 0 .8rem;padding-top:1.4rem;border-top:1px solid var(--line)}
+h3{font-size:1.15rem;margin:2rem 0 .5rem}
+p.lede{color:var(--muted);font-size:1.1rem;margin:0 0 .3rem}
+p.date{color:var(--muted);font-size:.9rem;margin:0 0 2rem}
+a{color:var(--accent);text-underline-offset:2px}
+img{max-width:100%;height:auto;border:1px solid var(--line);border-radius:6px;display:block}
+figure{margin:1.6rem 0}
+@media (min-width:52rem){figure.wide{width:min(72rem,calc(100vw - 2rem));margin-left:50%;transform:translateX(-50%)}}
+figcaption{color:var(--muted);font-size:.88rem;margin-top:.45rem;text-align:center}
+code{font:0.88em/1.45 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;background:var(--code);padding:.1em .3em;border-radius:4px}
+p code,li code{overflow-wrap:anywhere}
+pre{background:var(--code);padding:.9rem 1rem;border-radius:6px;overflow-x:auto}
+pre code{background:none;padding:0;font-size:.84rem}
+.table{overflow-x:auto;margin:1.2rem 0}
+table{border-collapse:collapse;width:100%;min-width:34rem;font-size:.93rem}
+th,td{text-align:left;vertical-align:top;padding:.45rem .7rem;border-bottom:1px solid var(--line)}
+th{background:var(--head);font-weight:600;white-space:nowrap}
+td:first-child{white-space:nowrap}
+table.wrap td:first-child{white-space:normal;overflow-wrap:anywhere}
+li{margin:.3rem 0}
+td img{width:9.5rem;height:3.6rem;object-fit:contain;background:#fff;border:1px solid var(--line);border-radius:6px}
+td:nth-child(2){white-space:nowrap}
+figure.scroll{overflow-x:auto}
+figure.scroll img{min-width:46rem}
+small{display:block;color:var(--muted);font-size:.82rem;line-height:1.5}
+</style>
+<style>
+nav.site{max-width:46rem;margin:0 auto;padding:1rem 1rem 0;display:flex;flex-wrap:wrap;gap:.3rem 1.1rem;font-size:.95rem}
+nav.site a{text-decoration:none}
+nav.site a:first-child{font-weight:700;margin-right:auto}
+td:first-child,td:nth-child(2){white-space:normal}
+dl.pages dt{margin-top:1rem;font-weight:600}
+dl.pages dd{margin:.15rem 0 0;color:var(--muted)}
+</style>
+</head>
+<body>
+<nav class="site"><a href="../">dbdb</a><a href="../docs/">Documentation</a><a href="../flatpak.html">Flatpak</a><a href="https://github.com/koziserek/dbdb/releases">Download</a><a href="https://github.com/koziserek/dbdb/issues">Issues</a></nav>
+<main>
+<h1>Job schedule</h1>
+<p class="lede">Running a job by itself, at set times, on one machine.</p>
+<p>A schedule runs a job by itself: once, every so often, or on the days and at the times of a cron pattern. Schedules are part of the project, so every copy that opens it sees the same ones. Each names the one machine that runs it.</p>
+<p>The Job schedule pane shows them on a line of time: the runs that happened to the left of now, the times to come to the right. <code>dbdb-cli schedule list</code> and the <code>list_schedules</code> tool say the same in text and JSON.</p>
+<p>The settings of a schedule are in the panel under the timeline, the same panel the Job designer has for a step. A schedule that was just added has them on show, and so does one whose name on the timeline is clicked. The panel folds down to its tab, to leave the room to the timeline.</p>
+<h2 id="what-a-schedule-holds">What a schedule holds</h2>
+<pre class="json"><code>{
+  &quot;name&quot;: &quot;nightly load&quot;,
+  &quot;job&quot;: &quot;load_customers&quot;,
+  &quot;machine&quot;: &quot;etl-server&quot;,
+  &quot;when&quot;: {&quot;kind&quot;: &quot;cron&quot;, &quot;cron&quot;: &quot;0 2 * * *&quot;},
+  &quot;time_zone&quot;: &quot;Europe/Zurich&quot;,
+  &quot;environment&quot;: &quot;production&quot;,
+  &quot;missed&quot;: &quot;run&quot;
+}</code></pre>
+<div class="table">
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>name</code></td>
+<td>What the schedule is called</td>
+</tr>
+<tr>
+<td><code>job</code></td>
+<td>The job to run</td>
+</tr>
+<tr>
+<td><code>machine</code></td>
+<td>The machine that runs it. Empty: no machine does</td>
+</tr>
+<tr>
+<td><code>when</code></td>
+<td>When it runs; see below</td>
+</tr>
+<tr>
+<td><code>time_zone</code></td>
+<td>The clock its times are told on, such as <code>Europe/Zurich</code>. Left out, the zone of the machine that adds it</td>
+</tr>
+<tr>
+<td><code>environment</code></td>
+<td>The environment whose values the run uses; left out, the defaults</td>
+</tr>
+<tr>
+<td><code>parameters</code></td>
+<td>Values for single parameters, which win over the environment's</td>
+</tr>
+<tr>
+<td><code>missed</code></td>
+<td><code>skip</code> (the default) or <code>run</code>; see "Missed times"</td>
+</tr>
+<tr>
+<td><code>paused</code></td>
+<td><code>true</code> keeps the schedule and does not run it</td>
+</tr>
+<tr>
+<td><code>until</code></td>
+<td>The last time it may run at, as <code>2026-12-31 23:59</code> on its clock</td>
+</tr>
+<tr>
+<td><code>since</code></td>
+<td>Set by dbdb: the moment the schedule counts from. A time before it is neither run nor shown as missed</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><code>when</code> is one of three:</p>
+<div class="table">
+<table>
+<thead>
+<tr>
+<th><code>kind</code></th>
+<th>Fields</th>
+<th>Runs</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>once</code></td>
+<td><code>at</code>: <code>2026-11-20 08:00</code></td>
+<td>One time</td>
+</tr>
+<tr>
+<td><code>every</code></td>
+<td><code>every</code>, <code>unit</code> (<code>minutes</code>, <code>hours</code>, <code>days</code>, <code>weeks</code>), <code>from</code></td>
+<td>Again and again, counted from <code>from</code>. Days and weeks keep the time of day of <code>from</code></td>
+</tr>
+<tr>
+<td><code>cron</code></td>
+<td><code>cron</code>: <code>0 6 * * 1-5</code></td>
+<td>On the days and at the times of the pattern</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>A cron pattern has five fields: minute, hour, day of the month, month and day of the week. A field is <code>*</code>, a number, a range <code>1-5</code>, a list <code>1,15</code>, or any of them with a step, <code>*/10</code>. Months and days of the week can be named (<code>jan</code>, <code>mon</code>); Sunday is 0 or 7; <code>L</code> as the day of the month is its last day. When both the day of the month and the day of the week are given, a day that fits either counts. <code>@hourly</code>, <code>@daily</code>, <code>@weekly</code>, <code>@monthly</code> and <code>@yearly</code> are read too.</p>
+<p>In the pane nobody has to write a pattern: Hourly, Daily, Weekly and Monthly ask for the days and the time and write it. Custom takes any pattern, and the pane says it back in words with its next times.</p>
+<p>The commands are <code>add_schedule</code>, <code>update_schedule</code>, <code>rename_schedule</code> and <code>remove_schedule</code>, from the pane, <code>dbdb-cli apply</code> and the <code>apply_command</code> tool alike. A job that is renamed keeps its schedules.</p>
+<h2 id="the-machine">The machine</h2>
+<p>A machine is known by the computer's name, or by the <code>DBDB_MACHINE</code> variable when it is set, compared without regard to capitals. It is the same name the Connectors pane uses. The pane and <code>dbdb-cli schedule list</code> say what this machine is called.</p>
+<h2 id="who-runs-a-schedule">Who runs a schedule</h2>
+<p>A schedule runs only while a runner is there on its machine. There are three:</p>
+<ul>
+<li><strong>The app</strong>, while it is open with the project, once Run here is ticked in the pane. The tick is for this copy and this project; it is saved with the app and never in the project, so opening a shared project does not start jobs on a machine by itself. When a project with the tick is opened again, a window says that this machine runs its jobs, and offers to stop. If the project is no longer the one the tick was given for, as after it was shared with a new key, nothing runs until you say so again (<a href="sharing-and-trust.html#the-ticks-in-the-app">sharing-and-trust.md</a>). The app runs one job at a time: a schedule that comes due during a run starts when that run is over.</li>
+<li><strong><code>dbdb-cli schedule run project.json</code></strong>, without the app. It looks at the clock once a minute, reads the project file again each time, and runs what is due. It runs until it is stopped.</li>
+<li><strong><code>dbdb-cli runner project.json</code></strong>, without the app and synced with the project's other copies. It does what <code>schedule run</code> does, and follows what other copies change through the project's relay too, so a schedule changed in a browser is the one that runs without the file being carried over. It also runs what other copies ask of this machine: see <a href="remote-runs.html">remote-runs.md</a>.</li>
+</ul>
+<p><code>dbdb-cli schedule run project.json --once</code> looks once, runs what is due and exits, for a system that calls it every minute:</p>
+<pre><code># cron
+* * * * * dbdb-cli schedule run /srv/etl/project.json --once
+
+# systemd: dbdb-schedule.service
+[Service]
+ExecStart=/usr/local/bin/dbdb-cli schedule run /srv/etl/project.json
+Restart=on-failure</code></pre>
+<p>With <code>--once</code> the exit status is 1 when written data has issues and 2 when a run failed. <code>--machine NAME</code> runs the schedules of another name.</p>
+<p>The browser build shows the schedules and their runs, and can change them, but never runs one: a page that is closed keeps no time.</p>
+<h2 id="never-twice">Never twice</h2>
+<p>Before it runs a job, a runner takes the schedule's time: it makes a file in <code>runs/claims</code> beside the project, which only one program can make. The app and <code>dbdb-cli</code>, both running on one machine, then run a time once between them. So do two machines that were given the same name and work on the same folder.</p>
+<h2 id="missed-times">Missed times</h2>
+<p>A time is missed when it passed while the machine was off or asleep, or no runner was there.</p>
+<ul>
+<li><code>skip</code>, the default: it is not run. The pane shows it as missed, and Run now on it runs it after all.</li>
+<li><code>run</code>: it runs once, as soon as a runner is back. A schedule that was due five times meanwhile runs once, not five times.</li>
+</ul>
+<h2 id="time-zones-and-summer-time">Time zones and summer time</h2>
+<p>The times of a schedule are times on the clock of its time zone, so six in the morning stays six in the morning when summer time begins or ends, on whichever machine looks at it.</p>
+<ul>
+<li>A time the clock skips on the night summer time begins runs at the first moment after the gap.</li>
+<li>A time that comes twice on the night it ends runs once, the first time. A pattern for every hour runs in both hours.</li>
+</ul>
+<h2 id="past-runs">Past runs</h2>
+<p>A scheduled run leaves a run record like any other (<a href="runs.html">runs.md</a>), in the <code>runs</code> folder beside the project file, with three things more: <code>machine</code>, and under <code>scheduled</code> the schedule and the time it was due. Nothing of a run is written to the project file, which would otherwise change with every run.</p>
+<p>The line of time shows what is in that folder. Machines that share the folder see each other's runs. Copies that are synced only through a relay share the schedules but not the <code>runs</code> folder, so each sees the runs made on its own machine. A run that a copy asked another machine for is the exception: its record comes back with the answer (<a href="remote-runs.html">remote-runs.md</a>).</p>
+<h2 id="from-the-command-line-and-for-an-assistant">From the command line and for an assistant</h2>
+<pre class="sh"><code>dbdb-cli schedule list project.json                  # each schedule, its next time, last run and what it missed
+dbdb-cli schedule list project.json --json --days 14
+dbdb-cli schedule run project.json                   # run this machine&#39;s schedules until stopped
+dbdb-cli schedule run project.json --once            # look once, run what is due, exit
+dbdb-cli runner project.json                         # the same, synced, and what other copies ask of this machine</code></pre>
+<p>The <code>list_schedules</code> tool gives the JSON of <code>schedule list</code>: for each schedule what it says in words, whether this machine runs it, its next time, its last run and the times it missed, then the times to come and the latest runs.</p>
+</main>
+</body>
+</html>
