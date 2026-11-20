@@ -158,11 +158,24 @@ with the project's key, which the install above takes note of. The first
 install also fetches the libraries it runs on (the freedesktop runtime)
 from Flathub.
 
-In its sandbox dbdb reaches the network, for database servers, and your
-home folder. To use files elsewhere, open that place to it once, for
-example `flatpak override --user --filesystem=/data io.github.koziserek.dbdb`.
-An assistant program installed on your system (the Assistant pane starts
-one) is out of reach from the sandbox; use the archive or Nix for that.
+In its sandbox dbdb reaches the network, for database servers, your
+home folder, and `/nix` to read. To use files elsewhere, open that place to
+it once, for example `flatpak override --user --filesystem=/data io.github.koziserek.dbdb`.
+
+The Assistant pane can start the Claude Code or Copilot CLI installed on
+your system. The Flatpak finds it by itself in `~/.local/bin` (where
+Claude Code's own installer puts it), in your Nix profile, in a NixOS
+system or user profile, and in home-manager's. Their sign-in is in your
+home folder, which the sandbox sees. A CLI anywhere else has to be named,
+and its folder opened when it is outside your home:
+
+```sh
+flatpak override --user --env=DBDB_CLAUDE_PATH=/opt/claude/bin/claude \
+  --filesystem=/opt/claude:ro io.github.koziserek.dbdb
+```
+
+A CLI installed with npm is a Node program, and there is no Node in the
+sandbox; take Claude Code's own installer (`claude install`) instead.
 
 ### Nix and NixOS
 
