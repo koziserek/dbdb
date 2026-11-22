@@ -101,6 +101,7 @@ archive for each system:
 | `dbdb-<version>-windows-x86_64.zip` | Windows, x86_64 |
 | `dbdb-<version>-macos-arm64.tar.xz` | macOS, Apple Silicon |
 | `dbdb-<version>-wasm32.zip` | the app for a web browser, on any system |
+| `dbdb-<version>-android-arm64.apk` | [Android](#android) tablets with a mouse, a keyboard or a pen |
 | `dbdb-<version>-intro.html` | an introduction to dbdb with pictures, as one page to open in a browser |
 | `SHA256SUMS` | checksums of the files above |
 
@@ -218,6 +219,22 @@ xattr -dr com.apple.quarantine /Applications/dbdb.app
 or try to open it, dismiss the warning, and allow it under System Settings >
 Privacy & Security > Open Anyway. Do the same for `dbdb-cli` if you use it:
 `xattr -d com.apple.quarantine dbdb-cli`.
+
+### Android
+
+`dbdb-<version>-android-arm64.apk` is the same app for a tablet with
+Android 11 or newer and an ARM processor. It is the desktop's interface,
+made for a mouse, a keyboard or a pen, not for fingers or a phone.
+
+Open the file on the tablet and allow your browser or file manager to
+install apps when Android asks, or install it from a computer with `adb
+install -r dbdb-*-android-arm64.apk`. A newer release installs over the
+one you have. dbdb is not in the Play Store, so Android may warn about
+an unknown app the first time.
+
+On its first start dbdb asks for access to all files: a project names
+its files by their paths, as on a desktop. A tap with three fingers
+shows and hides the keyboard on the screen.
 
 ### In a web browser
 
