@@ -1,0 +1,1038 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Building a dbdb project: a guide for AI assistants · dbdb</title>
+<meta name="description" content="The guide an assistant reads: steps, the project file and every command. dbdb-cli guide prints it.">
+<style>
+:root{--bg:#fbfaf7;--fg:#1d1f21;--muted:#62666d;--line:#dcd9d2;--code:#f0eee8;--accent:#a8401a;--head:#f3f1eb}
+@media (prefers-color-scheme:dark){:root{--bg:#16181b;--fg:#e4e2dd;--muted:#9a9ea6;--line:#33373d;--code:#22252a;--accent:#f0935f;--head:#1e2125}}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font:17px/1.6 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+main{max-width:46rem;margin:0 auto;padding:2.5rem 1rem 4rem}
+h1,h2,h3{line-height:1.25;text-wrap:balance}
+h1{font-size:2.1rem;margin:0 0 .4rem}
+h2{font-size:1.5rem;margin:2.8rem 0 .8rem;padding-top:1.4rem;border-top:1px solid var(--line)}
+h3{font-size:1.15rem;margin:2rem 0 .5rem}
+p.lede{color:var(--muted);font-size:1.1rem;margin:0 0 .3rem}
+p.date{color:var(--muted);font-size:.9rem;margin:0 0 2rem}
+a{color:var(--accent);text-underline-offset:2px}
+img{max-width:100%;height:auto;border:1px solid var(--line);border-radius:6px;display:block}
+figure{margin:1.6rem 0}
+@media (min-width:52rem){figure.wide{width:min(72rem,calc(100vw - 2rem));margin-left:50%;transform:translateX(-50%)}}
+figcaption{color:var(--muted);font-size:.88rem;margin-top:.45rem;text-align:center}
+code{font:0.88em/1.45 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;background:var(--code);padding:.1em .3em;border-radius:4px}
+p code,li code{overflow-wrap:anywhere}
+pre{background:var(--code);padding:.9rem 1rem;border-radius:6px;overflow-x:auto}
+pre code{background:none;padding:0;font-size:.84rem}
+.table{overflow-x:auto;margin:1.2rem 0}
+table{border-collapse:collapse;width:100%;min-width:34rem;font-size:.93rem}
+th,td{text-align:left;vertical-align:top;padding:.45rem .7rem;border-bottom:1px solid var(--line)}
+th{background:var(--head);font-weight:600;white-space:nowrap}
+td:first-child{white-space:nowrap}
+table.wrap td:first-child{white-space:normal;overflow-wrap:anywhere}
+li{margin:.3rem 0}
+td img{width:9.5rem;height:3.6rem;object-fit:contain;background:#fff;border:1px solid var(--line);border-radius:6px}
+td:nth-child(2){white-space:nowrap}
+figure.scroll{overflow-x:auto}
+figure.scroll img{min-width:46rem}
+small{display:block;color:var(--muted);font-size:.82rem;line-height:1.5}
+</style>
+<style>
+nav.site{max-width:46rem;margin:0 auto;padding:1rem 1rem 0;display:flex;flex-wrap:wrap;gap:.3rem 1.1rem;font-size:.95rem}
+nav.site a{text-decoration:none}
+nav.site a:first-child{font-weight:700;margin-right:auto}
+td:first-child,td:nth-child(2){white-space:normal}
+dl.pages dt{margin-top:1rem;font-weight:600}
+dl.pages dd{margin:.15rem 0 0;color:var(--muted)}
+</style>
+</head>
+<body>
+<nav class="site"><a href="../">dbdb</a><a href="../docs/">Documentation</a><a href="../flatpak.html">Flatpak</a><a href="https://github.com/koziserek/dbdb/releases">Download</a><a href="https://github.com/koziserek/dbdb/issues">Issues</a></nav>
+<main>
+<h1>Building a dbdb project: a guide for AI assistants</h1>
+<p class="lede">The guide an assistant reads: steps, the project file and every command. dbdb-cli guide prints it.</p>
+<p>You have <code>dbdb-cli</code> and some input files, and someone asked for a project that turns those inputs into outputs. This page is all you need for that: the steps to take, the format of a project file, and every command that changes one. <code>dbdb-cli guide</code> prints it; the binary carries it, so it always matches the version you run.</p>
+<p>Other parts of the guide:</p>
+<pre class="text"><code>dbdb-cli guide expressions       the language of Map columns and Filter conditions
+dbdb-cli guide parameters        ${name} in paths and connections, and environments
+dbdb-cli guide database-output   writing to PostgreSQL, SQL Server and SQLite tables
+dbdb-cli guide compare           checking a target against its source after a load
+dbdb-cli guide schedules         running a job by itself, at set times, on one machine
+dbdb-cli guide remote-runs       asking another machine to run a job, and being the machine that runs
+dbdb-cli guide rest              sources that read a REST API or an OData service: rows, pages, the key
+dbdb-cli guide push              a job that sends its result to another machine, as a file in its Incoming folder
+dbdb-cli guide html-output       an output that fills a template with rows and writes HTML, as one file or a file for each row or group</code></pre>
+<h2 id="what-a-project-is">What a project is</h2>
+<p>A project is one JSON file. It names <strong>sources</strong> (files, sheets, tables or queries to read) and holds <strong>jobs</strong>. A job is a graph of <strong>steps</strong> joined by <strong>wires</strong>: rows enter at Input steps, pass through steps that filter, join and reshape them, and leave at output steps that write files or database tables. The same file opens in the desktop app (<code>dbdb-app</code>), where the person you work for will look at what you built.</p>
+<p>Everything in a table is text, and an empty value is the same as a missing one. Types matter only where an output has them (JSON, Excel, SQLite, Parquet, a database) and in expressions that convert.</p>
+<h2 id="the-way-to-work">The way to work</h2>
+<p>Work in the project's folder, and keep inputs and outputs below it. Paths in the project file are relative to that folder, so the folder can be zipped and handed over.</p>
+<pre class="sh"><code>cd migration                  # holds project.json, Inputs/, Outputs/</code></pre>
+<ol type="1">
+<li><p><strong>Look at the inputs</strong> before designing anything.</p>
+<pre class="sh"><code>dbdb-cli list Inputs/master.xlsx            # sheets, or tables of a database
+dbdb-cli preview Inputs/master.xlsx --sheet Parts
+dbdb-cli preview Inputs/legacy.sqlite --table orders --limit 5
+dbdb-cli preview Inputs/legacy.sqlite --sql &quot;SELECT status, count(*) FROM orders GROUP BY 1&quot;
+dbdb-cli preview Inputs/stock.csv --delimiter &#39;;&#39; --encoding windows-1250
+dbdb-cli schema Inputs/schemas/XPART.xml    # a fixed-width layout</code></pre>
+<p>The header line of a preview gives each column's name and type.</p></li>
+<li><p><strong>Add the sources and jobs</strong> with <code>apply</code>. One call takes one command or a JSON list of them; a list is all or nothing. Pass a long one through a file or standard input so the shell does not mangle it:</p>
+<pre class="sh"><code>dbdb-cli apply project.json --quiet @commands.json
+dbdb-cli apply project.json --quiet &lt;&lt;&#39;EOF&#39;
+[{&quot;command&quot;: &quot;add_source&quot;, &quot;name&quot;: &quot;parts&quot;,
+  &quot;source&quot;: {&quot;kind&quot;: &quot;csv&quot;, &quot;path&quot;: &quot;Inputs/parts.csv&quot;}}]
+EOF</code></pre>
+<p>The file is created when it is not there. Without <code>--quiet</code>, <code>apply</code> prints the whole project afterwards.</p>
+<p>You may also write or edit <code>project.json</code> directly; it is the same data. <code>apply</code> has two advantages: it refuses a command that does not fit, saying which field is wrong, and the app can undo what it did.</p></li>
+<li><p><strong>Check the project.</strong></p>
+<pre class="sh"><code>dbdb-cli validate project.json</code></pre>
+<p>This first checks the file alone (a step without an input, a wire to a step that is not there, a name nothing answers to) and names every such problem with its job and step. Then it reads every source and does a dry run of every job, which writes nothing. It exits with 0 when all is well, 1 on warnings and 2 on errors. <code>--no-data</code> stops after the first part, for when the databases are out of reach.</p></li>
+<li><p><strong>Look at the rows</strong> where the result surprises you.</p>
+<pre class="sh"><code>dbdb-cli show project.json                       # every job&#39;s steps with their ids
+dbdb-cli show project.json --columns-used        # the columns the jobs use of each source
+dbdb-cli preview project.json --source parts
+dbdb-cli preview project.json --job &quot;Export parts&quot; --step 4
+dbdb-cli preview project.json --job &quot;Export parts&quot; --step 2 --output rejected</code></pre>
+<p><code>--step</code> shows the rows coming out of that step, so you can follow a flow from its input to the step where the rows go wrong.</p></li>
+<li><p><strong>Run it</strong>, when asked to, and report what the run said.</p>
+<pre class="sh"><code>dbdb-cli run-job project.json &quot;Export parts&quot; --dry-run   # checks, writes nothing
+dbdb-cli run-job project.json &quot;Export parts&quot;</code></pre>
+<p>Exit status 0 means written without issues, 1 that the written data has issues (the first 1000 of each output are listed, and all are counted; <code>--all-issues</code> lists every one), 2 that the job failed. A run that writes leaves a record in a <code>runs</code> folder beside the project.</p></li>
+</ol>
+<p>To change a job later, print it, edit the JSON and send it back:</p>
+<pre class="sh"><code>dbdb-cli show project.json --job &quot;Export parts&quot; &gt; job.json
+# edit job.json, wrap it as {&quot;command&quot;: &quot;update_job&quot;, &quot;job&quot;: ...}</code></pre>
+<h3 id="things-that-go-wrong">Things that go wrong</h3>
+<ul>
+<li><strong>Paths.</strong> In the project file a relative path is taken from the project file's folder. In a command given to <code>apply</code> it is taken from the directory you run <code>dbdb-cli</code> in. Run it in the project's folder and the two are the same. A file outside the project's folder is saved by its full path, which only computers that have that very path can read: <code>C:\data\x.csv</code> names nothing on macOS or Linux, and <code>/data/x.csv</code> nothing on Windows. <code>check</code> warns of both, and of a name whose capital and small letters differ from the disk's, which only Linux minds.</li>
+<li><strong>Unknown fields are refused</strong>, not ignored, in sources, steps and commands. Read the error: it names the field and lists the ones allowed.</li>
+<li><strong>Column names are exact</strong>, with their case and spaces. Take them from <code>preview</code>, not from memory.</li>
+<li><strong>An input takes one wire.</strong> To put two flows together use an <code>append</code> step (rows under rows) or a <code>join</code> (columns beside columns).</li>
+<li><strong>A fixed-width output takes its columns by name</strong> from the schema. Put a <code>map</code> step before it that makes exactly those names.</li>
+<li><strong>Passwords</strong> stay out of the project: give a connection as <code>env:NAME</code> and it is read from that environment variable when connecting.</li>
+<li>If the project is open in the desktop app while you change the file, the person has to reopen it there.</li>
+</ul>
+<h2 id="the-project-file">The project file</h2>
+<pre class="json"><code>{
+  &quot;sources&quot;: [
+    {&quot;name&quot;: &quot;parts&quot;, &quot;source&quot;: {&quot;kind&quot;: &quot;csv&quot;, &quot;path&quot;: &quot;Inputs/parts.csv&quot;}}
+  ],
+  &quot;rules&quot;: {&quot;rule&quot;: [
+    {&quot;type&quot;: &quot;matches&quot;, &quot;column&quot;: &quot;part_no&quot;, &quot;regex&quot;: &quot;^[A-Z]{2}-\\d{4}$&quot;}
+  ]},
+  &quot;parameters&quot;: [{&quot;name&quot;: &quot;out&quot;, &quot;value&quot;: &quot;Outputs/test&quot;}],
+  &quot;environments&quot;: [{&quot;name&quot;: &quot;production&quot;, &quot;values&quot;: {&quot;out&quot;: &quot;Outputs/live&quot;}}],
+  &quot;relations&quot;: [],
+  &quot;key_files&quot;: [],
+  &quot;perspectives&quot;: [],
+  &quot;jobs&quot;: [
+    {
+      &quot;name&quot;: &quot;Export parts&quot;,
+      &quot;nodes&quot;: [
+        {&quot;id&quot;: 1, &quot;pos&quot;: [40, 40], &quot;step&quot;: {&quot;type&quot;: &quot;input&quot;, &quot;source&quot;: &quot;parts&quot;}},
+        {&quot;id&quot;: 2, &quot;pos&quot;: [290, 40], &quot;step&quot;: {&quot;type&quot;: &quot;write&quot;, &quot;path&quot;: &quot;${out}/parts.json&quot;, &quot;format&quot;: {&quot;kind&quot;: &quot;json&quot;}}}
+      ],
+      &quot;wires&quot;: [{&quot;from&quot;: 1, &quot;to&quot;: 2}]
+    }
+  ]
+}</code></pre>
+<p>Every part may be left out when empty. <code>perspectives</code> are the saved views of the app's data browser and <code>relations</code> its join suggestions; a job needs neither.</p>
+<p>A file that dbdb saved begins with <code>"format": 1</code>, the number of the file format (<code>2</code> once it holds connectors, <code>3</code> once it holds schedules, <code>4</code> once it holds a vault, <code>5</code> once a job pushes a file to another machine, <code>6</code> once it holds a connector to a database or a machine's own setting in a connector, <code>7</code> once it holds an HTML output step, a REST API or OData source, or a connector to one, <code>8</code> once an OData source gives a row for each related row or reads only what changed, <code>12</code> once it holds a source that reads an XML file), and each source, job and view in it has an <code>id</code>. Leave both as they are when you change a file by hand. A file you write yourself needs neither: without the number it is read as format 1, and the next save adds both. A dbdb that meets a higher number than it knows does not open the file and does not save over it; the error says that a newer dbdb is needed.</p>
+<h2 id="sources">Sources</h2>
+<p>A source is <code>{"name": ..., "source": {"kind": ..., ...}}</code>. Job steps name sources by <code>name</code>.</p>
+<div class="table">
+<table>
+<thead>
+<tr>
+<th><code>kind</code></th>
+<th>Fields</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>csv</code></td>
+<td><code>path</code>, <code>delimiter</code> (<code>,</code>), <code>header</code> (<code>true</code>), <code>encoding</code> (<code>utf-8</code>)</td>
+<td>Any one-character delimiter: <code>"\t"</code>, <code>";"</code>. Encodings by their usual names: <code>windows-1250</code>, <code>iso-8859-2</code>, <code>utf-16le</code>…</td>
+</tr>
+<tr>
+<td><code>excel</code></td>
+<td><code>path</code>, <code>sheet</code>, <code>header</code> (<code>true</code>)</td>
+<td><code>.xlsx</code>, <code>.xlsm</code>, <code>.xlsb</code>, <code>.xls</code>, <code>.ods</code></td>
+</tr>
+<tr>
+<td><code>json</code></td>
+<td><code>path</code></td>
+<td>An array of objects, or one object per line</td>
+</tr>
+<tr>
+<td><code>parquet</code></td>
+<td><code>path</code></td>
+<td>The columns and their types are the file's own; a list or struct comes as text. Compressed with snappy, gzip, LZ4 or brotli, not zstd</td>
+</tr>
+<tr>
+<td><code>xml</code></td>
+<td><code>path</code>, <code>rows</code> (the elements below the top one)</td>
+<td><code>rows</code> names the element that repeats, from the top of the file: <code>orders/order</code>. See below</td>
+</tr>
+<tr>
+<td><code>fixed_width</code></td>
+<td><code>path</code>, <code>schema</code>, <code>format</code></td>
+<td>Laid out by a schema file; see below</td>
+</tr>
+<tr>
+<td><code>sqlite_table</code> / <code>sqlite_query</code></td>
+<td><code>path</code>, and <code>table</code> or <code>sql</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>access_table</code> / <code>access_query</code></td>
+<td><code>path</code>, and <code>table</code> or <code>sql</code></td>
+<td><code>.mdb</code>, <code>.accdb</code>; a query is SQLite's SQL</td>
+</tr>
+<tr>
+<td><code>postgres_table</code> / <code>postgres_query</code></td>
+<td><code>url</code>, and <code>table</code> or <code>sql</code></td>
+<td><code>postgresql://user@host/db</code>, or <code>env:NAME</code></td>
+</tr>
+<tr>
+<td><code>sql_server_table</code> / <code>sql_server_query</code></td>
+<td><code>url</code>, and <code>table</code> or <code>sql</code></td>
+<td>An ADO.NET connection string, or <code>env:NAME</code></td>
+</tr>
+<tr>
+<td><code>mysql_table</code> / <code>mysql_query</code></td>
+<td><code>url</code>, and <code>table</code> or <code>sql</code></td>
+<td>MariaDB or MySQL: <code>mysql://…</code>, or <code>env:NAME</code></td>
+</tr>
+<tr>
+<td><code>oracle_table</code> / <code>oracle_query</code></td>
+<td><code>url</code>, and <code>table</code> or <code>sql</code></td>
+<td>Experimental</td>
+</tr>
+<tr>
+<td><code>rest</code></td>
+<td><code>url</code>, <code>path</code>, <code>rows</code>, <code>paging</code>, <code>body</code></td>
+<td>What a REST API answers to a GET, as JSON (to a POST that sends the JSON text <code>body</code>, where the machine's <code>DBDB_REST_POST</code> lists the host): <code>url</code> is its address or a connector to it, <code>path</code> what follows, <code>rows</code> where the rows are in the answer (<code>data.items</code>; empty when the answer is the list), <code>paging</code> how its pages follow. <code>dbdb-cli guide rest</code> has the ways of paging and the key</td>
+</tr>
+<tr>
+<td><code>odata</code></td>
+<td><code>url</code>, <code>set</code>, <code>query</code>, <code>each</code>, <code>changes</code></td>
+<td>An entity set of an OData service (version 2 or 4): <code>url</code> is the service's address or a connector to it, <code>set</code> the entity set, <code>query</code> the query options the service applies (<code>$filter=Year eq 2026&amp;$select=ID,Total</code>; may be left out). <code>each</code> (may be left out) names a list of related rows that <code>$expand</code> in the query brings along, and gives a row for each of them. <code>changes</code> (may be left out) makes a run read only what is new since the run before: <code>{"newer_by": "ChangedAt"}</code> the rows with a larger value in that column, <code>"delta"</code> what the service says has changed, behind its delta link. Rows and pages need no settings. <code>dbdb-cli guide rest</code> has the rest</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>Defaults are in brackets. A table is <code>name</code> or <code>schema.name</code>. A query is one read-only <code>SELECT</code>; it is often the simplest way to join and filter tables of one database before a job sees them.</p>
+<h3 id="xml-files">XML files</h3>
+<p>An <code>xml</code> source gives a row for each element that <code>rows</code> names, as the names of the elements from the top of the file down to the one that repeats. Without <code>rows</code> the rows are the elements right below the top one.</p>
+<pre class="xml"><code>&lt;orders&gt;
+  &lt;order id=&quot;1&quot;&gt;
+    &lt;customer&gt;Kowalski&lt;/customer&gt;
+    &lt;total currency=&quot;EUR&quot;&gt;12.50&lt;/total&gt;
+    &lt;address&gt;&lt;city&gt;Łódź&lt;/city&gt;&lt;/address&gt;
+  &lt;/order&gt;
+&lt;/orders&gt;</code></pre>
+<pre class="json"><code>{&quot;command&quot;: &quot;add_source&quot;, &quot;name&quot;: &quot;orders&quot;,
+ &quot;source&quot;: {&quot;kind&quot;: &quot;xml&quot;, &quot;path&quot;: &quot;Inputs/orders.xml&quot;, &quot;rows&quot;: &quot;orders/order&quot;}}</code></pre>
+<p>That gives the columns <code>id</code>, <code>customer</code>, <code>total.currency</code>, <code>total</code> and <code>address.city</code>:</p>
+<ul>
+<li>An attribute of the row's element and an element inside it are columns under their names. What is deeper has the names on the way joined by dots.</li>
+<li>A name in <code>rows</code> matches an element whatever its namespace prefix; write the prefix (<code>po:order</code>) to match only that one, or <code>*</code> for any element.</li>
+<li>An element that occurs more than once in one row is one cell that holds them all as XML text. To get a row for each, name them in <code>rows</code>: <code>orders/order/line</code>.</li>
+<li>A row whose element holds only text has the one column <code>value</code>.</li>
+<li>The columns are those of every row in the file, typed from their values as a CSV file's are. Text loses the white space around it, and an empty value is null.</li>
+<li>The file is read in the encoding its first line declares.</li>
+<li>When the file has no element where <code>rows</code> says, reading stops and the error names the elements it found instead.</li>
+</ul>
+<h2 id="jobs-steps-and-wires">Jobs, steps and wires</h2>
+<pre class="json"><code>{&quot;command&quot;: &quot;add_job&quot;, &quot;job&quot;: {
+  &quot;name&quot;: &quot;Export parts&quot;,
+  &quot;nodes&quot;: [
+    {&quot;id&quot;: 1, &quot;pos&quot;: [40, 40],  &quot;step&quot;: {&quot;type&quot;: &quot;input&quot;, &quot;source&quot;: &quot;parts&quot;}},
+    {&quot;id&quot;: 2, &quot;pos&quot;: [40, 150], &quot;step&quot;: {&quot;type&quot;: &quot;input&quot;, &quot;source&quot;: &quot;suppliers&quot;}},
+    {&quot;id&quot;: 3, &quot;pos&quot;: [290, 40], &quot;step&quot;: {&quot;type&quot;: &quot;join&quot;, &quot;main_column&quot;: &quot;supplier_id&quot;, &quot;lookup_column&quot;: &quot;id&quot;}},
+    {&quot;id&quot;: 4, &quot;pos&quot;: [540, 40], &quot;step&quot;: {&quot;type&quot;: &quot;filter&quot;, &quot;condition&quot;: &quot;status &lt;&gt; &#39;SCRAPPED&#39;&quot;}},
+    {&quot;id&quot;: 5, &quot;pos&quot;: [790, 40], &quot;step&quot;: {&quot;type&quot;: &quot;map&quot;, &quot;columns&quot;: [
+      {&quot;name&quot;: &quot;part_no&quot;,  &quot;value&quot;: {&quot;type&quot;: &quot;column&quot;, &quot;column&quot;: &quot;part_no&quot;}},
+      {&quot;name&quot;: &quot;supplier&quot;, &quot;value&quot;: {&quot;type&quot;: &quot;expr&quot;, &quot;expr&quot;: &quot;upper(trim(name))&quot;}},
+      {&quot;name&quot;: &quot;source&quot;,   &quot;value&quot;: {&quot;type&quot;: &quot;constant&quot;, &quot;text&quot;: &quot;LEGACY&quot;}}
+    ]}},
+    {&quot;id&quot;: 6, &quot;pos&quot;: [1040, 40],  &quot;step&quot;: {&quot;type&quot;: &quot;write&quot;, &quot;path&quot;: &quot;Outputs/parts.csv&quot;}},
+    {&quot;id&quot;: 7, &quot;pos&quot;: [790, 150],  &quot;step&quot;: {&quot;type&quot;: &quot;write&quot;, &quot;path&quot;: &quot;Outputs/scrapped.csv&quot;}}
+  ],
+  &quot;wires&quot;: [
+    {&quot;from&quot;: 1, &quot;to&quot;: 3, &quot;port&quot;: 0},
+    {&quot;from&quot;: 2, &quot;to&quot;: 3, &quot;port&quot;: 1},
+    {&quot;from&quot;: 3, &quot;to&quot;: 4},
+    {&quot;from&quot;: 4, &quot;to&quot;: 5},
+    {&quot;from&quot;: 5, &quot;to&quot;: 6},
+    {&quot;from&quot;: 4, &quot;to&quot;: 7, &quot;from_port&quot;: 1}
+  ]
+}}</code></pre>
+<ul>
+<li>A node's <code>id</code> is a whole number of your choosing, unique within its job.</li>
+<li><code>pos</code> is where the step sits on the app's canvas: <code>[x, y]</code> of its top left corner. Lay a flow out left to right, 250 apart, and put a branch 110 lower, so that the person opening the job can read it. Steps without <code>pos</code> all pile up in one corner.</li>
+<li>A node may carry a <code>description</code>: a sentence on what the step is for, for the people who read the job later. It changes nothing about what the step does. With <code>"show_description": true</code> the step shows it on the canvas and grows to fit it. <code>size</code>, <code>[width, height]</code>, is the size someone dragged the step to; leave it out and the step sizes itself.</li>
+<li>A wire goes from output <code>from_port</code> of step <code>from</code> to input <code>port</code> of step <code>to</code>. Both are 0 unless given. An output may feed several steps; an input takes exactly one wire.</li>
+<li>Only steps that lead to an output step run. <code>validate</code> warns about the others.</li>
+</ul>
+<h3 id="the-steps">The steps</h3>
+<p>Inputs and outputs are numbered from 0 in the order given.</p>
+<div class="table">
+<table>
+<thead>
+<tr>
+<th><code>type</code></th>
+<th>Does</th>
+<th>Inputs</th>
+<th>Outputs</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>input</code></td>
+<td>reads a source</td>
+<td>none</td>
+<td><code>out</code></td>
+</tr>
+<tr>
+<td><code>files</code></td>
+<td>reads a file, or the files of a folder, one row for each file</td>
+<td>none</td>
+<td><code>out</code></td>
+</tr>
+<tr>
+<td><code>test_data</code></td>
+<td>gives rows written into the job itself, to try the job out</td>
+<td>none</td>
+<td><code>out</code></td>
+</tr>
+<tr>
+<td><code>filter</code></td>
+<td>keeps some rows</td>
+<td><code>in</code></td>
+<td><code>out</code>, <code>rejected</code></td>
+</tr>
+<tr>
+<td><code>sort</code></td>
+<td>orders rows</td>
+<td><code>in</code></td>
+<td><code>out</code></td>
+</tr>
+<tr>
+<td><code>dedupe</code></td>
+<td>keeps the first row of each group of equal rows</td>
+<td><code>in</code></td>
+<td><code>out</code></td>
+</tr>
+<tr>
+<td><code>join</code></td>
+<td>adds the columns of matching lookup rows</td>
+<td><code>main</code>, <code>lookup</code></td>
+<td><code>out</code>, <code>unmatched</code></td>
+</tr>
+<tr>
+<td><code>append</code></td>
+<td>puts the second input's rows under the first's</td>
+<td><code>first</code>, <code>second</code></td>
+<td><code>out</code></td>
+</tr>
+<tr>
+<td><code>aggregate</code></td>
+<td>makes one row of each group</td>
+<td><code>in</code></td>
+<td><code>out</code></td>
+</tr>
+<tr>
+<td><code>map</code></td>
+<td>builds the columns of its output</td>
+<td><code>in</code></td>
+<td><code>out</code></td>
+</tr>
+<tr>
+<td><code>output</code></td>
+<td>writes a fixed-width file</td>
+<td><code>in</code></td>
+<td><code>rejected</code></td>
+</tr>
+<tr>
+<td><code>write</code></td>
+<td>writes CSV, JSON, Excel, Parquet or an SQLite table</td>
+<td><code>in</code></td>
+<td><code>rejected</code></td>
+</tr>
+<tr>
+<td><code>database</code></td>
+<td>writes into a table of a database</td>
+<td><code>in</code></td>
+<td><code>rejected</code>, <code>written</code></td>
+</tr>
+<tr>
+<td><code>write_files</code></td>
+<td>writes one file for each row</td>
+<td><code>in</code></td>
+<td>none</td>
+</tr>
+<tr>
+<td><code>html</code></td>
+<td>fills a template with the rows and writes HTML</td>
+<td><code>in</code></td>
+<td>none</td>
+</tr>
+<tr>
+<td><code>push</code></td>
+<td>writes a file and sends it to another machine</td>
+<td><code>in</code></td>
+<td><code>rejected</code></td>
+</tr>
+<tr>
+<td><code>prompt</code></td>
+<td>asks a model for rows</td>
+<td><code>in 1</code>, <code>in 2</code>, <code>in 3</code>, <code>in 4</code>, <code>in 5</code>, <code>in 6</code>, <code>in 7</code>, <code>in 8</code></td>
+<td><code>out</code></td>
+</tr>
+<tr>
+<td><code>run_job</code></td>
+<td>runs another job of the project</td>
+<td><code>after</code></td>
+<td><code>out</code></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>Their settings, with the defaults in brackets:</p>
+<p><strong><code>input</code></strong>: <code>source</code>, the name of a project source.</p>
+<p><strong><code>filter</code></strong>: <code>condition</code>, an expression that must hold (see <code>guide expressions</code>), and <code>filters</code> (<code>[]</code>), simple tests that must all pass:</p>
+<pre class="json"><code>{&quot;type&quot;: &quot;filter&quot;,
+ &quot;condition&quot;: &quot;to_int(qty) &gt; 0 and status in (&#39;A&#39;, &#39;B&#39;)&quot;,
+ &quot;filters&quot;: [
+   {&quot;type&quot;: &quot;one_of&quot;,   &quot;column&quot;: &quot;site&quot;, &quot;values&quot;: [&quot;ZRH&quot;, &quot;GVA&quot;, null]},
+   {&quot;type&quot;: &quot;none_of&quot;,  &quot;column&quot;: &quot;kind&quot;, &quot;values&quot;: [&quot;TEST&quot;]},
+   {&quot;type&quot;: &quot;contains&quot;, &quot;column&quot;: &quot;name&quot;, &quot;text&quot;: &quot;valve&quot;},
+   {&quot;type&quot;: &quot;range&quot;,    &quot;column&quot;: &quot;year&quot;, &quot;min&quot;: &quot;2020&quot;, &quot;max&quot;: null}
+ ]}</code></pre>
+<p><code>null</code> in a list of values stands for an empty value. The rows that are not kept leave by the <code>rejected</code> output, with the same columns.</p>
+<p><strong><code>sort</code></strong>: <code>keys</code>, a list of <code>{"column": ..., "descending": false}</code>. Numbers come first, in the order of their value, then the other texts in the order of their characters, then the empty values. A descending key turns all of that round, so there the empty values come first.</p>
+<p><strong><code>dedupe</code></strong>: <code>columns</code> (<code>[]</code>, meaning all): rows with equal values in these columns are one group, and the first of each is kept. Sort before it to choose which one that is.</p>
+<p><strong><code>join</code></strong>: <code>main_column</code>, <code>lookup_column</code>, <code>more</code> (<code>[]</code>), <code>inner</code> (<code>false</code>). Each main row gets the columns of the lookup rows whose <code>lookup_column</code> equals its <code>main_column</code>; a main row with several matches comes out once for each. The result has the main columns, then the lookup columns. A main row without a match is kept with empty lookup columns, or dropped with <code>"inner": true</code>; either way it also leaves by <code>unmatched</code>, as it came in. For a key of several columns add the other pairs: <code>"more": [{"main": "site", "lookup": "site_code"}]</code>.</p>
+<p>A key matches as text, letter for letter, and an empty key matches nothing, not even an empty key on the other side: see "How values compare" below before you join on a column that may be empty or that holds numbers.</p>
+<p><strong><code>append</code></strong>: no settings: <code>{"type": "append"}</code>. Columns are matched by name; a row is empty in the columns its input lacks.</p>
+<p><strong><code>aggregate</code></strong>: <code>group_by</code> (<code>[]</code>, meaning one group of all rows) and <code>columns</code>:</p>
+<pre class="json"><code>{&quot;type&quot;: &quot;aggregate&quot;, &quot;group_by&quot;: [&quot;aircraft&quot;], &quot;columns&quot;: [
+  {&quot;name&quot;: &quot;legs&quot;,       &quot;function&quot;: &quot;count&quot;},
+  {&quot;name&quot;: &quot;hours&quot;,      &quot;function&quot;: &quot;sum&quot;, &quot;column&quot;: &quot;block_hours&quot;},
+  {&quot;name&quot;: &quot;last_date&quot;,  &quot;function&quot;: &quot;max&quot;, &quot;column&quot;: &quot;flight_date&quot;}
+]}</code></pre>
+<p>The functions are <code>count</code>, <code>count_distinct</code>, <code>sum</code>, <code>avg</code>, <code>min</code>, <code>max</code>, <code>first</code> and <code>last</code>. <code>count</code> without a <code>column</code> counts rows; the others skip empty values. The result has the <code>group_by</code> columns, then these.</p>
+<p><strong><code>map</code></strong>: <code>columns</code>, the columns of the result in order. Each is <code>{"name": ..., "value": ...}</code> with a value of one of three kinds:</p>
+<pre class="json"><code>{&quot;type&quot;: &quot;map&quot;, &quot;columns&quot;: [
+  {&quot;name&quot;: &quot;id&quot;,    &quot;value&quot;: {&quot;type&quot;: &quot;column&quot;, &quot;column&quot;: &quot;part_no&quot;}},
+  {&quot;name&quot;: &quot;kind&quot;,  &quot;value&quot;: {&quot;type&quot;: &quot;constant&quot;, &quot;text&quot;: &quot;PART&quot;}},
+  {&quot;name&quot;: &quot;price&quot;, &quot;value&quot;: {&quot;type&quot;: &quot;expr&quot;, &quot;expr&quot;: &quot;to_decimal(price, 2)&quot;}}
+]}</code></pre>
+<p>Columns that are not listed are dropped. An expression may use the columns of the step's input, not the other new columns.</p>
+<p><strong><code>output</code></strong>: <code>path</code>, <code>schema</code>, <code>format</code>. Writes a fixed-width file laid out by a schema file; see below.</p>
+<p><strong><code>write</code></strong>: <code>path</code> and <code>format</code>:</p>
+<pre class="json"><code>{&quot;type&quot;: &quot;write&quot;, &quot;path&quot;: &quot;Outputs/parts.csv&quot;, &quot;format&quot;: {&quot;kind&quot;: &quot;csv&quot;, &quot;delimiter&quot;: &quot;;&quot;, &quot;header&quot;: true, &quot;encoding&quot;: &quot;windows-1252&quot;}}</code></pre>
+<div class="table">
+<table>
+<thead>
+<tr>
+<th><code>format</code></th>
+<th>Fields</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>{"kind": "csv"}</code></td>
+<td><code>delimiter</code> (<code>,</code>), <code>header</code> (<code>true</code>), <code>encoding</code> (<code>utf-8</code>)</td>
+</tr>
+<tr>
+<td><code>{"kind": "json"}</code></td>
+<td><code>lines</code> (<code>false</code>): one object per line instead of an array</td>
+</tr>
+<tr>
+<td><code>{"kind": "excel"}</code></td>
+<td><code>sheet</code> (<code>Sheet1</code>); always <code>.xlsx</code></td>
+</tr>
+<tr>
+<td><code>{"kind": "sqlite", "table": ...}</code></td>
+<td><code>append</code> (<code>false</code>): otherwise the table is made anew</td>
+</tr>
+<tr>
+<td><code>{"kind": "parquet"}</code></td>
+<td><code>compression</code> (<code>snappy</code>): or <code>gzip</code>, <code>lz4</code>, <code>none</code></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>Without <code>format</code> it writes CSV. Folders that are missing are made.</p>
+<p>A Parquet file has one type for each column, the one the column has in the flow: whole numbers for <code>id_Long</code>, <code>id_Integer</code>, <code>id_Short</code> and <code>id_Byte</code>, floating point for <code>id_Double</code> and <code>id_Float</code>, booleans, and for <code>id_Date</code> a day (<code>2026-01-31</code>), a day and time (<code>2026-01-31 12:30:00</code>), or a moment (<code>2026-01-31 12:30:00+01:00</code>, kept in UTC), whichever the first rows hold. An <code>id_BigDecimal</code> is an exact decimal when the column has a <code>length</code> and a <code>precision</code>, and text otherwise. The other formats write a value that is not of its column's type as text; Parquet cannot, so such a value stops the run and the error names its row and column. A dry run finds it too. Convert the value in a Map step first, or give the column the type <code>id_String</code>.</p>
+<p><strong><code>database</code></strong>: see <code>guide database-output</code>.</p>
+<p><strong><code>test_data</code></strong>: <code>columns</code>, the column names, and <code>rows</code>, a list of rows, each a list with a text or <code>null</code> for each column in that order; a row may end early, and is null in the columns it leaves out. An empty text is null as well. At most 1000 rows. The rows are part of the job: no source, file or connection is behind them. Use it to build and try a job before its source is there, and replace it with an <code>input</code> step before the job runs for real: <code>check</code> warns of every such step (<code>test_data</code>), and a run says that it worked on test data (<code>test_data</code> in the answer of the run tool, a warning line from <code>dbdb-cli run</code>).</p>
+<pre class="json"><code>{&quot;type&quot;: &quot;test_data&quot;, &quot;columns&quot;: [&quot;part&quot;, &quot;stock&quot;],
+ &quot;rows&quot;: [[&quot;P1&quot;, &quot;4&quot;], [&quot;P2&quot;, null]]}</code></pre>
+<p><strong><code>files</code></strong>: <code>path</code>, a file or a folder; <code>pattern</code> (every file), which files of a folder to read by name, such as <code>"*.md"</code> or <code>"*.md, docs/*.txt"</code>; <code>names_only</code> (<code>false</code>); <code>pdf_pages</code> (<code>false</code>). It reads files of any kind, where a source reads a table. Each file of the folder, and of the folders below it, is one row:</p>
+<div class="table">
+<table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Holds</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>path</code></td>
+<td>the file's place below the folder, with <code>/</code>: <code>2026/notes.md</code></td>
+</tr>
+<tr>
+<td><code>name</code></td>
+<td>the last part of that: <code>notes.md</code></td>
+</tr>
+<tr>
+<td><code>size</code></td>
+<td>its size in bytes</td>
+</tr>
+<tr>
+<td><code>content</code></td>
+<td>what is in the file</td>
+</tr>
+<tr>
+<td><code>encoding</code></td>
+<td><code>text</code>, or <code>base64</code> when the file is not UTF-8 text and <code>content</code> is its bytes in base64</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>With <code>names_only</code> the files are listed and not read, and the last two columns are left out.</p>
+<p>A PDF is not text, so it is one row with <code>base64</code> like a picture. With <code>"pdf_pages": true</code> it is one row for each of its pages instead: <code>content</code> is the text of the page, <code>encoding</code> is <code>text</code>, and a sixth column <code>page</code>, between <code>size</code> and <code>content</code>, has the page's number from 1 (empty for the files that are not PDFs). The text is taken out of the PDF on this machine. A scanned page has no text and an empty <code>content</code>. Use it for a long PDF that goes to a <code>prompt</code> step with <code>batch</code> set: see there.</p>
+<pre class="json"><code>{&quot;type&quot;: &quot;files&quot;, &quot;path&quot;: &quot;Inputs/manuals&quot;, &quot;pattern&quot;: &quot;*.pdf&quot;, &quot;pdf_pages&quot;: true}</code></pre>
+<p><strong><code>write_files</code></strong>: <code>path</code> and <code>to</code> (<code>folder</code>). With <code>"to": "folder"</code> each row becomes a file below the folder <code>path</code>: the row's <code>content</code> column is what the file holds and its <code>path</code> column the file's place below the folder. With <code>"to": "file"</code> the step takes one row and writes its <code>content</code> as the file <code>path</code>. A row whose <code>encoding</code> column says <code>base64</code> is written as the bytes its content stands for. The files take their places when the whole job has run; a file that is there under another name is left alone, and nothing is deleted. A row whose <code>path</code> leads out of the folder (<code>../x</code>, <code>/etc/x</code>) stops the run, and so do two rows with the same <code>path</code>.</p>
+<pre class="json"><code>{&quot;type&quot;: &quot;files&quot;, &quot;path&quot;: &quot;Inputs/notes&quot;, &quot;pattern&quot;: &quot;*.md&quot;}</code></pre>
+<pre class="json"><code>{&quot;type&quot;: &quot;write_files&quot;, &quot;path&quot;: &quot;Outputs/summaries&quot;}</code></pre>
+<p><strong><code>html</code></strong>: <code>path</code>, <code>template</code> and <code>name</code>. Fills <code>template</code>, a MiniJinja (Jinja) template, with the rows and writes the result as the file <code>path</code>. The template is given <code>rows</code>, <code>row</code> (the first row), <code>columns</code> (the column names) and <code>params</code>; a column is <code>row.id</code>, or <code>r.id</code> inside <code>{% for r in rows %}</code>, never <code>id</code> by itself. Values are escaped for HTML. With <code>name</code> set, <code>path</code> is a folder and <code>name</code> a template for each row's file name below it: rows with one name make one file. Do sums in the steps before. See <code>guide html-output</code>.</p>
+<pre class="json"><code>{&quot;type&quot;: &quot;html&quot;, &quot;path&quot;: &quot;Outputs/report.html&quot;, &quot;template&quot;: &quot;{% for r in rows %}&lt;p&gt;{{ r.id }}&lt;/p&gt;{% endfor %}&quot;}</code></pre>
+<p><strong><code>push</code></strong>: <code>machine</code>, <code>name</code> and <code>format</code> (<code>{"kind": "csv"}</code>). Writes the input's columns as a file, in a format of <code>write</code>, and sends the file to the machine called <code>machine</code>, which saves it as <code>name</code> in the folder <code>Incoming</code> beside its project file. <code>name</code> is a file name, never a path. The other machine has to be there when the job runs, with <code>dbdb-cli runner</code> or the app with Run what is asked ticked; a dry run sends nothing and does not need it. See <code>guide push</code>.</p>
+<pre class="json"><code>{&quot;type&quot;: &quot;push&quot;, &quot;machine&quot;: &quot;etl-box&quot;, &quot;name&quot;: &quot;customers.csv&quot;}</code></pre>
+<p><strong><code>prompt</code></strong>: asks a model for rows, through one of the project's AI connectors.</p>
+<pre class="json"><code>{&quot;type&quot;: &quot;prompt&quot;, &quot;connector&quot;: &quot;local&quot;,
+ &quot;prompt&quot;: &quot;Write one summary of these notes, as summary.md.&quot;}</code></pre>
+<ul>
+<li><code>connector</code>: the name of a connector of the project.</li>
+<li><code>prompt</code>: the task. <code>${name}</code> in it is a parameter.</li>
+<li><code>columns</code> (<code>[]</code>): the columns of the rows the step gives. Leave it empty unless a later step needs certain names.</li>
+<li><code>batch</code> (<code>0</code>): how many rows of the first input go into one question. <code>0</code> sends every input whole, in one question, which suits a table a model can read in one go and a task that needs all of it (a summary). A number asks about the rows that many at a time, one question for each batch, and puts the answers after each other: a table of any size goes through, for work done row by row (sort into classes, translate, pull values out of text). The other inputs go whole with every question. The model never sees two batches together.</li>
+<li><code>max_rows</code> (<code>0</code>, no limit) and <code>too_many</code> (<code>stop</code>): the most rows of one input that are sent, and what happens with more: <code>stop</code> ends the run before the model is asked, <code>send_first</code> sends the first rows and tells the model how many there were. One question holds at most 400,000 characters of rows whatever <code>max_rows</code> is; <code>too_many</code> says what happens past that too.</li>
+</ul>
+<p>A <code>prompt</code> step takes the inputs that are wired to it, from none to eight; wire the first to input 0, the next to input 1. Its one output goes to <strong>one</strong> step. When the job runs, the model is sent the prompt, the columns and rows of every input with the step each comes from, and what the step after it is and needs, so the prompt does not have to describe formats:</p>
+<ul>
+<li>wired to <code>write_files</code>, the model gives <code>path</code> and <code>content</code> for each file, of whatever kind serves the task: Markdown, CSV, HTML, SVG;</li>
+<li>wired to <code>output</code>, it gives the columns of the schema file, within their widths;</li>
+<li>wired to <code>database</code> or <code>write</code>, it gives rows of values for the table or the file, and chooses the columns unless <code>columns</code> names them.</li>
+</ul>
+<p>When what the prompt asks for does not fit the step after it (a picture, and the rows go into a database table), the model says so and the run stops with its explanation, before anything is written. dbdb checks the answer too: it has to be the columns asked for, with a value for each in every row. After that the output step checks the rows as it checks any others.</p>
+<p><strong>PDFs.</strong> A <code>files</code> step wired to a <code>prompt</code> step gives a PDF in one of two ways, and the <code>prompt</code> step sees to the rest:</p>
+<ul>
+<li>Whole, one row for each PDF (<code>pdf_pages</code> off). A connector that is Claude, with an API key or through Claude Code, is sent the file itself: the model reads each page as a picture with its text, so tables, diagrams and scans are read too. One question takes at most 600 pages and 30 MB of PDFs, and a page costs far more than its text alone. Any other connector (Ollama, llama.cpp, Copilot) is sent the text of all the pages in place of the file, which counts against the 400,000 characters; a PDF without text, such as a scan, stops the run there.</li>
+<li>By pages (<code>"pdf_pages": true</code> on the <code>files</code> step), with <code>batch</code> on the <code>prompt</code> step: 20 pages a question, say. This works with every connector and for a PDF of any length, and is the cheaper way for a document that is text. The model never sees two batches together, so ask for what a page or a few pages can answer (pull out every field that is described), not for a summary of the whole.</li>
+</ul>
+<pre class="json"><code>{&quot;type&quot;: &quot;prompt&quot;, &quot;connector&quot;: &quot;local&quot;, &quot;batch&quot;: 20,
+ &quot;prompt&quot;: &quot;List every field these pages describe.&quot;,
+ &quot;columns&quot;: [&quot;record&quot;, &quot;field&quot;, &quot;type&quot;, &quot;start&quot;, &quot;length&quot;, &quot;description&quot;]}</code></pre>
+<p>Things to know:</p>
+<ul>
+<li>A connector that is Claude Code or Copilot starts that program on the machine for each question, signed in as the person is. The first question shows whether it is installed and signed in.</li>
+<li>The rows of the inputs are sent whole, in one message. A <code>prompt</code> step is for a table a model can read in one go, not for a million rows: put a <code>filter</code> or an <code>aggregate</code> before it. All inputs together may hold 400,000 characters.</li>
+<li>What is sent leaves the machine unless the connector is a model on the person's own machine (Ollama, llama.cpp). <code>validate</code> warns about a <code>prompt</code> step whose rows go to a service.</li>
+<li>A step preview (<code>show --step</code>) of a <code>prompt</code> step, or of a step after it, does not ask the model and says so. A dry run does ask: it costs what a run costs, and writes nothing.</li>
+<li><code>validate --data</code> leaves out a job with a <code>prompt</code> step for the same reason, and says so.</li>
+<li>Each run asks again, and the answer may differ from the last one.</li>
+</ul>
+<p><strong><code>run_job</code></strong>: <code>job</code>, the name of another job, and <code>stop_on</code> (<code>warnings</code>). A job of <code>run_job</code> steps wired one after another runs a series: the usual way to offer "run everything". With <code>"stop_on": "warnings"</code> the series stops when that job fails or its data has issues; with <code>"errors"</code> only when it fails. <code>run_job</code> steps are wired only to each other.</p>
+<p>A job runs its <code>run_job</code> steps one after another unless it says <code>"at_once": 4</code> (beside its <code>name</code>, at most 64): then up to that many run at the same time. A step still waits for the one wired before it, so wire only the jobs that need each other, such as one that reads the file another writes, and leave the rest without wires. Jobs that run together must not write the same file or table. Once one stops the series no other begins, and the rest are skipped.</p>
+<p>A series that stopped can go on from there: <code>dbdb-cli run-job project.json "&lt;job&gt;" --resume</code> keeps the sub-jobs that got through in the last run and runs the one that failed or stopped the series and the ones after it. Repair what failed first. The <code>run_job</code> tool takes <code>"resume": true</code> for the same.</p>
+<h3 id="rejected-rows">Rejected rows</h3>
+<p>Every output step checks what it writes: the keys and mandatory columns of its schema, and the project's rules. With nothing wired to its <code>rejected</code> output, rows with problems are written anyway and reported as issues. Wire <code>rejected</code> to a <code>write</code> step and those rows go there instead, with two more columns, <code>rejected_row</code> and <code>rejected_because</code>.</p>
+<h2 id="how-values-compare">How values compare</h2>
+<p>Do not try these out: they are the rules, and a test holds the engine to them on every build. They are not the rules of SQL.</p>
+<p><strong>Empty.</strong> A value is text or empty. An empty text and a missing value are the same thing, from any source. A value of spaces is not empty: <code>trim</code> it first if it should count as empty.</p>
+<p><strong>In a <code>join</code>, a <code>dedupe</code>, the <code>group_by</code> of an <code>aggregate</code>, a <code>unique</code> rule or key and an <code>exists</code> rule, values are equal when their text is the same</strong>, character for character. <code>7</code>, <code>007</code> and <code>7.0</code> are three values there, and so are <code>A</code>, <code>a</code> and <code>A </code> with a space after it. Make the two sides alike in a <code>map</code> step before the step: <code>trim(code)</code>, <code>upper(code)</code>, <code>to_int(id)</code>.</p>
+<p>What an empty value does there differs by step:</p>
+<div class="table">
+<table>
+<thead>
+<tr>
+<th>Step</th>
+<th>An empty value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>join</code></td>
+<td>matches nothing. A main row with an empty key is kept without lookup columns (dropped with <code>inner</code>) and leaves by <code>unmatched</code>; a lookup row with an empty key is never used. With a key of several columns, one empty part is enough.</td>
+</tr>
+<tr>
+<td><code>dedupe</code></td>
+<td>equals another empty value: rows with an empty key are one group, and the first is kept.</td>
+</tr>
+<tr>
+<td><code>aggregate</code></td>
+<td>equals another empty value in <code>group_by</code>: such rows are one group. In a function it is skipped, and <code>count</code> with a <code>column</code> does not count it.</td>
+</tr>
+<tr>
+<td><code>unique</code> rule, schema key</td>
+<td>equals another empty value: two rows with an empty key are a duplicate.</td>
+</tr>
+<tr>
+<td><code>exists</code> rule</td>
+<td>is not looked for: a row with every column of the rule empty passes. With a key of several columns, an empty part is a value like another, found where the other source has it empty too.</td>
+</tr>
+<tr>
+<td><code>sort</code></td>
+<td>comes last, and first with <code>descending</code>.</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>To join the rows with an empty key too, give both sides a value that stands for empty first: <code>coalesce(code, '-')</code>.</p>
+<p><strong>In an expression</strong>, <code>=</code>, <code>&lt;&gt;</code>, <code>in</code> and the like compare two numbers as numbers, so <code>7 = 7.0</code> holds, and everything else as text. A whole number written with leading zeros, such as <code>007</code>, is text. An empty value:</p>
+<div class="table">
+<table>
+<thead>
+<tr>
+<th>Expression, with <code>x</code> empty</th>
+<th>Gives</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>x is null</code>, <code>x = ''</code>, <code>x = null</code></td>
+<td>true</td>
+</tr>
+<tr>
+<td><code>x &lt;&gt; 'A'</code>, <code>x not in ('A', 'B')</code></td>
+<td>true: SQL would drop the row, dbdb keeps it</td>
+</tr>
+<tr>
+<td><code>x in ('A', null)</code></td>
+<td>true</td>
+</tr>
+<tr>
+<td><code>x &lt; 5</code>, <code>x &gt;= 5</code> and the like</td>
+<td>false, both of them</td>
+</tr>
+<tr>
+<td><code>x || '-'</code>, <code>concat(x, '-')</code></td>
+<td><code>-</code>: the empty side adds nothing</td>
+</tr>
+<tr>
+<td><code>x + 1</code>, <code>x * 2</code></td>
+<td>empty</td>
+</tr>
+<tr>
+<td><code>upper(x)</code>, <code>trim(x)</code>, <code>substr(x, 1, 2)</code></td>
+<td>empty</td>
+</tr>
+<tr>
+<td><code>length(x)</code></td>
+<td><code>0</code></td>
+</tr>
+<tr>
+<td><code>to_int(x)</code>, <code>to_date(x, ...)</code></td>
+<td>empty; only a value that is there and cannot be converted stops the run</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>There is no third answer "unknown": a condition holds or it does not, and <code>not</code> of a comparison that is false is true.</p>
+<h2 id="fixed-width-files-and-schema-files">Fixed-width files and schema files</h2>
+<p>A fixed-width file (source or output) is laid out by a schema file in the XML that Talend and Talaxie export. To make one, write it:</p>
+<pre class="xml"><code>&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+&lt;schema&gt;
+    &lt;column label=&quot;part_no&quot; talendType=&quot;id_String&quot; length=&quot;12&quot; key=&quot;true&quot; nullable=&quot;false&quot;/&gt;
+    &lt;column label=&quot;description&quot; talendType=&quot;id_String&quot; length=&quot;40&quot; nullable=&quot;true&quot;/&gt;
+    &lt;column label=&quot;qty&quot; talendType=&quot;id_Integer&quot; length=&quot;6&quot; nullable=&quot;true&quot;/&gt;
+&lt;/schema&gt;</code></pre>
+<ul>
+<li><code>label</code> is the column's name and <code>length</code> its width in characters. Every column of a fixed-width file needs a length.</li>
+<li><code>key="true"</code> columns together must be unique, and <code>nullable="false"</code> columns must have a value. An output reports the rows that break this.</li>
+<li>The types are <code>id_String</code>, <code>id_Integer</code>, <code>id_Long</code>, <code>id_Double</code>, <code>id_BigDecimal</code>, <code>id_Date</code> and <code>id_Boolean</code>.</li>
+</ul>
+<p>An <code>output</code> step takes the schema's columns <strong>by name</strong> from its input and writes them in the schema's order; an input column the schema does not have is left out, and a schema column the input does not have is an error. <code>format</code> (all optional) says how values are placed:</p>
+<pre class="json"><code>{&quot;type&quot;: &quot;output&quot;, &quot;path&quot;: &quot;Outputs/XPART.txt&quot;, &quot;schema&quot;: &quot;Inputs/schemas/XPART.xml&quot;,
+ &quot;format&quot;: {&quot;overflow&quot;: &quot;fail&quot;, &quot;align&quot;: &quot;left&quot;, &quot;pad&quot;: &quot; &quot;, &quot;line_ending&quot;: &quot;\r\n&quot;,
+            &quot;final_newline&quot;: true, &quot;encoding&quot;: &quot;windows-1252&quot;,
+            &quot;columns&quot;: {&quot;qty&quot;: {&quot;align&quot;: &quot;right&quot;}, &quot;description&quot;: {&quot;overflow&quot;: &quot;truncate&quot;}}}}</code></pre>
+<p><code>overflow</code> says what happens to a value wider than its column: <code>fail</code> (the default: the run stops), <code>truncate</code> (cut silently) or <code>warn</code> (cut and reported as an issue).</p>
+<h2 id="rules">Rules</h2>
+<p>Rules are checks on the data that a schema cannot express. Every output applies the rules that name columns it has. There are five: <code>unique</code>, <code>matches</code>, <code>required</code>, <code>empty</code> and <code>exists</code>.</p>
+<pre class="json"><code>[
+  {&quot;command&quot;: &quot;add_rule&quot;, &quot;rule&quot;: {&quot;type&quot;: &quot;unique&quot;, &quot;columns&quot;: [&quot;part_no&quot;, &quot;site&quot;]}},
+  {&quot;command&quot;: &quot;add_rule&quot;, &quot;rule&quot;: {&quot;type&quot;: &quot;matches&quot;, &quot;column&quot;: &quot;part_no&quot;, &quot;regex&quot;: &quot;^[A-Z]{2}-\\d{4}$&quot;}},
+  {&quot;command&quot;: &quot;add_rule&quot;, &quot;rule&quot;: {&quot;type&quot;: &quot;required&quot;, &quot;column&quot;: &quot;closed_on&quot;, &quot;when&quot;: {&quot;column&quot;: &quot;status&quot;, &quot;one_of&quot;: [&quot;CLOSED&quot;, &quot;CANCELLED&quot;]}}},
+  {&quot;command&quot;: &quot;add_rule&quot;, &quot;rule&quot;: {&quot;type&quot;: &quot;empty&quot;, &quot;column&quot;: &quot;closed_on&quot;, &quot;when&quot;: {&quot;column&quot;: &quot;status&quot;, &quot;equals&quot;: &quot;OPEN&quot;}}}
+]</code></pre>
+<p><code>when</code> is optional and tests another column of the same row with <code>equals</code>, <code>one_of</code> or <code>present</code> (<code>true</code>: has a value). In the project file the rules are the list under <code>"rules": {"rule": [...]}</code>.</p>
+<h3 id="a-value-that-must-be-in-another-source">A value that must be in another source</h3>
+<p>An <code>exists</code> rule says that what a row has in <code>columns</code> must be there, in one row, in another source: an order's part number among the parts, a link's title and type among the requirements. It is the check a database makes with a foreign key, for files that have none.</p>
+<pre class="json"><code>[
+  {&quot;command&quot;: &quot;add_rule&quot;, &quot;rule&quot;: {&quot;type&quot;: &quot;exists&quot;, &quot;columns&quot;: [&quot;part_no&quot;], &quot;in_source&quot;: &quot;parts&quot;}},
+  {&quot;command&quot;: &quot;add_rule&quot;, &quot;rule&quot;: {&quot;type&quot;: &quot;exists&quot;, &quot;columns&quot;: [&quot;title&quot;, &quot;type&quot;],
+    &quot;in_output_of&quot;: &quot;requirements&quot;, &quot;in_columns&quot;: [&quot;req_title&quot;, &quot;req_type&quot;]}},
+  {&quot;command&quot;: &quot;add_rule&quot;, &quot;rule&quot;: {&quot;type&quot;: &quot;exists&quot;, &quot;columns&quot;: [&quot;aircraft&quot;], &quot;in_source&quot;: &quot;fleet&quot;,
+    &quot;when&quot;: {&quot;column&quot;: &quot;ac_or_comp&quot;, &quot;equals&quot;: &quot;A&quot;}}}
+]</code></pre>
+<ul>
+<li>Where to look is <code>in_source</code>, a source of the project, or <code>in_output_of</code>, a job of the project: then it is what that job last wrote, read back from its file or table. The job needs one output step that can be read back (<code>output</code>, <code>write</code> or <code>database</code>); for a job with several, make a source of the file and name it with <code>in_source</code>.</li>
+<li><code>in_columns</code> says what the columns are called there, in the order of <code>columns</code>. Leave it out when they have the same names.</li>
+<li>Several columns are looked for together: the title and the type have to be in the same row there. How values compare, and what an empty value does, is under "How values compare".</li>
+<li>Like every rule it applies to each output that has the columns, so one rule on <code>part_no</code> checks every file that carries a part number. The job named in <code>in_output_of</code> is not checked against its own file, and a source is not looked for in itself under the same column names.</li>
+<li>The other source is read whole when the output step starts, before the first row is checked: put the job that writes it earlier in the series of sub-jobs. A file that is not there, or a database that cannot be reached, does not stop the run: the output gets one issue, <code>not-checked</code>, that says so, and no row is rejected for it. This is what a dry run of a whole series shows for a file that only a real run writes.</li>
+<li><code>check_source</code> and the app's Run checks apply it to a source's rows. A step's rows shown in the Designer are not looked for: the other source would be read whole for every preview.</li>
+</ul>
+<h2 id="parameters">Parameters</h2>
+<p><code>${name}</code> in a path, connection, table name or expression is replaced by the parameter's value, and an environment gives other values for a run (<code>run-job --env production --param name=value</code>). <code>${today()}</code> and other formulas work in paths too. See <code>guide parameters</code>.</p>
+<pre class="json"><code>{&quot;command&quot;: &quot;set_parameters&quot;,
+ &quot;parameters&quot;: [{&quot;name&quot;: &quot;out&quot;, &quot;value&quot;: &quot;Outputs/test&quot;}, {&quot;name&quot;: &quot;db&quot;, &quot;value&quot;: &quot;env:TEST_DB&quot;}],
+ &quot;environments&quot;: [{&quot;name&quot;: &quot;production&quot;, &quot;values&quot;: {&quot;out&quot;: &quot;Outputs/live&quot;, &quot;db&quot;: &quot;env:PROD_DB&quot;}}]}</code></pre>
+<p><code>set_parameters</code> replaces all parameters and environments at once.</p>
+<h2 id="a-layout-for-the-app">A layout for the app</h2>
+<p>A project can carry a layout of the app's window. It changes nothing about the data, and the app shows it only to a person who ticked <em>View &gt; Load project layouts when opening</em>, so write one only when you are asked to.</p>
+<pre class="json"><code>{&quot;command&quot;: &quot;set_layout&quot;, &quot;layout&quot;: {
+  &quot;workspaces&quot;: [
+    {&quot;name&quot;: &quot;Load&quot;, &quot;root&quot;: {&quot;row&quot;: [
+      {&quot;share&quot;: 0.25, &quot;tabs&quot;: [{&quot;kind&quot;: &quot;sources&quot;}]},
+      {&quot;share&quot;: 0.75, &quot;column&quot;: [
+        {&quot;tabs&quot;: [{&quot;kind&quot;: &quot;designer&quot;, &quot;job&quot;: &quot;load parts&quot;}]},
+        {&quot;tabs&quot;: [{&quot;kind&quot;: &quot;issues&quot;}, {&quot;kind&quot;: &quot;notes&quot;, &quot;note&quot;: &quot;Plan&quot;}]}
+      ]}
+    ]}}
+  ],
+  &quot;active&quot;: &quot;Load&quot;}}</code></pre>
+<p>A tile is a <code>row</code> of tiles side by side, a <code>column</code> of tiles one above the other, or <code>tabs</code>, a group of panes; <code>share</code> is its part of the row or column, and <code>active</code> the tab that shows, counted from 0. A pane has a <code>kind</code> (<code>sources</code>, <code>browser</code>, <code>query</code>, <code>designer</code>, <code>graph</code>, <code>preview</code>, <code>issues</code>, <code>log</code>, <code>runs</code>, <code>compare</code>, <code>assistant</code>, <code>notes</code>, <code>keys</code>, <code>connectors</code>, <code>schedule</code>, <code>api</code>), and may name what it shows: <code>job</code> for a designer, <code>view</code> for a browser, <code>source</code> for a graph or an API Call Builder (<code>api</code>), <code>settings.key_file</code> for a graph of one of the project's key files by itself, <code>comparison</code> for a compare, <code>note</code> (its path) for notes. <code>title</code> gives its tab a name. Workspaces need names of their own. <code>set_layout</code> replaces the whole layout, and renaming a job, view, source, comparison or note keeps the panes pointing at it.</p>
+<h2 id="every-command">Every command</h2>
+<p>Each is a JSON object with a <code>command</code> field. <code>index</code> is optional everywhere and says where in its list the new thing goes (the end unless given).</p>
+<div class="table">
+<table>
+<thead>
+<tr>
+<th>Command</th>
+<th>Fields</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>add_source</code></td>
+<td><code>name</code>, <code>source</code>, <code>index</code></td>
+</tr>
+<tr>
+<td><code>update_source</code></td>
+<td><code>name</code>, <code>source</code>: replaces the source's settings</td>
+</tr>
+<tr>
+<td><code>rename_source</code></td>
+<td><code>from</code>, <code>to</code>: steps and views that read it follow</td>
+</tr>
+<tr>
+<td><code>remove_source</code></td>
+<td><code>name</code></td>
+</tr>
+<tr>
+<td><code>add_job</code></td>
+<td><code>job</code>, <code>index</code></td>
+</tr>
+<tr>
+<td><code>update_job</code></td>
+<td><code>job</code>: replaces the job of that name, whole</td>
+</tr>
+<tr>
+<td><code>rename_job</code></td>
+<td><code>from</code>, <code>to</code>: <code>run_job</code> steps that run it follow</td>
+</tr>
+<tr>
+<td><code>remove_job</code></td>
+<td><code>name</code></td>
+</tr>
+<tr>
+<td><code>add_rule</code></td>
+<td><code>rule</code>, <code>index</code></td>
+</tr>
+<tr>
+<td><code>remove_rule</code></td>
+<td><code>index</code>, counted from 0</td>
+</tr>
+<tr>
+<td><code>set_parameters</code></td>
+<td><code>parameters</code>, <code>environments</code></td>
+</tr>
+<tr>
+<td><code>set_layout</code></td>
+<td><code>layout</code>: the app's workspaces for whoever asks to see them (below); left out, takes the layout out of the project</td>
+</tr>
+<tr>
+<td><code>add_relation</code></td>
+<td><code>relation</code>: <code>{"from_source", "from_column", "to_source", "to_column"}</code>, <code>index</code></td>
+</tr>
+<tr>
+<td><code>remove_relation</code></td>
+<td><code>index</code></td>
+</tr>
+<tr>
+<td><code>add_key_file</code></td>
+<td><code>path</code> of a key file, a Frictionless Data Package descriptor in JSON, <code>index</code></td>
+</tr>
+<tr>
+<td><code>remove_key_file</code></td>
+<td><code>index</code></td>
+</tr>
+<tr>
+<td><code>set_line_colours</code></td>
+<td><code>colours</code>: all the colours the Graph draws the lines of tagged keys in, each <code>{"tag", "colour"}</code> with the colour as <code>#rrggbb</code>. A key that has the tag (<code>dbdb:tags</code> in a key file) is drawn in the colour, and the Graph's legend names the tag. A key with the tags of two takes the colour listed first. An empty list takes them all away</td>
+</tr>
+<tr>
+<td><code>add_perspective</code></td>
+<td><code>perspective</code>, <code>index</code></td>
+</tr>
+<tr>
+<td><code>update_perspective</code></td>
+<td><code>perspective</code></td>
+</tr>
+<tr>
+<td><code>rename_perspective</code></td>
+<td><code>from</code>, <code>to</code></td>
+</tr>
+<tr>
+<td><code>remove_perspective</code></td>
+<td><code>name</code></td>
+</tr>
+<tr>
+<td><code>add_comparison</code></td>
+<td><code>comparison</code>, <code>index</code></td>
+</tr>
+<tr>
+<td><code>update_comparison</code></td>
+<td><code>comparison</code>: replaces the comparison of that name</td>
+</tr>
+<tr>
+<td><code>rename_comparison</code></td>
+<td><code>from</code>, <code>to</code></td>
+</tr>
+<tr>
+<td><code>remove_comparison</code></td>
+<td><code>name</code></td>
+</tr>
+<tr>
+<td><code>add_graph_view</code></td>
+<td><code>view</code>: a named view of the Graph pane, <code>{"name", "source" or "key_file" (neither: the project's sources), "filter": {"rules": [{"test": "column_contains", "name_contains", "name_is", "has_primary_key" or "linked", "text", "not"}], "any", "levels", "shown", "hidden"}, "guesses", "keys_only", "tables": {table: [x, y]}, "frame": [left, top, width, height]}</code>; <code>index</code>. The first view is the one a Graph pane opens with. Without <code>tables</code> the graph is laid out when it is shown</td>
+</tr>
+<tr>
+<td><code>update_graph_view</code></td>
+<td><code>view</code>: replaces the graph view of that name</td>
+</tr>
+<tr>
+<td><code>rename_graph_view</code></td>
+<td><code>from</code>, <code>to</code></td>
+</tr>
+<tr>
+<td><code>move_graph_view</code></td>
+<td><code>name</code>, <code>index</code> among the views, counted from 0</td>
+</tr>
+<tr>
+<td><code>remove_graph_view</code></td>
+<td><code>name</code></td>
+</tr>
+<tr>
+<td><code>add_connector</code></td>
+<td><code>connector</code>, <code>index</code></td>
+</tr>
+<tr>
+<td><code>update_connector</code></td>
+<td><code>connector</code>: replaces the connector of that name</td>
+</tr>
+<tr>
+<td><code>rename_connector</code></td>
+<td><code>from</code>, <code>to</code></td>
+</tr>
+<tr>
+<td><code>remove_connector</code></td>
+<td><code>name</code></td>
+</tr>
+<tr>
+<td><code>add_schedule</code></td>
+<td><code>schedule</code>, <code>index</code></td>
+</tr>
+<tr>
+<td><code>update_schedule</code></td>
+<td><code>schedule</code>: replaces the schedule of that name</td>
+</tr>
+<tr>
+<td><code>rename_schedule</code></td>
+<td><code>from</code>, <code>to</code></td>
+</tr>
+<tr>
+<td><code>remove_schedule</code></td>
+<td><code>name</code></td>
+</tr>
+<tr>
+<td><code>set_vault</code></td>
+<td><code>vault</code>: gives the project a vault, replaces it, or left out removes it</td>
+</tr>
+<tr>
+<td><code>set_vault_lock</code></td>
+<td><code>lock</code>: what a change of the vault's password writes</td>
+</tr>
+<tr>
+<td><code>set_secret</code></td>
+<td><code>secret</code>: <code>{"name", "id", "sealed"}</code>, the value sealed already</td>
+</tr>
+<tr>
+<td><code>rename_secret</code></td>
+<td><code>from</code>, <code>to</code>: the connections that name it follow</td>
+</tr>
+<tr>
+<td><code>remove_secret</code></td>
+<td><code>name</code></td>
+</tr>
+<tr>
+<td><code>batch</code></td>
+<td><code>commands</code>: several commands as one; all happen or none, and one Undo takes them back</td>
+</tr>
+<tr>
+<td><code>add_note</code></td>
+<td><code>parent</code> (a folder's path, <code>""</code> for the top), <code>entry</code>, <code>index</code></td>
+</tr>
+<tr>
+<td><code>remove_note</code></td>
+<td><code>path</code>: a note, or a folder with all in it</td>
+</tr>
+<tr>
+<td><code>move_note</code></td>
+<td><code>from</code>, <code>to</code> (paths), <code>index</code>: renames it, moves it to another folder, or both</td>
+</tr>
+<tr>
+<td><code>set_note_text</code></td>
+<td><code>path</code>, <code>text</code>: replaces the note's Markdown</td>
+</tr>
+<tr>
+<td><code>append_to_note</code></td>
+<td><code>path</code>, <code>text</code>: adds to the end, after an empty line</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>A connector is what the project reaches outside itself: a model, for the app's Assistant and a Prompt step, a database, for the sources and database outputs that read through it, or a REST API or an OData service, for the sources that read it. It is the person's to set up; add or change one only when asked. <code>{"name": ..., "kind": "ollama" | "llama_cpp" | "claude" | "claude_code" | "copilot", "address": ..., "model": ..., "key_variable": ..., "instructions": ..., "machines": [...]}</code>: only <code>name</code> and <code>kind</code> are needed. <code>key_variable</code> is the name of an environment variable and never a key, which is refused. <code>machines</code> names the computers the connector is for; left out, it is for every machine that opens the project. <code>dbdb-cli connectors project.json</code> lists them and says which this machine may use.</p>
+<p>A connector to a database is <code>{"name": "warehouse", "kind": "postgres" | "sql_server" | "mysql" | "oracle" | "sqlite" | "access", "address": ...}</code>: <code>address</code> is the connection as a source writes it (a connection string, <code>env:NAME</code>, or the file of an SQLite or Access database), and it takes no model, key or instructions. A source or a database output reads through it by writing <code>${connection:warehouse}</code> as its <code>url</code> (or <code>path</code>). The tools that take a <code>location</code> (<code>list_tables</code>, <code>preview</code>, <code>database_catalog</code>, <code>guess_keys</code>, <code>snapshot_database</code>) take it too, and fill it in from the project. Use one when several sources read one database, and never write a password into it: <code>${vault:name}</code> or <code>env:NAME</code>, as in any connection. <code>validate</code> says when something reads through a connector the project does not have, or one of another kind of database.</p>
+<p>A connector to an OData service is the same with <code>"kind": "odata"</code>, and a source of kind <code>odata</code> reads through it.</p>
+<p>A connector to a REST API is <code>{"name": "shop", "kind": "rest", "address": "https://api.example.com/v1", "key_variable": "SHOP_KEY", "key_header": "X-API-Key"}</code>. A source of kind <code>rest</code> reads through it with <code>"url": "${connection:shop}"</code>, and gets the key with it. <code>key_variable</code> or <code>key_secret</code> say where the key is, as for a model. <code>key_header</code> says how it is sent: left out or <code>bearer</code> for <code>Authorization: Bearer</code>, <code>basic</code> for a key that is <code>user:password</code>, the name of the header it goes in, or <code>oauth https://login.example.com/token scope</code> to sign in first with a key that is <code>client id:client secret</code>. It takes no model or instructions.</p>
+<p>A machine can have its own value for a setting, in <code>local</code> by the machine's name: <code>"local": {"anna-laptop": {"address": "postgresql://etl@localhost:5433/shop"}}</code>. <code>address</code>, <code>model</code>, <code>key_variable</code>, <code>key_secret</code>, <code>key_header</code> and <code>instructions</code> can be given there; what is left out is the connector's own, which every other machine uses. So a database that machines reach at different addresses is one connector. <code>list_connectors</code> shows a connector as the project has it, and under <code>here</code> the settings as this machine has them where it has its own.</p>
+<p>A schedule runs a job by itself on one machine: <code>{"name": ..., "job": ..., "machine": ..., "when": {"kind": "cron", "cron": "0 6 * * 1-5"}, "time_zone": "Europe/Zurich"}</code>. <code>when</code> is also <code>{"kind": "once", "at": "2026-11-20 08:00"}</code> or <code>{"kind": "every", "every": 2, "unit": "hours", "from": "2026-11-20 08:00"}</code>. Add or change one only when asked, and ask which machine is to run it. <code>dbdb-cli schedule list project.json</code> says when each runs next, what its last run did and what it missed. A schedule runs only while the app is open on its machine with Run here ticked, or <code>dbdb-cli schedule run project.json</code> is running there. See <code>guide schedules</code>.</p>
+<p>The vault holds the project's secrets, sealed with a password the person chose. You cannot read a secret or set one: the vault commands take a value that is sealed already, and only <code>dbdb-cli vault</code> and the app seal. What you can do is use one. Where a connection needs a password, write <code>${vault:name}</code> in its place (<code>postgresql://etl:${vault:pg_prod}@host/db</code>) and ask the person to run <code>dbdb-cli vault project.json set pg_prod</code>, or write <code>env:NAME</code> for a value of that machine's own. Never write a password into a connection. <code>dbdb-cli vault project.json status</code> lists the secrets by name with what uses each. A run that needs a secret while the vault is locked stops and says so: the person unlocks it, or sets <code>DBDB_VAULT_PASSWORD</code> for the server. <code>key_secret</code> of a connector names a secret that holds its key, in place of <code>key_variable</code>.</p>
+<p>A job can run on another machine, one that has the files, network and passwords it needs: <code>dbdb-cli run-job project.json &lt;job&gt; --on &lt;machine&gt;</code> asks the runner there and waits, and the <code>ask_run</code> tool does the same. Only a machine where <code>dbdb-cli runner project.json</code> runs, or the app is open with Run what is asked ticked, takes an ask; <code>dbdb-cli asked-runs project.json</code> (the <code>list_asked_runs</code> tool) says which are here now and what became of each ask. Ask for a dry run first, and for a run that writes only when the person asked for it. See <code>guide remote-runs</code>.</p>
+<p>A perspective is a view for the app's browser: <code>{"name": ..., "root": {"source": ..., "filters": [], "sort": [], "hidden": [], "joins": [{"parent_column": ..., "child_column": ..., "node": {...}}]}}</code>. Add one when the person will want to look through joined inputs in the app; a job does not need it.</p>
+<p>A comparison checks a load: it reads two sources, matches their rows by key columns and reports the rows that differ or are on one side only, without writing to either. <code>{"name": ..., "left": &lt;source&gt;, "right": &lt;source&gt;, "key": [&lt;left columns&gt;], "columns": [{"left": ..., "right": ..., "exclude": false, "tolerance": "0.01"}]}</code>; only the first three are needed. Run it with <code>dbdb-cli compare project.json &lt;name&gt;</code>, which exits with 1 when the sides differ. See <code>guide compare</code>.</p>
+<p>A key file adds what a database does not say about itself: keys it does not declare, and descriptions of tables and columns. One kind does more. A key file with <code>"dbdb:catalog"</code> at the top lists every table, column and key of one database, and the desktop app then shows that database from the file and does <strong>not read the database</strong> until the person presses ⟳, because reading the tables and keys of a large database takes long. So such a file can fall behind the database. In it, a foreign key with <code>"dbdb:declared": true</code> is one the database itself declared when the file was written; the others were added from elsewhere. The CLI and the MCP tools never take a database's tables from a key file: <code>list</code>, <code>preview</code>, <code>database_catalog</code> and <code>guess_keys</code> always ask the database. When what you build depends on tables or keys being there, confirm the file first:</p>
+<pre class="sh"><code>dbdb-cli check-keys project.json --database orders    # orders: a source of that database
+dbdb-cli export-keys project.json --database orders --whole -o orders.keys.json</code></pre>
+<p><code>check-keys</code> reads the database now, prints one line for each table, column or key that differs from the file, and exits with 1 when there is one. <code>export-keys --whole</code> reads the database and writes the file again; <code>add_key_file</code> has a project use it. Tell the person when the file was behind: until they press ⟳ or the file is written again, the app shows them the old tables.</p>
+<p>A key file is changed a table at a time, with <code>edit-keys</code>, and never by writing the whole file again: a key file of a large system is megabytes, and a file written whole loses what you did not mean to touch.</p>
+<pre class="sh"><code>dbdb-cli edit-keys extra.keys.json --show notes       # the table as this file has it, its keys numbered
+dbdb-cli edit-keys extra.keys.json @changes.json      # a change or a list of them; `-` reads standard input</code></pre>
+<p>A change is JSON with an <code>edit</code> field. A list of them is made in order, and nothing is written unless all of them can be made:</p>
+<pre class="json"><code>[
+  {&quot;edit&quot;: &quot;add_foreign_key&quot;, &quot;table&quot;: &quot;notes&quot;, &quot;key&quot;: {
+    &quot;columns&quot;: [&quot;owner_id&quot;], &quot;ref_table&quot;: &quot;users&quot;, &quot;ref_columns&quot;: [&quot;id&quot;],
+    &quot;when&quot;: {&quot;column&quot;: &quot;owner_type&quot;, &quot;values&quot;: [&quot;U&quot;]},
+    &quot;description&quot;: &quot;Every owner_id of the U rows is a user (checked November 2026).&quot;}},
+  {&quot;edit&quot;: &quot;set_foreign_key&quot;, &quot;table&quot;: &quot;notes&quot;, &quot;index&quot;: 0, &quot;key&quot;: {
+    &quot;columns&quot;: [&quot;owner_id&quot;], &quot;ref_table&quot;: &quot;users&quot;, &quot;ref_columns&quot;: [&quot;id&quot;]}},
+  {&quot;edit&quot;: &quot;remove_foreign_key&quot;, &quot;table&quot;: &quot;notes&quot;, &quot;index&quot;: 0},
+  {&quot;edit&quot;: &quot;set_primary_key&quot;, &quot;table&quot;: &quot;notes&quot;, &quot;columns&quot;: [&quot;id&quot;]},
+  {&quot;edit&quot;: &quot;set_table_description&quot;, &quot;table&quot;: &quot;notes&quot;, &quot;description&quot;: &quot;Remarks on anything&quot;},
+  {&quot;edit&quot;: &quot;set_column_description&quot;, &quot;table&quot;: &quot;notes&quot;, &quot;column&quot;: &quot;owner_type&quot;,
+   &quot;description&quot;: &quot;U for a user, C for a company&quot;},
+  {&quot;edit&quot;: &quot;annotate_foreign_key&quot;, &quot;table&quot;: &quot;notes&quot;, &quot;key&quot;: {
+    &quot;columns&quot;: [&quot;owner_id&quot;], &quot;ref_table&quot;: &quot;users&quot;, &quot;ref_columns&quot;: [&quot;id&quot;],
+    &quot;status&quot;: &quot;confirmed&quot;, &quot;note&quot;: &quot;40 of 40 values found&quot;, &quot;tags&quot;: [&quot;checked&quot;]}},
+  {&quot;edit&quot;: &quot;set_table_note&quot;, &quot;table&quot;: &quot;notes&quot;, &quot;note&quot;: &quot;Leave out the rows before 2020&quot;},
+  {&quot;edit&quot;: &quot;set_column_note&quot;, &quot;table&quot;: &quot;notes&quot;, &quot;column&quot;: &quot;owner_type&quot;, &quot;note&quot;: &quot;Never empty&quot;},
+  {&quot;edit&quot;: &quot;set_table_tags&quot;, &quot;table&quot;: &quot;notes&quot;, &quot;tags&quot;: [&quot;wave 1&quot;]},
+  {&quot;edit&quot;: &quot;set_column_tags&quot;, &quot;table&quot;: &quot;notes&quot;, &quot;column&quot;: &quot;owner_type&quot;, &quot;tags&quot;: [&quot;code list&quot;]},
+  {&quot;edit&quot;: &quot;set_column_type&quot;, &quot;table&quot;: &quot;notes&quot;, &quot;column&quot;: &quot;owner_id&quot;, &quot;type&quot;: &quot;integer&quot;},
+  {&quot;edit&quot;: &quot;set_table&quot;, &quot;table&quot;: &quot;notes&quot;, &quot;resource&quot;: null}
+]</code></pre>
+<ul>
+<li><code>when</code> and <code>description</code> of a key may be left out. <code>when</code> is for a column that points to different tables: the key holds for the rows where that column of the same table has one of the values.</li>
+<li><code>index</code> is the key's place among the table's foreign keys <strong>in that file</strong>, from 0. <code>--show</code> numbers them; look before you change or remove one.</li>
+<li>A description left out or empty takes the description away, and a primary key without columns takes the primary key away.</li>
+<li>A description says what a thing is. A <code>note</code> is a remark for whoever works on the data (how a key was found, what is still open), and <code>tags</code> are words to find things by. Tables, columns and keys take both. A note left out or empty, and tags left out, take them away.</li>
+<li><code>set_column_type</code> says what a column holds, as a Table Schema type. dbdb goes by <code>string</code>, <code>integer</code> and <code>number</code>: a key that joins text to a number is joined with a cast. Without a <code>type</code>, it is taken away.</li>
+<li>A key has a <code>status</code>: <code>confirmed</code>, <code>doubtful</code>, <code>rejected</code>, or <code>to_check</code>, which is what a key without one is. <strong>A rejected key stays in the file and joins nothing</strong>: reject a key that was checked and found wrong rather than removing it, so that nobody proposes it again.</li>
+<li><code>annotate_foreign_key</code> finds the key by what it joins (its columns, the table and columns it refers to, and its <code>when</code>), not by <code>index</code>. It sets the key's status, note and tags, and its description when one is given. When the file does not have the key, it adds it. Use it to say something about a key of a file that a tool writes: put it in the file kept by hand, and the tool's file stays as it is.</li>
+<li>Where two key files say something about the same thing, the one the project lists later is heard. The same key in two files is one key, with the later file's status, note and description where it has them, and the tags of both.</li>
+<li><code>set_table</code> puts a whole Frictionless resource in the place of everything the file says about a table, and <code>null</code> removes the table from the file.</li>
+<li>A table the file does not have is added by the first change that adds something to it, and goes again with its last key.</li>
+<li>Only the table changed is written again. The rest of the file stays as it was, to the letter, with properties dbdb does not know.</li>
+<li>The answer has each changed table as the file now has it, and <code>undo</code>: the changes that take these back, to hand to <code>edit-keys</code> again.</li>
+</ul>
+<p>A key the database does not declare is a guess until the data is asked. <code>check-key</code> asks it:</p>
+<pre class="sh"><code>dbdb-cli check-key project.json --database orders --table notes \
+  --key &#39;{&quot;columns&quot;: [&quot;owner_id&quot;], &quot;ref_table&quot;: &quot;users&quot;, &quot;ref_columns&quot;: [&quot;id&quot;],
+          &quot;when&quot;: {&quot;column&quot;: &quot;owner_type&quot;, &quot;values&quot;: [&quot;U&quot;]}}&#39;</code></pre>
+<p>It has the database of the source <code>orders</code> count the different values of <code>notes.owner_id</code>, among the rows where <code>owner_type</code> is <code>U</code>, and how many of them are a <code>users.id</code>. Rows with an empty <code>owner_id</code> are left out. The answer has <code>values</code>, <code>found</code>, <code>not_found</code> and <code>all_found</code>, and the exit status is 1 unless every value was found. The first values that were not found go to stderr, for a person; the answer itself never has a value of the data. The key need not be in a key file, so check a guess before adding it. All found does not prove a key: any column of small numbers is found in any other. Few found makes it doubtful. <code>--write extra.keys.json</code> keeps the result with the key in that file, as <code>"checked": {"on": "2026-11-18", "values": 40, "found": 40, "source": "orders"}</code>; the answer's <code>to_keep_it</code> is the same change for <code>edit-keys</code>, and takes a <code>status</code> when the result settles one. The database is only read.</p>
+<p><strong>Which file a key goes in matters.</strong> A project often has one key file that a tool writes, or that holds a whole database (<code>"dbdb:catalog"</code>), and one kept by hand. The first is written again by its tool and loses what was added to it, so keys you find go in the second. Ask the person which file that is when it is not plain from the names, and say which file you changed. To move a key, remove it from one file and add it to the other.</p>
+<p>A database that is slow or will not stay within reach can be copied into one SQLite file, and the work done on the copy:</p>
+<pre class="sh"><code>dbdb-cli snapshot env:ORDERS_DB orders.sqlite                 # a connection string, or a database file
+dbdb-cli snapshot project.json orders.sqlite --source orders  # the database a source reads</code></pre>
+<p>It copies every table with its rows, its primary key and the foreign keys the database declares, and prints each table with its number of rows. The MCP tool <code>snapshot_database</code> does the same: to export or copy a whole database, or many of its tables, to SQLite, use it rather than a job. Views are left out unless <code>--views</code> is given, <code>--table NAME</code> (repeatable) copies only some, and a file that is there stays unless <code>--replace</code> is given. <code>schema.name</code> becomes <code>name</code> in the copy unless two tables would share a name. A table that cannot be read is named on stderr and the exit status is 1; the others are copied. The database is only read.</p>
+<p>Notes are the project's own pages of Markdown, kept in folders: what was decided, what to check, how a load is run. An <code>entry</code> is <code>{"type": "note", "name": ..., "text": ...}</code> or <code>{"type": "folder", "name": ..., "children": [...]}</code>; a path is the names from the top joined by <code>/</code>, such as <code>Migration/Cutover runbook</code>. <code>text</code> may be one string or a list of lines. <code>[[Name]]</code> links to another note, <code>![[Name]]</code> shows it in place. <code>dbdb-cli notes project.json</code> lists them and <code>--read &lt;path&gt;</code> prints one.</p>
+<h2 id="through-mcp-instead">Through MCP instead</h2>
+<p><code>dbdb-cli mcp --project project.json</code> serves the same things as tools to an MCP client: <code>guide</code>, <code>list_tables</code>, <code>preview</code>, <code>show_project</code>, <code>apply_command</code>, <code>validate_project</code>, <code>preview_step</code>, <code>run_job</code> and more.</p>
+<p>No answer there is longer than a page, so a project of hundreds of jobs is read in parts: <code>project_overview</code> says what it holds, <code>list_jobs</code> and <code>list_sources</code> page through the names (<code>next_offset</code> is the <code>offset</code> of the next page), <code>show_job</code> gives one job's steps with their ids and wires, and <code>show_source</code> one source as the file has it. <code>guide</code> gives a long page as the titles of its sections, and one with <code>section</code>. <code>validate_project</code> takes a <code>job</code> to check that job alone.</p>
+<p><code>list_sources</code> and <code>show_source</code> also say which columns of a source the jobs use (<code>dbdb-cli show project.json --columns-used</code> and <code>--source NAME</code> print the same). It is found by following each job's steps in the file, so no source is read: <code>every column</code> means a step writes the rows as they come, and a column marked <code>unsure</code> is used after a Join of two sources, from this one or from the other. A run asks a database for those columns alone, whatever the source says, so a source that reads a whole table, or <code>SELECT *</code>, need not be changed for speed. To change a source's query for another reason, <code>change_source</code> with <code>{"kind": "postgres_query", "table": null, "sql": "SELECT …"}</code> changes those settings and keeps the connection. Check the job after with <code>validate_project</code> and its <code>job</code>.</p>
+<p><code>check_keys</code> is <code>check-keys</code> there, and <code>database_catalog</code> reads a database's tables and keys from the database itself. What the key files add is not in that answer: <code>describe_table</code> returns one table from the key files, with its description, its columns, its keys with the condition of each conditional key, and the keys of other tables that refer to it. Given a text no table is called, it lists the tables whose name or description contains it. Use it rather than reading a key file, which can hold thousands of tables. <code>check_key</code> is <code>check-key</code>: it returns the counts and never a value. <code>join_tables</code> writes the query that joins the tables you name by their keys, the database's and the key files', and brings in the tables in between when two of them have no key to each other; its answer names those, and the tables no key reached. <code>check_sql</code> with a <code>database</code> also checks a query against the keys: its <code>keys</code> list says where a join uses part of a key, leaves out a conditional key's condition, goes by a rejected key or multiplies rows, and <code>fixed_sql</code> is the query put right where there is one answer. <code>discover_keys</code> is <code>discover-keys</code>: it proposes keys from a database's catalog and checks each against the data; with <code>"from_data": true</code> in its settings it also counts every table's columns and proposes a column whose values fit among another table's different values, for a database whose names say little, which reads every table once. The keys already known propose more: a column with the name of columns that mostly have a key to one table is proposed for it too, and the plan lists, under <code>columns_with_keys_to_different_tables</code>, where the key files disagree. With <code>"ask"</code> in its settings, the name of a connector of the project that reaches a model, that model is asked which keys the names and descriptions make likely, some tables to a question: it is sent names, kinds and descriptions and no rows, what it proposes is checked against the data like the rest, and <code>the_model</code> in the answer says what came of it. Leave <code>ask</code> out unless the person wants a model asked: it sends the database's names to wherever that connector points. Ask with <code>plan_only</code> first, which says how many queries a run makes; <code>to_keep_them</code> in its answer are the changes for <code>edit_key_file</code>, each key to check, with its evidence in a note. <code>import_keys</code> is <code>import-keys</code>: it makes one key file from a folder of XML files that describe a database, such as a vendor's data dictionary with a file for each table. Call it with <code>folder</code> alone first: the answer lists every kind of element by its place, with how often it is there and its attributes, and no value. Write the <code>mapping</code> from that (<code>table</code> is the element there is about one of for each table, the rest are paths from it), call again without <code>output</code> to see what would be made and left out, and then with <code>output</code> to write the file. <code>edit_key_file</code> is <code>edit-keys</code> for a key file of the project, named by its file name: <code>edits</code> are the changes, and <code>table</code> without <code>edits</code> shows that table as the file has it. Use whichever you were given; the project file is the same.</p>
+<h2 id="a-worked-example">A worked example</h2>
+<p>Two inputs, <code>Inputs/parts.csv</code> (<code>part_no</code>, <code>name</code>, <code>supplier_id</code>, <code>qty</code>) and <code>Inputs/suppliers.csv</code> (<code>id</code>, <code>supplier</code>), become one JSON file of the parts in stock with their supplier's name, and a CSV file of the parts whose supplier is unknown.</p>
+<pre class="json"><code>[
+  {&quot;command&quot;: &quot;add_source&quot;, &quot;name&quot;: &quot;parts&quot;, &quot;source&quot;: {&quot;kind&quot;: &quot;csv&quot;, &quot;path&quot;: &quot;Inputs/parts.csv&quot;}},
+  {&quot;command&quot;: &quot;add_source&quot;, &quot;name&quot;: &quot;suppliers&quot;, &quot;source&quot;: {&quot;kind&quot;: &quot;csv&quot;, &quot;path&quot;: &quot;Inputs/suppliers.csv&quot;}},
+  {&quot;command&quot;: &quot;add_rule&quot;, &quot;rule&quot;: {&quot;type&quot;: &quot;unique&quot;, &quot;columns&quot;: [&quot;part_no&quot;]}},
+  {&quot;command&quot;: &quot;add_job&quot;, &quot;job&quot;: {
+    &quot;name&quot;: &quot;Parts in stock&quot;,
+    &quot;nodes&quot;: [
+      {&quot;id&quot;: 1, &quot;pos&quot;: [40, 40],   &quot;step&quot;: {&quot;type&quot;: &quot;input&quot;, &quot;source&quot;: &quot;parts&quot;}},
+      {&quot;id&quot;: 2, &quot;pos&quot;: [290, 40],  &quot;step&quot;: {&quot;type&quot;: &quot;filter&quot;, &quot;condition&quot;: &quot;is_int(qty) and to_int(qty) &gt; 0&quot;}},
+      {&quot;id&quot;: 3, &quot;pos&quot;: [290, 150], &quot;step&quot;: {&quot;type&quot;: &quot;input&quot;, &quot;source&quot;: &quot;suppliers&quot;}},
+      {&quot;id&quot;: 4, &quot;pos&quot;: [540, 40],  &quot;step&quot;: {&quot;type&quot;: &quot;join&quot;, &quot;main_column&quot;: &quot;supplier_id&quot;, &quot;lookup_column&quot;: &quot;id&quot;}},
+      {&quot;id&quot;: 5, &quot;pos&quot;: [790, 40],  &quot;step&quot;: {&quot;type&quot;: &quot;map&quot;, &quot;columns&quot;: [
+        {&quot;name&quot;: &quot;part_no&quot;,  &quot;value&quot;: {&quot;type&quot;: &quot;column&quot;, &quot;column&quot;: &quot;part_no&quot;}},
+        {&quot;name&quot;: &quot;name&quot;,     &quot;value&quot;: {&quot;type&quot;: &quot;expr&quot;, &quot;expr&quot;: &quot;title(trim(name))&quot;}},
+        {&quot;name&quot;: &quot;supplier&quot;, &quot;value&quot;: {&quot;type&quot;: &quot;expr&quot;, &quot;expr&quot;: &quot;coalesce(supplier, &#39;UNKNOWN&#39;)&quot;}},
+        {&quot;name&quot;: &quot;qty&quot;,      &quot;value&quot;: {&quot;type&quot;: &quot;expr&quot;, &quot;expr&quot;: &quot;to_int(qty)&quot;}}
+      ]}},
+      {&quot;id&quot;: 6, &quot;pos&quot;: [1040, 40],  &quot;step&quot;: {&quot;type&quot;: &quot;write&quot;, &quot;path&quot;: &quot;Outputs/stock.json&quot;, &quot;format&quot;: {&quot;kind&quot;: &quot;json&quot;}}},
+      {&quot;id&quot;: 7, &quot;pos&quot;: [790, 150],  &quot;step&quot;: {&quot;type&quot;: &quot;write&quot;, &quot;path&quot;: &quot;Outputs/unknown_supplier.csv&quot;}}
+    ],
+    &quot;wires&quot;: [
+      {&quot;from&quot;: 1, &quot;to&quot;: 2},
+      {&quot;from&quot;: 2, &quot;to&quot;: 4, &quot;port&quot;: 0},
+      {&quot;from&quot;: 3, &quot;to&quot;: 4, &quot;port&quot;: 1},
+      {&quot;from&quot;: 4, &quot;to&quot;: 5},
+      {&quot;from&quot;: 5, &quot;to&quot;: 6},
+      {&quot;from&quot;: 4, &quot;to&quot;: 7, &quot;from_port&quot;: 1}
+    ]
+  }}
+]</code></pre>
+<pre class="sh"><code>dbdb-cli apply project.json --quiet @commands.json
+dbdb-cli validate project.json
+dbdb-cli preview project.json --job &quot;Parts in stock&quot; --step 5
+dbdb-cli run-job project.json &quot;Parts in stock&quot;</code></pre>
+<p>When you hand the project over, say what each job reads and writes, what <code>validate</code> and the run reported, and anything in the inputs that the person should decide about (duplicate keys, values that did not convert, rows without a match).</p>
+</main>
+</body>
+</html>

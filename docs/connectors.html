@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Connectors · dbdb</title>
+<meta name="description" content="Models, servers and services a project reaches, set up once and named.">
+<style>
+:root{--bg:#fbfaf7;--fg:#1d1f21;--muted:#62666d;--line:#dcd9d2;--code:#f0eee8;--accent:#a8401a;--head:#f3f1eb}
+@media (prefers-color-scheme:dark){:root{--bg:#16181b;--fg:#e4e2dd;--muted:#9a9ea6;--line:#33373d;--code:#22252a;--accent:#f0935f;--head:#1e2125}}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font:17px/1.6 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+main{max-width:46rem;margin:0 auto;padding:2.5rem 1rem 4rem}
+h1,h2,h3{line-height:1.25;text-wrap:balance}
+h1{font-size:2.1rem;margin:0 0 .4rem}
+h2{font-size:1.5rem;margin:2.8rem 0 .8rem;padding-top:1.4rem;border-top:1px solid var(--line)}
+h3{font-size:1.15rem;margin:2rem 0 .5rem}
+p.lede{color:var(--muted);font-size:1.1rem;margin:0 0 .3rem}
+p.date{color:var(--muted);font-size:.9rem;margin:0 0 2rem}
+a{color:var(--accent);text-underline-offset:2px}
+img{max-width:100%;height:auto;border:1px solid var(--line);border-radius:6px;display:block}
+figure{margin:1.6rem 0}
+@media (min-width:52rem){figure.wide{width:min(72rem,calc(100vw - 2rem));margin-left:50%;transform:translateX(-50%)}}
+figcaption{color:var(--muted);font-size:.88rem;margin-top:.45rem;text-align:center}
+code{font:0.88em/1.45 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;background:var(--code);padding:.1em .3em;border-radius:4px}
+p code,li code{overflow-wrap:anywhere}
+pre{background:var(--code);padding:.9rem 1rem;border-radius:6px;overflow-x:auto}
+pre code{background:none;padding:0;font-size:.84rem}
+.table{overflow-x:auto;margin:1.2rem 0}
+table{border-collapse:collapse;width:100%;min-width:34rem;font-size:.93rem}
+th,td{text-align:left;vertical-align:top;padding:.45rem .7rem;border-bottom:1px solid var(--line)}
+th{background:var(--head);font-weight:600;white-space:nowrap}
+td:first-child{white-space:nowrap}
+table.wrap td:first-child{white-space:normal;overflow-wrap:anywhere}
+li{margin:.3rem 0}
+td img{width:9.5rem;height:3.6rem;object-fit:contain;background:#fff;border:1px solid var(--line);border-radius:6px}
+td:nth-child(2){white-space:nowrap}
+figure.scroll{overflow-x:auto}
+figure.scroll img{min-width:46rem}
+small{display:block;color:var(--muted);font-size:.82rem;line-height:1.5}
+</style>
+<style>
+nav.site{max-width:46rem;margin:0 auto;padding:1rem 1rem 0;display:flex;flex-wrap:wrap;gap:.3rem 1.1rem;font-size:.95rem}
+nav.site a{text-decoration:none}
+nav.site a:first-child{font-weight:700;margin-right:auto}
+td:first-child,td:nth-child(2){white-space:normal}
+dl.pages dt{margin-top:1rem;font-weight:600}
+dl.pages dd{margin:.15rem 0 0;color:var(--muted)}
+</style>
+</head>
+<body>
+<nav class="site"><a href="../">dbdb</a><a href="../docs/">Documentation</a><a href="../flatpak.html">Flatpak</a><a href="https://github.com/koziserek/dbdb/releases">Download</a><a href="https://github.com/koziserek/dbdb/issues">Issues</a></nav>
+<main>
+<h1>Connectors</h1>
+<p class="lede">Models, servers and services a project reaches, set up once and named.</p>
+<p>A connector is what a project reaches outside itself, set up once and named:</p>
+<ul>
+<li>a connector to a <strong>model</strong> is who answers in the <a href="assistant.html">Assistant</a> and in a job's Prompt steps;</li>
+<li>a connector to a <strong>database</strong> holds the connection that sources and database outputs read and write through;</li>
+<li>a connector to a <strong>REST API</strong> holds the API's address and says where its key is, for the sources that read it.</li>
+</ul>
+<p>The Connectors pane (🔌) lists them and shows the chosen one as a form. Connectors are part of the project file, so every copy that opens the project, here or through a sync folder, a relay or a browser, has the same ones. Every change is a command: Undo takes it back, and <code>dbdb-cli apply</code> and the MCP tools do the same.</p>
+<h2 id="for-everybody-or-for-this-machine">For everybody, or for this machine</h2>
+<p>Each setting of a connector is <strong>everybody's</strong> until a machine keeps its own. Tick <strong>Only this machine</strong> beside a setting, and what you type there is for this machine alone: the other machines keep what they have. Untick it to take everybody's again.</p>
+<p>So one connector works where the machines differ. A database that the office reaches at <code>db.internal</code> and a laptop through a tunnel on <code>localhost:5433</code> is one connector with two connections, and every source that reads through it works on both. A llama-server on each desk is one connector with an address for each.</p>
+<p>A connector as a whole is for every machine that opens the project. Tick <strong>The whole connector is only for this machine</strong> and the other machines are no longer offered it; another machine that ticks it too joins this one. Where a connector is only for other machines, the form says which, with <strong>This machine too</strong> and <strong>Every machine</strong>. A connector to a database is also not for a machine where it has no connection. One that is not for this machine is listed greyed out and is not offered: the Assistant does not ask through it, and a source that reads through it says that no connector of that name is for this machine.</p>
+<p><strong>Other machines</strong> lists the other machines the connector names, each with what it keeps for itself. <strong>Copy to this machine</strong> gives this machine the settings that machine uses, as its own, and makes the connector one for this machine too. The other machine keeps what it has, and what you change afterwards is this machine's alone.</p>
+<p>What a machine keeps for itself is in the project like the rest: that is how another machine can see it and copy it. It is no place for a secret (see below).</p>
+<p>A <strong>machine</strong> is known by its computer's name, the one the pane shows as <em>This machine</em>. <code>dbdb-app</code> and <code>dbdb-cli</code> on one computer are the same machine. Set <code>DBDB_MACHINE</code> before starting dbdb to call a machine something else. A browser has no name for the computer, so the pane asks for one there and the browser keeps it. Capitals do not tell machines apart. The machines say where a connector works. They are no lock: whoever has the project file can change them.</p>
+<h2 id="a-connector-to-a-model">A connector to a model</h2>
+<ul>
+<li>a <strong>name</strong>, which is what the Assistant's header lists;</li>
+<li>a <strong>kind</strong>: Ollama, llama.cpp, Claude, Claude Code or Copilot (<a href="assistant.html">assistant.md</a> says what each needs);</li>
+<li>an <strong>address</strong> (Ollama, llama.cpp) and a <strong>model</strong>. Another model chosen in the Assistant's header is that copy's own choice and does not change the connector;</li>
+<li>a <strong>key variable</strong> (Claude, llama.cpp): the <em>name</em> of an environment variable, such as <code>TEAM_CLAUDE_KEY</code>. Each machine reads its own key from it. A key itself is never kept in a connector: dbdb refuses anything that is not the name of a variable, so no key reaches the project file or another machine. Left empty, Claude reads <code>ANTHROPIC_API_KEY</code>;</li>
+<li>or a <strong>key secret</strong> in its place: the name of a secret in the project's <a href="vault.html">vault</a>, for one key that everyone with the vault's password uses. The key is in the project sealed, and the Assistant asks for the vault to be unlocked before it starts;</li>
+<li>a <strong>key for this run</strong>: a key typed into the pane, for this machine, kept until dbdb closes and never saved. It goes before the variable and the secret;</li>
+<li><strong>instructions</strong>, sent ahead of every conversation after dbdb's own: the language to answer in, what the tables are about, what to leave alone. They add to how the assistant answers; what it may read and change stays as <a href="assistant.html">assistant.md</a> says.</li>
+</ul>
+<p>Claude Code and Copilot connectors are not offered in a browser, which cannot start a program. When no connector to a model is for this machine, nobody answers there, and the Assistant says so.</p>
+<p>The Assistant itself holds no address, model list or key any more. What a copy of dbdb was set up with before connectors (an Ollama address, a model) answers nobody by itself: <strong>Add connector</strong> fills a new connector of that kind in with it, so it is one click to move it into the project.</p>
+<h2 id="a-connector-to-a-database">A connector to a database</h2>
+<ul>
+<li>a <strong>name</strong>;</li>
+<li>a <strong>kind</strong>: PostgreSQL, SQL Server, MariaDB / MySQL, Oracle, SQLite or MS Access;</li>
+<li>the <strong>connection</strong>, written as in a source: a connection string, <code>env:NAME</code> for one that a variable of each machine holds, or the file of an SQLite or Access database.</li>
+</ul>
+<p>A source or a database output reads through it when its connection is <code>${connection:name}</code>. In the app, choose it under <strong>From a connector ⏷</strong> below the connection of a source or of a database output. A project file says it the same way:</p>
+<pre class="json"><code>{&quot;name&quot;: &quot;orders&quot;, &quot;source&quot;: {&quot;kind&quot;: &quot;postgres_table&quot;,
+  &quot;url&quot;: &quot;${connection:warehouse}&quot;, &quot;table&quot;: &quot;public.orders&quot;}}</code></pre>
+<p>The connection of a connector may name <a href="parameters.html">parameters</a>, so test and production each have theirs, and takes its password from the <a href="vault.html">vault</a> as <code>${vault:name}</code>. Do not write a password into it: the project file is shared, and the pane and <code>validate</code> say so when one is there. <em>Move passwords to the vault</em> in <em>Edit &gt; Vault…</em> (or <code>dbdb-cli vault move-in</code>) seals it and writes the secret's name in its place, for everybody's connection and for each machine's own.</p>
+<h2 id="a-connector-to-a-rest-api-or-an-odata-service">A connector to a REST API or an OData service</h2>
+<ul>
+<li>a <strong>name</strong>;</li>
+<li>the <strong>address</strong> of the API, such as <code>https://api.example.com/v1</code>. A source adds its own path to it;</li>
+<li>a <strong>key variable</strong> or a <strong>key secret</strong>, as a connector to a model has them: the name of an environment variable that each machine reads its own key from, or the name of a secret in the project's <a href="vault.html">vault</a>. Never the key itself;</li>
+<li><strong>key sent as</strong>: <code>bearer</code> (also when left empty) for <code>Authorization: Bearer &lt;key&gt;</code>, <code>basic</code> for a key that is <code>user:password</code>, or the name of the header the key goes in, such as <code>X-API-Key</code>. <code>oauth</code> and the address that gives a token signs in first, with the client's id and secret as the key (<a href="rest.html#signing-in-with-oauth">rest.md</a>).</li>
+</ul>
+<p>A <a href="rest.html">REST API source</a> reads through it when its address is <code>${connection:name}</code>: choose it under <strong>From a connector ⏷</strong> in the source's settings.</p>
+<pre class="json"><code>{&quot;name&quot;: &quot;orders&quot;, &quot;source&quot;: {&quot;kind&quot;: &quot;rest&quot;,
+  &quot;url&quot;: &quot;${connection:shop}&quot;, &quot;path&quot;: &quot;/orders&quot;, &quot;rows&quot;: &quot;items&quot;}}</code></pre>
+<p>The key goes to the host of the connector's address and to no other, only with a GET, and not over plain <code>http://</code> except to this machine itself. <a href="rest.html">rest.md</a> says what else a REST source will not do.</p>
+<p><strong>Build a call…</strong> opens the <a href="rest.html#building-and-testing-a-call-in-the-app">API Call Builder</a> with a new call through the connector.</p>
+<p>A connector to an <strong>OData service</strong> has the same settings. Its address is the service's own, the one that <code>$metadata</code> follows, and an <a href="rest.html#odata-services">OData source</a> reads through it.</p>
+<p><strong>Test connection</strong> tries the connector as this machine has it. A database is asked for its tables: nothing is read or changed. A model is asked for its models. A REST API is sent one GET to its address, with the key, and the pane says what it answered. An OData service is asked for its <code>$metadata</code>, and the pane says how many entity sets it has. For Claude only the key is looked for, since its API has nothing to ask that costs nothing; the key itself is tried with the first question.</p>
+<p>Sources that hold their connection themselves keep working as they are. <strong>Add connector ⏷ &gt; From the connection of a source</strong> makes a connector of such a connection and has every source and database output with the same connection read through it, in one step that one Undo takes back.</p>
+<p>Renaming a connector takes what reads through it along. The pane says what reads through the one shown.</p>
+<h2 id="from-the-command-line-and-for-an-assistant">From the command line and for an assistant</h2>
+<p><code>dbdb-cli connectors project.json</code> lists them, with the settings as this machine has them, and says which this machine may use; <code>--machine NAME</code> answers for another machine, <code>--json</code> prints them as data, and <code>--usable NAME</code> exits with status 1 unless that connector may be used here. Over MCP the tool is <code>list_connectors</code>. They change with the commands <code>add_connector</code>, <code>update_connector</code>, <code>rename_connector</code> and <code>remove_connector</code> (<a href="agents.html">agents.md</a>).</p>
+<h2 id="the-project-file">The project file</h2>
+<p>A project file with connectors is written as format 2, which a dbdb from before connectors does not open: it would save the file without them. One with a connector to a database, or with a setting that a machine keeps for itself, is written as format 6, and one with a connector to a REST API as format 7. A project without connectors stays in format 1 (<a href="shared-projects.html">shared-projects.md</a>).</p>
+</main>
+</body>
+</html>

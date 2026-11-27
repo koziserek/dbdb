@@ -1,0 +1,379 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>REST API and OData sources · dbdb</title>
+<meta name="description" content="Sources that read a REST API or an OData service.">
+<style>
+:root{--bg:#fbfaf7;--fg:#1d1f21;--muted:#62666d;--line:#dcd9d2;--code:#f0eee8;--accent:#a8401a;--head:#f3f1eb}
+@media (prefers-color-scheme:dark){:root{--bg:#16181b;--fg:#e4e2dd;--muted:#9a9ea6;--line:#33373d;--code:#22252a;--accent:#f0935f;--head:#1e2125}}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font:17px/1.6 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+main{max-width:46rem;margin:0 auto;padding:2.5rem 1rem 4rem}
+h1,h2,h3{line-height:1.25;text-wrap:balance}
+h1{font-size:2.1rem;margin:0 0 .4rem}
+h2{font-size:1.5rem;margin:2.8rem 0 .8rem;padding-top:1.4rem;border-top:1px solid var(--line)}
+h3{font-size:1.15rem;margin:2rem 0 .5rem}
+p.lede{color:var(--muted);font-size:1.1rem;margin:0 0 .3rem}
+p.date{color:var(--muted);font-size:.9rem;margin:0 0 2rem}
+a{color:var(--accent);text-underline-offset:2px}
+img{max-width:100%;height:auto;border:1px solid var(--line);border-radius:6px;display:block}
+figure{margin:1.6rem 0}
+@media (min-width:52rem){figure.wide{width:min(72rem,calc(100vw - 2rem));margin-left:50%;transform:translateX(-50%)}}
+figcaption{color:var(--muted);font-size:.88rem;margin-top:.45rem;text-align:center}
+code{font:0.88em/1.45 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;background:var(--code);padding:.1em .3em;border-radius:4px}
+p code,li code{overflow-wrap:anywhere}
+pre{background:var(--code);padding:.9rem 1rem;border-radius:6px;overflow-x:auto}
+pre code{background:none;padding:0;font-size:.84rem}
+.table{overflow-x:auto;margin:1.2rem 0}
+table{border-collapse:collapse;width:100%;min-width:34rem;font-size:.93rem}
+th,td{text-align:left;vertical-align:top;padding:.45rem .7rem;border-bottom:1px solid var(--line)}
+th{background:var(--head);font-weight:600;white-space:nowrap}
+td:first-child{white-space:nowrap}
+table.wrap td:first-child{white-space:normal;overflow-wrap:anywhere}
+li{margin:.3rem 0}
+td img{width:9.5rem;height:3.6rem;object-fit:contain;background:#fff;border:1px solid var(--line);border-radius:6px}
+td:nth-child(2){white-space:nowrap}
+figure.scroll{overflow-x:auto}
+figure.scroll img{min-width:46rem}
+small{display:block;color:var(--muted);font-size:.82rem;line-height:1.5}
+</style>
+<style>
+nav.site{max-width:46rem;margin:0 auto;padding:1rem 1rem 0;display:flex;flex-wrap:wrap;gap:.3rem 1.1rem;font-size:.95rem}
+nav.site a{text-decoration:none}
+nav.site a:first-child{font-weight:700;margin-right:auto}
+td:first-child,td:nth-child(2){white-space:normal}
+dl.pages dt{margin-top:1rem;font-weight:600}
+dl.pages dd{margin:.15rem 0 0;color:var(--muted)}
+</style>
+</head>
+<body>
+<nav class="site"><a href="../">dbdb</a><a href="../docs/">Documentation</a><a href="../flatpak.html">Flatpak</a><a href="https://github.com/koziserek/dbdb/releases">Download</a><a href="https://github.com/koziserek/dbdb/issues">Issues</a></nav>
+<main>
+<h1>REST API and OData sources</h1>
+<p class="lede">Sources that read a REST API or an OData service.</p>
+<p>A REST API source reads the rows an API answers with. It asks with GET, reads JSON, and follows the API's pages to the last one. From there on the rows are like any others: a job filters, joins and writes them, and the app shows them as a table.</p>
+<pre class="json"><code>{&quot;name&quot;: &quot;orders&quot;, &quot;source&quot;: {
+  &quot;kind&quot;: &quot;rest&quot;,
+  &quot;url&quot;: &quot;${connection:shop}&quot;,
+  &quot;path&quot;: &quot;/orders?state=open&quot;,
+  &quot;rows&quot;: &quot;data.items&quot;,
+  &quot;paging&quot;: {&quot;kind&quot;: &quot;next_link&quot;, &quot;at&quot;: &quot;links.next&quot;}}}</code></pre>
+<p>In the app: <strong>Add source</strong>, type <strong>REST API</strong>.</p>
+<p>An API that speaks OData is read with less to say: see <a href="#odata-services">OData services</a> below.</p>
+<h2 id="where-the-api-is">Where the API is</h2>
+<p><code>url</code> is the API's address, such as <code>https://api.example.com/v1</code>, or a <a href="connectors.html">connector</a> to a REST API as <code>${connection:name}</code>. Use a connector when the API wants a key, or when several sources read one API: the connector holds the address once and says where the key is. <code>env:NAME</code> takes the address from a variable of each machine.</p>
+<p><code>path</code> is what follows the address: <code>/orders?state=open</code>. It may name <a href="parameters.html">parameters</a>, so one source reads <code>${day}</code>'s orders.</p>
+<h2 id="where-the-rows-are">Where the rows are</h2>
+<p><code>rows</code> is the way to the rows inside an answer: the names to follow, with dots between them. For this answer it is <code>data.items</code>:</p>
+<pre class="json"><code>{&quot;data&quot;: {&quot;items&quot;: [{&quot;id&quot;: 1, &quot;customer&quot;: {&quot;name&quot;: &quot;Ann&quot;}}], &quot;total&quot;: 1}}</code></pre>
+<p>Leave it empty when the answer itself is the list of rows. An object where the rows should be is one row.</p>
+<ul>
+<li><strong>Columns</strong> are the fields of the rows, in the order first seen. A row that lacks a field has it empty.</li>
+<li><strong>An object inside a row</strong> is opened into columns of its own: <code>customer.name</code> beside <code>customer.id</code>.</li>
+<li><strong>A list inside a row</strong> stays as JSON text, in one column.</li>
+<li><strong>Values are text</strong>, as everywhere in dbdb. <code>null</code> and <code>""</code> are both empty.</li>
+<li><strong>A number with more than 15 digits</strong> may lose its last ones: JSON numbers pass through a floating-point number. An API that gives such numbers as text keeps them whole.</li>
+</ul>
+<h2 id="pages">Pages</h2>
+<p>APIs give pages in different ways. <code>paging</code> says which:</p>
+<div class="table">
+<table>
+<thead>
+<tr>
+<th><code>paging</code></th>
+<th>How the next page is asked for</th>
+<th>Reading ends</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>left out, or <code>{"kind": "none"}</code></td>
+<td>It is not: one answer has every row</td>
+<td>after it</td>
+</tr>
+<tr>
+<td><code>{"kind": "next_link", "at": "links.next"}</code></td>
+<td>At the address the answer gives at <code>at</code>, whole or relative</td>
+<td>when there is none</td>
+</tr>
+<tr>
+<td><code>{"kind": "link_header"}</code></td>
+<td>At the address the <code>Link</code> header gives as <code>rel="next"</code></td>
+<td>when there is none</td>
+</tr>
+<tr>
+<td><code>{"kind": "offset", "parameter": "offset"}</code></td>
+<td>With <code>offset</code> set to the rows read so far</td>
+<td>at an empty page</td>
+</tr>
+<tr>
+<td><code>{"kind": "page", "parameter": "page"}</code></td>
+<td>With <code>page</code> one higher; <code>"first": 0</code> for an API that counts from 0</td>
+<td>at an empty page</td>
+</tr>
+<tr>
+<td><code>{"kind": "cursor", "at": "meta.next", "parameter": "after"}</code></td>
+<td>With <code>after</code> set to the mark the answer gives at <code>at</code></td>
+<td>when there is none</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><code>offset</code> and <code>page</code> also take <code>"size_parameter": "limit", "size": 100</code>. dbdb then sets <code>limit=100</code> itself, and a page with fewer than 100 rows is the last, which saves the empty page at the end.</p>
+<p>An API that names the same page a second time, or gives the same rows for two pages in a row, stops the read with an error. Otherwise a wrong setting would have a run go round for ever.</p>
+<p>An API that answers 429 or 503 is asked again, after the time its <code>Retry-After</code> says, up to five times.</p>
+<h2 id="the-key">The key</h2>
+<p>A key is set up in a connector to a REST API, never in a source:</p>
+<ul>
+<li><strong>Key variable</strong>: the name of an environment variable. Each machine reads its own key from it.</li>
+<li><strong>Key secret</strong>: or the name of a secret in the project's <a href="vault.html">vault</a>, for one key that everyone with the vault's password uses.</li>
+<li><strong>Key sent as</strong>: <code>bearer</code> (the usual, and what an empty setting means) sends <code>Authorization: Bearer &lt;key&gt;</code>. <code>basic</code> is for a key that is <code>user:password</code>. Any other text is the name of the header the key goes in, such as <code>X-API-Key</code>.</li>
+</ul>
+<p>A user and password in the address, <code>https://user:${vault:name}@host</code>, are sent as Basic too.</p>
+<h3 id="signing-in-with-oauth">Signing in with OAuth</h3>
+<p>An API that wants a token from a sign-in server, as most business services in a cloud do, is set up in the same three settings:</p>
+<ul>
+<li><strong>Key sent as</strong>: <code>oauth</code>, then the address that gives the token, then the scopes to ask for, if any: <code>oauth https://login.example.com/oauth2/token orders.read</code>.</li>
+<li><strong>Key variable</strong> or <strong>Key secret</strong>: the client's id and its secret, with a colon between them: <code>my-client-id:my-client-secret</code>.</li>
+</ul>
+<p>Before a read, dbdb asks that address for a token and sends the token to the API as <code>Authorization: Bearer</code>. This is the sign-in of a program (OAuth 2.0, the client credentials grant), which needs nobody at a browser, so a job on a runner signs in the same way. What holds for it:</p>
+<ul>
+<li>The id and the secret go to the address that gives the token and nowhere else, never over <code>http://</code> except to this machine, and only to a host <code>DBDB_REST_HOSTS</code> allows, where that is set. The API itself gets only the token.</li>
+<li>A token is asked for at the start of each read and kept nowhere: not in the project, not on disk, and not in what a test shows.</li>
+<li>A read that takes longer than the token is valid stops with the API's refusal. It is not signed in again in the middle.</li>
+<li>When the sign-in is refused, the error says what the server said, such as <code>invalid_client</code>, and nothing of the secret.</li>
+</ul>
+<p>A sign-in where a person agrees in a browser (the authorization code grant) is not built, since the token it gives belongs to that person and would have to be kept for them somewhere. A token from such a flow still works as a bearer key for as long as it is valid.</p>
+<h2 id="what-a-rest-source-will-not-do">What a REST source will not do</h2>
+<p>These hold for every REST source, so that a project file from someone else cannot turn a read into something else:</p>
+<ul>
+<li><strong>A GET, unless the machine allows a POST.</strong> A read never changes what it reads, so a source asks with a GET and sends nothing along. A source that names something to send asks with a POST, and dbdb sends one only to the hosts the machine lists in <code>DBDB_REST_POST</code> (<a href="#an-api-that-searches-with-a-post">below</a>). No other method is ever sent. The sign-in of a connector that is set up for OAuth is a POST too, to the address that gives its token.</li>
+<li><strong>The key goes to one host.</strong> A next page or a redirect on another host stops the read, with an error that names the host, instead of carrying the key there.</li>
+<li><strong>No key in plain text.</strong> A key is not sent over <code>http://</code>, except to this machine itself (<code>localhost</code>).</li>
+<li><strong>Only the hosts a machine allows.</strong> Where <code>DBDB_REST_HOSTS</code> is set, dbdb calls no other host: <code>DBDB_REST_HOSTS=api.example.com,*.corp.example</code>. Set it on a machine that runs jobs for others (<a href="sharing-and-trust.html">sharing-and-trust.md</a>).</li>
+</ul>
+<h2 id="an-api-that-searches-with-a-post">An API that searches with a POST</h2>
+<p>Some APIs read with a POST: the search of a document store, a report that takes its filter as JSON, GraphQL. For these a REST source has <strong>Sends</strong>: the JSON to send along. With something in it, the call is a POST with <code>Content-Type: application/json</code>; empty, it is a GET.</p>
+<p>dbdb cannot see whether a POST only reads. The same address could as well add an order. So this is the one thing a project file cannot switch on by itself:</p>
+<ul>
+<li>A POST goes only to the hosts the machine lists in the variable <code>DBDB_REST_POST</code>, written like <code>DBDB_REST_HOSTS</code>: <code>DBDB_REST_POST=search.example.com,*.corp.example</code>. Where it is not set, no source sends a POST, and the error names the variable and the host. Set it on your machine, and on a runner, for the APIs you know to only read with it.</li>
+<li>What is sent has to be JSON, and it is sent as written. No parameter is filled into it.</li>
+<li>The pages follow in the address, as for a GET, and every page is sent the same. An API that wants the page inside what is sent is read for its first page only: set <em>Pages</em> to none.</li>
+<li>A redirect in answer to a POST is not followed.</li>
+<li>Every other limit above holds as for a GET.</li>
+</ul>
+<p>The API Call Builder shows <code>POST</code> and what is sent under <strong>Asks</strong> before anything is asked, and <strong>Copy as curl</strong> writes it with <code>-d</code>.</p>
+<p>In a project file it is <code>"body"</code>, a text: <code>"body": "{\"query\": \"open\"}"</code>.</p>
+<h2 id="large-answers-and-the-browser">Large answers, and the browser</h2>
+<p>Every page is read before the first row is given, so that the columns are those of all rows. What was read is held in memory; a source of millions of rows is better copied once into a database or a Parquet file by a job. A preview in the app stops after the page that fills it.</p>
+<p>A page in a browser can only read an API that allows calls from the page's address (CORS). Most APIs do not, so REST sources are for the desktop app and <code>dbdb-cli</code> in practice.</p>
+<h2 id="odata-services">OData services</h2>
+<p>OData is a standard for REST APIs, which SAP, Microsoft Dynamics, SharePoint and many others speak. It settles what a REST source has to be told: where the rows are, and how the pages follow. So an OData source names only the service, the entity set (OData's word for a table) and, if wanted, what the service should filter:</p>
+<pre class="json"><code>{&quot;name&quot;: &quot;orders&quot;, &quot;source&quot;: {
+  &quot;kind&quot;: &quot;odata&quot;,
+  &quot;url&quot;: &quot;${connection:erp}&quot;,
+  &quot;set&quot;: &quot;Orders&quot;,
+  &quot;query&quot;: &quot;$filter=Year eq 2026&amp;$select=ID,Customer,Total&quot;}}</code></pre>
+<p>In the app: <strong>Add source</strong>, type <strong>OData service</strong>. <strong>Look up</strong> lists the service's entity sets.</p>
+<ul>
+<li><code>url</code> is the service's address, the one that <code>$metadata</code> follows, such as <code>https://erp.example.com/odata/v4</code>, or a connector to an OData service as <code>${connection:name}</code>. The connector has the settings of a connector to a REST API, the key among them.</li>
+<li><code>set</code> is the entity set.</li>
+<li><code>query</code> is OData's query options, which the service itself applies: <code>$filter</code>, <code>$select</code>, <code>$orderby</code>, <code>$expand</code>, <code>$top</code>. Left out, every row is read. It may name <a href="parameters.html">parameters</a>.</li>
+</ul>
+<p>Versions 2 and 4 are read, and version 3 where it answers like one of them. The source does not say which: it shows in the answer. The answer has to be JSON, which dbdb asks for; a service that answers only in Atom (XML) is not read.</p>
+<p>The rows are as a REST source's, with three differences:</p>
+<ul>
+<li>What the service says about a row and not in it is left out: <code>@odata.etag</code> and its like, <code>__metadata</code>, and version 2's links to rows that were not asked for.</li>
+<li>A date of version 2, <code>/Date(1767225600000)/</code>, is written out as <code>2026-01-01 00:00:00</code>.</li>
+<li>A row that <code>$expand</code> brought along is opened into columns like any object in a row; a list of them stays JSON text, unless the source says <code>each</code>.</li>
+</ul>
+<h3 id="a-row-for-each-related-row">A row for each related row</h3>
+<p><code>$expand</code> puts related rows into each row. Where a row has one related row, such as the customer of an order, its columns stand beside the row's own: <code>Customer.Name</code>. Where it has many, such as the lines of an order, they come as a list. <code>each</code> names one such list, and the source then gives a row for each related row in it:</p>
+<pre class="json"><code>{&quot;name&quot;: &quot;order lines&quot;, &quot;source&quot;: {
+  &quot;kind&quot;: &quot;odata&quot;,
+  &quot;url&quot;: &quot;${connection:erp}&quot;,
+  &quot;set&quot;: &quot;Orders&quot;,
+  &quot;query&quot;: &quot;$expand=Lines&quot;,
+  &quot;each&quot;: &quot;Lines&quot;}}</code></pre>
+<p>An order with three lines is three rows, each with the order's columns and one line's as <code>Lines.No</code>, <code>Lines.Qty</code>. An order without lines is one row with those columns empty, so no order is lost. It is what a Join step of two sources would give with every main row kept, read in one go.</p>
+<ul>
+<li>One list can be rows. Another list that is brought along stays JSON text in a cell.</li>
+<li>The query has to bring the list along (<code>$expand=Lines</code>), or the read stops and says so.</li>
+<li>Only some columns of the related rows are asked for as the service's version writes it: <code>$expand=Lines($select=No,Qty)</code> in version 4, and <code>$select=*,Lines/No,Lines/Qty&amp;$expand=Lines</code> in versions 2 and 3.</li>
+<li>A project file with <code>each</code> is written as <code>"format": 8</code>, so that an older dbdb says a newer one is needed.</li>
+</ul>
+<h3 id="reading-only-what-changed">Reading only what changed</h3>
+<p>A job that copies a large entity set every night reads every row every night. An OData source can say that a run reads only what is new since the run before, in one of two ways.</p>
+<p><strong>Newer by a column.</strong> The source names a column that only grows: a date of the last change, or a number the service counts up.</p>
+<pre class="json"><code>{&quot;name&quot;: &quot;orders&quot;, &quot;source&quot;: {
+  &quot;kind&quot;: &quot;odata&quot;,
+  &quot;url&quot;: &quot;${connection:erp}&quot;,
+  &quot;set&quot;: &quot;Orders&quot;,
+  &quot;changes&quot;: {&quot;newer_by&quot;: &quot;ChangedAt&quot;}}}</code></pre>
+<p>Before a run reads, it asks the service for the largest value the column has now. It then reads the rows whose value is larger than the largest of the run before (<code>$filter=ChangedAt gt …</code>, added to the source's own filter), and when the run has ended well, the new largest value is kept for the next run. The first run reads every row.</p>
+<ul>
+<li>The value is asked for before the rows are read, and is not taken from them. A row that is written while the run reads is read again by the next run, and none is missed.</li>
+<li>A row that is deleted at the service is not noticed, and a row whose column is empty is read by the first run only.</li>
+<li>A run asks the service for its <code>$metadata</code> first, to write the value as the column's type wants it.</li>
+</ul>
+<p><strong>The service's own changes.</strong> A service of version 4 that follows its changes ends an answer with a delta link when it is asked to (<code>Prefer: odata.track-changes</code>), and gives behind that link what has changed since.</p>
+<pre class="json"><code>{&quot;name&quot;: &quot;orders&quot;, &quot;source&quot;: {
+  &quot;kind&quot;: &quot;odata&quot;,
+  &quot;url&quot;: &quot;${connection:erp}&quot;,
+  &quot;set&quot;: &quot;Orders&quot;,
+  &quot;changes&quot;: &quot;delta&quot;}}</code></pre>
+<p>The first run reads every row and keeps the link. Each run after it reads from the link of the run before: the rows that are new or changed, and the rows that are gone. A source that reads this way always has two more columns, <code>@removed</code> and <code>@id</code>. They are empty for a row that is there. For one that is gone, <code>@removed</code> says why (<code>deleted</code>, or <code>changed</code> for a row that still exists and is no longer among those the query asks for) and <code>@id</code> what the service calls it, with the key columns where the service gives them. A Filter step on <code>@removed</code> sends them where they belong.</p>
+<ul>
+<li>A service that gives no delta link is read whole by every run. <code>dbdb-cli changes</code> says so.</li>
+<li>A link that the service no longer knows makes the run fail with the service's answer. Begin again as below.</li>
+</ul>
+<p>For both ways:</p>
+<ul>
+<li><strong>What is remembered</strong> is in <code>odata-changes.json</code> beside the project file: for each source, service and entity set the largest value or the delta link, the query it is of and when it was read. It holds no key. It is this machine's own and not part of the project: another machine that runs the job begins with every row, and so does another environment, which reads another service.</li>
+<li><strong>It is kept only by a run that wrote and did not fail.</strong> A dry run reads what a run would and keeps nothing. After a run that failed, the next one reads the same rows again.</li>
+<li><strong>Every row is read again</strong> when the source's query, entity set or column changes, since what was remembered is of another call.</li>
+<li><strong>A run with nothing new</strong> gives the steps after the source no rows, with the columns of the last run that had rows, so that a step that names a column still finds it. The columns are remembered in the same file.</li>
+<li><strong>A preview and a test read every row</strong>, whatever is remembered, and so does a run of a project that is not saved, or in a browser, where there is no file to remember in.</li>
+<li><strong>To begin again</strong>: <code>dbdb-cli run-job project.json job --from-start</code>, <code>dbdb-cli changes project.json --forget orders</code>, or <em>Read every row next time</em> in the API Call Builder.</li>
+</ul>
+<pre class="sh"><code>dbdb-cli changes project.json</code></pre>
+<p>lists what is remembered, one source a line.</p>
+<p>What the job writes to is yours to choose with this in mind: a run now brings only some rows, so an output that replaces a file holds only those. A database output that adds or updates rows is what such a source is usually wired to (<a href="database-output.html">database-output.md</a>).</p>
+<ul>
+<li>A project file with <code>changes</code> is written as <code>"format": 8</code>.</li>
+</ul>
+<p>Everything under "What a REST source will not do" holds for an OData source too.</p>
+<p>A service also says what it holds, in its <code>$metadata</code>: the entity sets, their columns, their keys, and what leads from one entity set to another, its navigation properties. The <strong>Graph</strong> pane draws it: pick <em>Service of</em> and a source that reads the service, and every entity set is a table and every navigation property a line (see below for which column a line starts at). <strong>Look up</strong> and a connector's <strong>Test connection</strong> read it too, and so does</p>
+<pre class="sh"><code>dbdb-cli export-keys project.json --database orders --whole -o erp.keys.json</code></pre>
+<p>which writes what the service that the source <code>orders</code> reads says it holds, with its keys, as a <a href="agents.html">key file</a>, as it does for a database.</p>
+<p>A navigation property says that rows are linked, and not always by which columns. dbdb makes of each one of three things:</p>
+<ul>
+<li>A foreign key, where the service names the columns (a referential constraint).</li>
+<li>A foreign key, where it names none and the names tell: the entity has a column with the name of the one key column of the entity the property leads to. <code>Orders.Customer</code> leads to <code>Customers</code>, whose key is <code>CustomerID</code>, and <code>Orders</code> has a <code>CustomerID</code>. The key's comment says that it was made this way. None is made of a key that is the entity's own whole key (every entity's <code>ID</code>), of an entity to itself, between two entities that lead to many of each other, or where two properties lead to the same entity.</li>
+<li>A line of the Graph and no key, where neither says the columns. The property is a row marked <code>nav</code> under its table's columns. It can be followed with <code>$expand</code>; it cannot be joined on, and a key file does not hold it.</li>
+</ul>
+<p>A property and the one that leads back are one link.</p>
+<p>Not built: writing to a service, <code>$batch</code>, and asking the service for its count of rows.</p>
+<h2 id="building-and-testing-a-call-in-the-app">Building and testing a call in the app</h2>
+<p>The <strong>API Call Builder</strong> pane is where a REST or an OData source is worked out when its settings are not in hand yet. Open it from <em>Add pane</em>, from a source's menu in the Sources pane (<strong>Open in API Call Builder</strong>), from the source dialog (<strong>Build and test…</strong>, which goes on with what was typed there), or from a connector to an API in the Connectors pane (<strong>Build a call…</strong>).</p>
+<ul>
+<li>On the left are the project's API sources, under the connector each reads through. <strong>+</strong> beside a connector starts a new call through it.</li>
+<li>The form has the settings of the source dialog. Under it, <strong>Asks</strong> shows the first page's address as it will be asked for, and follows what is typed. Nothing is asked until <strong>Test</strong>. <strong>Copy as curl</strong> copies the call as a command for a terminal. A key is not in it: the command has <code>&lt;key&gt;</code> where one goes.</li>
+<li><strong>Test</strong> asks the API as a job would, through the same reading, so every limit under "What a REST source will not do" holds for it. It stops after the page that reaches 200 rows.</li>
+<li><strong>Rows</strong> shows the rows a job would get. <strong>Pages</strong> lists each page that was asked: its status, how long it took, how many rows came of it and how long the answer was. A page opens to what was asked, with the name of the header the key went in and never the key, and to the answer as a tree.</li>
+<li>For a REST API, a list in the answer has the button <strong>Rows are here</strong>, which writes its place into <em>Rows at</em>.</li>
+<li>A test that fails keeps the pages up to the one that stopped it, with what the API answered there.</li>
+<li><strong>Add source</strong> or <strong>Update source</strong> keeps the call as a source of the project. It is a <code>rest</code> or an <code>odata</code> source like any other, and Undo takes the change back. <strong>Revert</strong> gives up what was typed.</li>
+</ul>
+<p>The pane holds no key: a key is a connector's.</p>
+<h3 id="what-a-rest-apis-first-answer-suggests">What a REST API's first answer suggests</h3>
+<p>A REST API does not say where its rows are or how its pages follow. Both can often be seen in its first answer. After a <strong>Test</strong> of a call that does not say where the rows are, found none, or has no paging, the pane says what it sees there, for example:</p>
+<blockquote>
+<p>The first answer suggests: the rows are at products; pages: A parameter skips rows (offset).</p>
+</blockquote>
+<p><strong>Take it</strong> fills that into the form, and the next test shows whether it is right. The reasons are shown when the mouse is over the button. What is looked for:</p>
+<ul>
+<li>the list of objects nearest the top of the answer, and of those the longest;</li>
+<li>the address of the next page, in the <code>Link</code> header or in a field such as <code>next</code> or <code>_links.next.href</code>;</li>
+<li>a mark for the next page, such as <code>next_cursor</code>. The name of the parameter it is sent back as is a guess to check against the API's documentation;</li>
+<li>a count of rows skipped (<code>offset</code>, <code>skip</code>) or a page number, in the answer or in the address that was asked.</li>
+</ul>
+<p>It is a proposal. Nothing changes until it is taken, and an API that shows none of this gets none.</p>
+<h3 id="starting-from-a-curl-command">Starting from a curl command</h3>
+<p>The documentation of an API mostly shows a call as a <code>curl</code> command. <strong>New call</strong>, <strong>From a curl command…</strong> opens a box to paste one into, and <strong>Fill the form</strong> takes its address and its path.</p>
+<ul>
+<li>Only a GET is taken. A command that sends anything else, or sends something along (<code>-d</code>, <code>--json</code>, <code>-F</code>), is refused and the reason said. For an API that searches with a POST, write what it sends into <em>Sends</em> yourself (<a href="#an-api-that-searches-with-a-post">below</a>).</li>
+<li>The key of the command is not kept, and is in no setting afterwards. The pane says how it travels, and <strong>Make a connector for it</strong> adds a connector to the API's address, through which the call then reads. The key is given to that connector in the Connectors pane, as the name of a variable or a secret of the vault. When a connector to the same address is there already, the call goes through it.</li>
+<li>A parameter in the address that is named like a key (<code>api_key</code>, <code>token</code>) is taken out and named, since the path is written into the project file. A key travels in a header, from a connector.</li>
+<li>Headers a source does not send, and a cookie, are named as left out.</li>
+</ul>
+<h3 id="starting-from-an-openapi-file">Starting from an OpenAPI file</h3>
+<p>Many APIs describe themselves in an OpenAPI file (Swagger, in its version 2). <strong>New call</strong>, <strong>From an OpenAPI file…</strong> asks for one: a file in JSON or YAML, or the address of one such as <code>https://api.example.com/openapi.json</code>. <strong>List its calls</strong> reads it, and the calls it describes are listed on the left, with a search when there are many. What each is for and the parameters it takes show when the mouse is over it.</p>
+<p>A click on one starts a call with what the file says of it:</p>
+<ul>
+<li>the API's address, or the connector that has this address;</li>
+<li>the path, with the parameters the call cannot be asked without, each still to be given a value. A name in braces in the path, such as <code>{id}</code>, is to be filled in;</li>
+<li>where the rows are, when the file describes the answer and a list of objects is in it;</li>
+<li>how the pages follow, when a parameter is named for it (<code>skip</code>, <code>offset</code>, <code>page</code>).</li>
+</ul>
+<p>While the file is listed, a call whose path is one of its calls has a field for each thing the call takes, under <strong>What the call takes</strong>: the ones it cannot be asked without are marked with a star. What is typed there is written into the path, and what is typed into the path shows in the fields.</p>
+<p>When the file says the API takes a key, the pane says how it travels and offers to make a connector for it, as for a <code>curl</code> command.</p>
+<p>Only calls that are a GET are listed, which is what a source reads with. The file may be in JSON or in YAML. An address is asked for the file with a GET and without a key. The file is the API's maker's description, so the call is a start, to be tested like any other.</p>
+<h3 id="clicking-an-odata-call-together">Clicking an OData call together</h3>
+<p>An OData service says what it holds, so its call need not be typed. <strong>Look up</strong> beside <em>Entity set</em> asks the service for its <code>$metadata</code>. After that:</p>
+<ul>
+<li>The service's entity sets are listed on the left, each with how many columns it has and its key when the mouse is over it. A click picks one for the call.</li>
+<li>Under <em>Query options</em> the same options are shown as parts:
+<ul>
+<li><strong>Columns</strong>: tick the columns to read (<code>$select</code>). None ticked reads every column.</li>
+<li><strong>Conditions</strong>: rows of a column, a comparison and a value (<code>$filter</code>). Every row must hold. A text column can also be asked whether it contains, starts with or ends with a text, and any column whether it is empty. <em>one of</em> takes several values with commas between them, and holds when the column is any of them.</li>
+<li><strong>Order</strong>: the columns to order by, smallest or largest first (<code>$orderby</code>).</li>
+<li><strong>Limit</strong>: the most rows the service is to give (<code>$top</code>).</li>
+<li><strong>Bring along</strong>: related rows the service is to put into each row (<code>$expand</code>), by the names the service gives the ways to them. For each that is ticked, a menu picks the columns of the related rows to ask for, and where the way leads to many rows, <strong>A row for each of …</strong> makes them rows of their own (<a href="#a-row-for-each-related-row">above</a>).</li>
+</ul></li>
+</ul>
+<p><strong>A run reads</strong>, under the query options, says which rows a run of a job reads: every row, only the rows newer by a column, or only what the service says has changed (<a href="#reading-only-what-changed">above</a>). Below it the pane says where the run before left off, and <strong>Read every row next time</strong> takes that away.</p>
+<p>After a test, the same ways stand above its rows as <strong>Related rows</strong>, each a button: a click brings those rows along and tests again, so the related columns are there to look at. A way to many rows is made rows of its own by that click, unless another list is already.</p>
+<p>The text in <em>Query options</em> stays what the source holds. A click changes the text, and a text that is typed or was written by hand is read into the parts, so both can be used on the same call.</p>
+<p>A value is typed as it reads, <code>Switzerland</code> or <code>2026-01-31</code>, and is written as the column's type and the service's version want it: <code>'Switzerland'</code>, and <code>datetime'2026-01-31T00:00:00'</code> for a service of version 2 or <code>2026-01-31T00:00:00Z</code> for one of version 4. <em>contains</em> is written as <code>substringof</code> for version 2.</p>
+<p>A filter that is more than conditions joined by <code>and</code>, one with an <code>or</code> between different columns, other brackets or a function, is not shown as rows. It stays as it is written and is sent as written. An option that is none of the five, such as <code>$count=true</code>, is kept as well.</p>
+<p><strong>Count</strong>, beside <em>Test</em>, asks the service how many rows the filter leaves (<code>Orders/$count?$filter=…</code>) before any row is read. The number is of the call as it was asked, and goes when the call changes.</p>
+<p>A service that was looked up stays known while the pane is open, so another call to it has its entity sets and parts at once.</p>
+<p>A service of version 2 or 3 gives related rows only when they are among the columns asked for, so with columns ticked the pane adds what is brought along to <code>$select</code> itself.</p>
+<h3 id="a-filter-the-service-could-run">A filter the service could run</h3>
+<p>A job that filters an OData source right after reading it reads every row first and drops most of them. When the pane is on such a source, it says so, for example:</p>
+<blockquote>
+<p>The job export filters these rows right after reading them (Country = Switzerland; Total ≥ 10). The service could do that itself, so that fewer rows travel.</p>
+</blockquote>
+<p><strong>Add to the query</strong> adds those conditions to the query options. It is a change of the call like any other: test it, then <strong>Update source</strong>. The Filter step stays where it is, so the job gives the rows it gave, and only fewer of them travel.</p>
+<p>The same goes for columns. When the step after the source, or after its Filter step, is a Map step that only copies columns and sets fixed values, the pane names the columns the job goes on with, and <strong>Add to the query</strong> asks the service for only those (<code>$select</code>). The columns the Filter step looks at are among them. A Map step that works a value out with an expression is left alone, since what it reads is not looked into.</p>
+<p>In the Designer, the settings of such a step say the same in one line, with <strong>Open its call</strong>, which shows the source in this pane. The line goes once the source's query does what the step does.</p>
+<p>Nothing is moved unasked, and the note is careful about what it offers:</p>
+<ul>
+<li>Only conditions under which the service gives at least every row the step keeps: a value or one of several values a column must equal, and numbers a column must lie between or must not be. A text search and a comparison of texts are left to the step, since services differ in how they compare texts.</li>
+<li>Only when the Filter step is the one place the rows go, its rejected rows go nowhere, and nothing else in the project reads the source: the query changes the rows for every reader.</li>
+</ul>
+<h3 id="where-a-steps-work-is-done">Where a step's work is done</h3>
+<p>In a job that reads an OData service, each step that follows the source carries a mark in its header in the Designer, for as long as the rows go to one place:</p>
+<div class="table">
+<table>
+<thead>
+<tr>
+<th>Mark</th>
+<th>What it says</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>at the service</td>
+<td>The source's query asks the service for it. The step that reads the source always has this mark. A Filter or Map step has it when the query does all the service can do of it. The step still runs, on what arrives, as a check</td>
+</tr>
+<tr>
+<td>partly at the service</td>
+<td>The query does some of a Filter step, and the rest is done by dbdb</td>
+</tr>
+<tr>
+<td>the service could</td>
+<td>dbdb does it, and the source's call offers to add it to the query</td>
+</tr>
+<tr>
+<td>here</td>
+<td>dbdb does it, on the rows the service sent</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>The mouse over the step, and the step's settings, say the same as a sentence with the reason, such as what the service is asked for, or that a text search is left to the step. <strong>Open its call</strong> in the settings shows the source in the API Call Builder.</p>
+<p>The marks only tell. What decides is the query of the source, and a step is never taken out of the job: one whose work the service does keeps running, so the job gives the rows it gave whatever the service makes of the query.</p>
+<p>A Sort step is always done here. The same rows would travel in any order, so nothing is saved by asking the service to sort, and a service may order texts another way. A job has no step that keeps only the first rows, so there is nothing of a limit to leave to the service either; <code>$top</code> in the call stays a setting of the source.</p>
+<p><code>dbdb-cli show project.json</code> and the assistant's summary of a project say the same under each such step.</p>
+<p>In a browser the form and the address work, and a test reaches only an API that allows calls from the page's address, as a source does.</p>
+<h2 id="from-the-command-line">From the command line</h2>
+<pre class="sh"><code>dbdb-cli preview https://api.example.com/v1/orders --table data.items</code></pre>
+<p>reads one answer and shows its rows; <code>--table</code> is where the rows are. A source with paging or a connector, and an OData source, is part of a project: <code>dbdb-cli preview project.json --source orders</code>.</p>
+</main>
+</body>
+</html>

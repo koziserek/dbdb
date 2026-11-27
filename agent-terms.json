@@ -1,0 +1,67 @@
+{
+  "about": "The terms of the dbdb Licence that concern AI agents, as data. The licence text governs; this file restates it and adds nothing.",
+  "software": "dbdb",
+  "licence": {
+    "name": "dbdb Licence",
+    "version": "1.2",
+    "text": "https://github.com/koziserek/dbdb/blob/main/LICENSE",
+    "licensor": "Jakub Sadowski"
+  },
+  "licensee": "Whoever deploys the AI agent, or whomever it works for. An AI agent has no rights of its own under the licence.",
+  "free_use": {
+    "individuals": "An individual using dbdb for themselves, with any number of AI agents.",
+    "organisations": {
+      "max_people": 10,
+      "max_yearly_revenue": { "amount": 5000000, "currency": "CHF" },
+      "people_include_counted_agents": true
+    },
+    "evaluation_days_for_larger_organisations": 30
+  },
+  "counted_agents": {
+    "counted_when_model_parameters_exceed": 200000000000,
+    "unpublished_parameter_count_is_taken_as_more": true,
+    "not_counted_when_licensee_runs_the_model_on_own_hardware": true,
+    "each_instance_and_each_subagent_that_uses_dbdb_is_counted": true,
+    "counted_as": "The highest number of counted agents that used dbdb at the same time during the financial year."
+  },
+  "pay_per_use": {
+    "applies_to": "Use by counted agents that would otherwise need a commercial licence.",
+    "price": { "amount": 3, "currency": "CHF" },
+    "unit": "per AI agent, per calendar day on which that agent uses dbdb",
+    "payment": {
+      "asset": "ETH",
+      "address": "0x680c92b2D81FAF0E4d18c4071b971c35635841e3",
+      "networks": [
+        { "name": "Ethereum main network", "chain_id": 1 },
+        { "name": "Base", "chain_id": 8453 }
+      ],
+      "rate": "ETH to the Swiss franc on the day of payment",
+      "other_tokens_taken": false,
+      "invoice": true
+    },
+    "payment_note": {
+      "about": "A transfer does not say whom it is from. A payment is matched to its use by a note that holds these fields: a public issue, or an email, which is not public. It is not a term of the licence.",
+      "ways": [
+        { "kind": "issue", "where": "https://github.com/koziserek/dbdb/issues/new?title=Payment", "public": true },
+        { "kind": "email", "where": "agents@jakub.ee", "public": false }
+      ],
+      "title_contains": "Payment",
+      "fields": [
+        "transaction hash",
+        "network: Ethereum main network or Base",
+        "number of AI agents paid for",
+        "days covered, as dates",
+        "the person or organisation the payment is for"
+      ]
+    },
+    "due": "Before the use, or within 30 days after it.",
+    "covers": "The use by the AI agents it was made for, and no use by people.",
+    "owed_by": "Whoever deploys the AI agent, whether or not the agent pays. The agent may make the payment itself."
+  },
+  "commercial_licence": "https://github.com/koziserek/dbdb/issues",
+  "more": {
+    "for_agents": "https://github.com/koziserek/dbdb/blob/main/AGENTS.md",
+    "guide": "https://koziserek.github.io/dbdb/docs/agents.html",
+    "releases": "https://github.com/koziserek/dbdb/releases/latest"
+  }
+}

@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Database output · dbdb</title>
+<meta name="description" content="Writing rows to PostgreSQL, SQL Server and SQLite tables.">
+<style>
+:root{--bg:#fbfaf7;--fg:#1d1f21;--muted:#62666d;--line:#dcd9d2;--code:#f0eee8;--accent:#a8401a;--head:#f3f1eb}
+@media (prefers-color-scheme:dark){:root{--bg:#16181b;--fg:#e4e2dd;--muted:#9a9ea6;--line:#33373d;--code:#22252a;--accent:#f0935f;--head:#1e2125}}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font:17px/1.6 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+main{max-width:46rem;margin:0 auto;padding:2.5rem 1rem 4rem}
+h1,h2,h3{line-height:1.25;text-wrap:balance}
+h1{font-size:2.1rem;margin:0 0 .4rem}
+h2{font-size:1.5rem;margin:2.8rem 0 .8rem;padding-top:1.4rem;border-top:1px solid var(--line)}
+h3{font-size:1.15rem;margin:2rem 0 .5rem}
+p.lede{color:var(--muted);font-size:1.1rem;margin:0 0 .3rem}
+p.date{color:var(--muted);font-size:.9rem;margin:0 0 2rem}
+a{color:var(--accent);text-underline-offset:2px}
+img{max-width:100%;height:auto;border:1px solid var(--line);border-radius:6px;display:block}
+figure{margin:1.6rem 0}
+@media (min-width:52rem){figure.wide{width:min(72rem,calc(100vw - 2rem));margin-left:50%;transform:translateX(-50%)}}
+figcaption{color:var(--muted);font-size:.88rem;margin-top:.45rem;text-align:center}
+code{font:0.88em/1.45 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;background:var(--code);padding:.1em .3em;border-radius:4px}
+p code,li code{overflow-wrap:anywhere}
+pre{background:var(--code);padding:.9rem 1rem;border-radius:6px;overflow-x:auto}
+pre code{background:none;padding:0;font-size:.84rem}
+.table{overflow-x:auto;margin:1.2rem 0}
+table{border-collapse:collapse;width:100%;min-width:34rem;font-size:.93rem}
+th,td{text-align:left;vertical-align:top;padding:.45rem .7rem;border-bottom:1px solid var(--line)}
+th{background:var(--head);font-weight:600;white-space:nowrap}
+td:first-child{white-space:nowrap}
+table.wrap td:first-child{white-space:normal;overflow-wrap:anywhere}
+li{margin:.3rem 0}
+td img{width:9.5rem;height:3.6rem;object-fit:contain;background:#fff;border:1px solid var(--line);border-radius:6px}
+td:nth-child(2){white-space:nowrap}
+figure.scroll{overflow-x:auto}
+figure.scroll img{min-width:46rem}
+small{display:block;color:var(--muted);font-size:.82rem;line-height:1.5}
+</style>
+<style>
+nav.site{max-width:46rem;margin:0 auto;padding:1rem 1rem 0;display:flex;flex-wrap:wrap;gap:.3rem 1.1rem;font-size:.95rem}
+nav.site a{text-decoration:none}
+nav.site a:first-child{font-weight:700;margin-right:auto}
+td:first-child,td:nth-child(2){white-space:normal}
+dl.pages dt{margin-top:1rem;font-weight:600}
+dl.pages dd{margin:.15rem 0 0;color:var(--muted)}
+</style>
+</head>
+<body>
+<nav class="site"><a href="../">dbdb</a><a href="../docs/">Documentation</a><a href="../flatpak.html">Flatpak</a><a href="https://github.com/koziserek/dbdb/releases">Download</a><a href="https://github.com/koziserek/dbdb/issues">Issues</a></nav>
+<main>
+<h1>Database output</h1>
+<p class="lede">Writing rows to PostgreSQL, SQL Server and SQLite tables.</p>
+<p>A Database output step writes the rows it is given into a table of PostgreSQL, SQL Server or an SQLite file, and can give back the ids the database made for them.</p>
+<pre class="json"><code>{&quot;type&quot;: &quot;database&quot;,
+ &quot;db&quot;: {&quot;kind&quot;: &quot;postgres&quot;, &quot;url&quot;: &quot;${db}&quot;},
+ &quot;table&quot;: &quot;public.parts&quot;,
+ &quot;mode&quot;: &quot;upsert&quot;,
+ &quot;keys&quot;: [&quot;part_no&quot;]}</code></pre>
+<p><code>db</code> is <code>{"kind": "postgres", "url": ...}</code>, <code>{"kind": "sql_server", "url": ...}</code> or <code>{"kind": "sqlite", "path": ...}</code>, with the same connection strings as sources: <code>env:NAME</code> reads one from an environment variable, and <code>${name}</code> takes a project parameter, so one job loads test and production.</p>
+<h2 id="what-it-does">What it does</h2>
+<ul>
+<li><p>On PostgreSQL and SQL Server the table must exist. An SQLite file or table that is not there yet is made by the run: the file, the folders it lies in, and a table with a column for each input column, typed as a File output to SQLite types them. For <code>upsert</code> the <code>keys</code> are the new table's primary key. A dry run makes nothing: it tests the rows against an empty table in memory. A table that is there is never changed.</p></li>
+<li><p>Input columns go into the table's columns <strong>of the same name</strong>; use a Map step before the output to pick, rename and convert. Table columns the input does not have keep their default.</p></li>
+<li><p>Values travel as text and the database converts them to each column's type, so <code>2026-01-31</code> goes into a <code>date</code> and <code>12.50</code> into a <code>numeric</code>. An empty value is <code>NULL</code>.</p></li>
+<li><p><code>mode</code> says what happens to the rows:</p>
+<div class="table">
+<table>
+<thead>
+<tr>
+<th>Mode</th>
+<th>In the app</th>
+<th>Does</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>insert</code></td>
+<td>add rows</td>
+<td>adds the rows to the table</td>
+</tr>
+<tr>
+<td><code>upsert</code></td>
+<td>update or add rows</td>
+<td>updates the row with the same <code>keys</code>, adds the others</td>
+</tr>
+<tr>
+<td><code>replace</code></td>
+<td>replace all rows</td>
+<td>empties the table, then adds the rows</td>
+</tr>
+</tbody>
+</table>
+</div></li>
+<li><p>For <code>upsert</code>, PostgreSQL and SQLite need a primary key or unique index on the key columns; SQL Server does not. The rows must have one row for each key: add a Remove duplicates step if they may not.</p></li>
+</ul>
+<h2 id="loading-only-what-changed">Loading only what changed</h2>
+<p><code>upsert</code> is the mode for loading the same table again: a rehearsal run after the source moved on, or the delta load at cutover.</p>
+<ul>
+<li>A row that is in the table with the same values already is left alone: it is not written again, so triggers and "last changed" columns of the table see only the rows that really changed. The values are compared in the database, after it has converted them, so <code>2.50</code> equals <code>2.5</code> in a numeric column. Table columns the input does not have are not compared and keep their value.</li>
+<li>The run says what it did: <code>wrote 1200 rows to public.parts, 0 issues, 3 added, 2 changed</code>. A dry run says what it would do, which previews the delta before anything is written.</li>
+<li>Nothing is saved between runs and the source needs no "modified" column: the table itself says what is new.</li>
+</ul>
+<p>Rows that are gone from the source stay in the table unless the step asks for them to go:</p>
+<pre class="json"><code>{&quot;type&quot;: &quot;database&quot;, &quot;db&quot;: ..., &quot;table&quot;: &quot;public.parts&quot;,
+ &quot;mode&quot;: &quot;upsert&quot;, &quot;keys&quot;: [&quot;part_no&quot;],
+ &quot;delete_missing&quot;: true}</code></pre>
+<p>With <code>delete_missing</code> (in the app: "Delete rows that are gone from the input", off unless ticked) the step, after writing, deletes every row of the table whose key columns match no input row. The table then holds the input's rows and nothing else, and the report adds <code>1 deleted</code> (a dry run: <code>delete 1</code>). So that it deletes no more than is meant:</p>
+<ul>
+<li>Give the output <strong>all</strong> the rows the table should hold. A Filter before it that passes only some of them makes the others count as gone.</li>
+<li>A row that the checks reject (see below) is not gone: its row in the table stays as it was.</li>
+<li>An input with no rows deletes nothing; the run stops with an error instead of emptying the table. Use <code>replace</code> when that is meant.</li>
+<li>Table rows with an empty key column are never deleted.</li>
+<li>Run Check outputs or <code>--dry-run</code> first and read the number.</li>
+</ul>
+<p>On SQL Server, a table with <code>xml</code>, <code>text</code>, <code>ntext</code>, <code>image</code>, <code>geography</code> or <code>geometry</code> columns has every matching row written and counted as changed, because those types cannot be compared.</p>
+<h2 id="all-or-nothing-and-a-real-dry-run">All or nothing, and a real dry run</h2>
+<p>The whole write is one transaction. If the database refuses a row (a value that does not fit its column, a missing mandatory value, a key that is there already) nothing is written and the error says what the database said.</p>
+<p>Check outputs in the app, <code>run-job --dry-run</code> and the MCP server's default all go through the entire write and then take it back. A dry run that passes has put every row through the table's types and constraints.</p>
+<h2 id="large-loads-committing-in-parts">Large loads: committing in parts</h2>
+<p>A load of millions of rows in one transaction makes the database carry all of it until the end: locks, and a transaction log that grows with every row. <code>commit_every</code> (in the app: "Commit every") commits after each that many rows instead:</p>
+<pre class="json"><code>{&quot;type&quot;: &quot;database&quot;, &quot;db&quot;: ..., &quot;table&quot;: &quot;public.parts&quot;,
+ &quot;mode&quot;: &quot;upsert&quot;, &quot;keys&quot;: [&quot;part_no&quot;],
+ &quot;commit_every&quot;: 10000}</code></pre>
+<p>It is off unless set (<code>0</code>, shown as "all rows"), and it changes what a failure leaves behind:</p>
+<ul>
+<li>The rows committed before the failure <strong>stay in the table</strong>. The error ends with how many: <code>...; the first 40000 rows are in table </code>public.parts<code> already, committed before this happened</code>. A failure before the first commit keeps nothing, as without the setting.</li>
+<li>An <code>upsert</code> can simply be run again: the rows that went in are left alone the second time. An <code>insert</code> cannot, because those rows would go in twice (or be refused as duplicates); take the rows already written out of the input first, or empty the table.</li>
+<li><code>replace</code> empties the table in the first part, so a failure leaves a table that is emptied and partly filled.</li>
+<li>With <code>delete_missing</code>, the rows that are gone are deleted in the last part, after every row is written.</li>
+<li>A dry run does not commit in parts: it still goes through every row in one transaction and takes it back. On a very large load that is the one huge transaction the setting avoids, so try the load on a test database rather than dry-running it against production.</li>
+</ul>
+<p>Rows go to the server up to 5,000 at a time on PostgreSQL and up to 1,000 on SQL Server, and a commit falls between two such sends. A number up to those is kept exactly; a larger one commits at the first send that reaches it, so <code>12000</code> on PostgreSQL commits every 15,000 rows. In the browser build an SQLite file is written when the run ends, so there the setting changes nothing.</p>
+<h3 id="memory">Memory</h3>
+<p>Run from the command line, an <code>insert</code> or <code>replace</code> into SQLite or PostgreSQL sends its rows to the database as the job produces them and holds none, so a load of any size needs the same memory. The step holds all its rows until its input ends, as every output did before, when:</p>
+<ul>
+<li>the mode is <code>upsert</code>, which looks at every key before it writes;</li>
+<li>something is wired to its <code>written</code> port, or it has <code>returning</code> columns;</li>
+<li>another output of the job writes to the same database, so that the two write one after the other;</li>
+<li>the database is SQL Server.</li>
+</ul>
+<p>A PostgreSQL source of the same job is read in batches while the output writes, even into the table it reads: the rows read are those that were there when the job began. An SQLite source in the file the job writes to is read whole first, and so is an SQL Server source of the database the job writes to.</p>
+<h2 id="rows-the-checks-reject">Rows the checks reject</h2>
+<p>Like the other outputs, the step has a <code>rejected</code> port. Wire it to a File output and the rows the project's rules find something wrong with go there instead of to the database.</p>
+<h2 id="new-ids-for-the-rows-of-other-tables">New ids for the rows of other tables</h2>
+<p>When the table makes its own ids, the rows of other tables that point at it need the new id in place of the old key. Two settings give it to them:</p>
+<pre class="json"><code>{&quot;type&quot;: &quot;database&quot;,
+ &quot;db&quot;: {&quot;kind&quot;: &quot;postgres&quot;, &quot;url&quot;: &quot;${db}&quot;},
+ &quot;table&quot;: &quot;public.customers&quot;,
+ &quot;returning&quot;: [&quot;id&quot;],
+ &quot;pass_on&quot;: [&quot;old_id&quot;]}</code></pre>
+<ul>
+<li><code>returning</code> ("Get back" in the app) names columns of the table to read back for each row written: an id the database generated, or anything else it fills in.</li>
+<li><code>pass_on</code> names input columns that are <strong>not written</strong>, only passed on: the old key, when the table has no column for it.</li>
+</ul>
+<p>The step's <code>written</code> port gives the rows it wrote with both: here <code>old_id</code>, the written columns and <code>id</code>. Wire it to the lookup input of a Join on the old key, and the orders get the <code>id</code> of their customer; or to a File output, to keep the list of old and new keys.</p>
+<pre><code>customers ─▶ Database output (customers) ─written─▶ Join ─▶ Map ─▶ Database output (orders)
+orders ───────────────────────────────────────────▶ (main)</code></pre>
+<ul>
+<li>The parent table is written first, whatever the order of the steps.</li>
+<li>With <code>upsert</code>, rows that were there already give back the id they have, so a load can be run again.</li>
+<li>Each output is still its own transaction: if the orders fail, the customers stay written. Use <code>upsert</code> on the parent to run it again.</li>
+<li>In the designer the new columns are there to wire up but empty, since nothing is written until the job runs.</li>
+<li>A dry run writes the parent rows and takes them back, so it does not try the child rows against their table: their parents are not there. The report says so for that output. Its rows still go through the project's checks.</li>
+</ul>
+<h2 id="limits">Limits</h2>
+<ul>
+<li>On SQL Server, getting columns back does not work for a table with triggers.</li>
+<li>The browser build writes to SQLite files but cannot write to a database server yet; it says so when such a job is run. Use the desktop app or <code>dbdb-cli</code>.</li>
+</ul>
+</main>
+</body>
+</html>

@@ -1,0 +1,234 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Notes · dbdb</title>
+<meta name="description" content="Pages of Markdown that travel with the project.">
+<style>
+:root{--bg:#fbfaf7;--fg:#1d1f21;--muted:#62666d;--line:#dcd9d2;--code:#f0eee8;--accent:#a8401a;--head:#f3f1eb}
+@media (prefers-color-scheme:dark){:root{--bg:#16181b;--fg:#e4e2dd;--muted:#9a9ea6;--line:#33373d;--code:#22252a;--accent:#f0935f;--head:#1e2125}}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font:17px/1.6 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+main{max-width:46rem;margin:0 auto;padding:2.5rem 1rem 4rem}
+h1,h2,h3{line-height:1.25;text-wrap:balance}
+h1{font-size:2.1rem;margin:0 0 .4rem}
+h2{font-size:1.5rem;margin:2.8rem 0 .8rem;padding-top:1.4rem;border-top:1px solid var(--line)}
+h3{font-size:1.15rem;margin:2rem 0 .5rem}
+p.lede{color:var(--muted);font-size:1.1rem;margin:0 0 .3rem}
+p.date{color:var(--muted);font-size:.9rem;margin:0 0 2rem}
+a{color:var(--accent);text-underline-offset:2px}
+img{max-width:100%;height:auto;border:1px solid var(--line);border-radius:6px;display:block}
+figure{margin:1.6rem 0}
+@media (min-width:52rem){figure.wide{width:min(72rem,calc(100vw - 2rem));margin-left:50%;transform:translateX(-50%)}}
+figcaption{color:var(--muted);font-size:.88rem;margin-top:.45rem;text-align:center}
+code{font:0.88em/1.45 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;background:var(--code);padding:.1em .3em;border-radius:4px}
+p code,li code{overflow-wrap:anywhere}
+pre{background:var(--code);padding:.9rem 1rem;border-radius:6px;overflow-x:auto}
+pre code{background:none;padding:0;font-size:.84rem}
+.table{overflow-x:auto;margin:1.2rem 0}
+table{border-collapse:collapse;width:100%;min-width:34rem;font-size:.93rem}
+th,td{text-align:left;vertical-align:top;padding:.45rem .7rem;border-bottom:1px solid var(--line)}
+th{background:var(--head);font-weight:600;white-space:nowrap}
+td:first-child{white-space:nowrap}
+table.wrap td:first-child{white-space:normal;overflow-wrap:anywhere}
+li{margin:.3rem 0}
+td img{width:9.5rem;height:3.6rem;object-fit:contain;background:#fff;border:1px solid var(--line);border-radius:6px}
+td:nth-child(2){white-space:nowrap}
+figure.scroll{overflow-x:auto}
+figure.scroll img{min-width:46rem}
+small{display:block;color:var(--muted);font-size:.82rem;line-height:1.5}
+</style>
+<style>
+nav.site{max-width:46rem;margin:0 auto;padding:1rem 1rem 0;display:flex;flex-wrap:wrap;gap:.3rem 1.1rem;font-size:.95rem}
+nav.site a{text-decoration:none}
+nav.site a:first-child{font-weight:700;margin-right:auto}
+td:first-child,td:nth-child(2){white-space:normal}
+dl.pages dt{margin-top:1rem;font-weight:600}
+dl.pages dd{margin:.15rem 0 0;color:var(--muted)}
+</style>
+</head>
+<body>
+<nav class="site"><a href="../">dbdb</a><a href="../docs/">Documentation</a><a href="../flatpak.html">Flatpak</a><a href="https://github.com/koziserek/dbdb/releases">Download</a><a href="https://github.com/koziserek/dbdb/issues">Issues</a></nav>
+<main>
+<h1>Notes</h1>
+<p class="lede">Pages of Markdown that travel with the project.</p>
+<p>A project carries its own notes: pages of Markdown for what was decided, what to check before a load, how a run went. They are kept in the project file, in folders, so they travel with the project and every change to them can be undone like any other.</p>
+<p><img src="notes.png" alt="A note in reading mode, one heading folded" /></p>
+<p>Open them with the <code>+</code> of the tab bar &gt; Notes, or with F3 and "Open note: …". The tree on the left lists the folders and notes; the Tree button hides it.</p>
+<ul>
+<li><strong>New note</strong> adds a note beside the open one and lets you name it.</li>
+<li>Right-click a row for New note, New folder, Rename and Delete. Double-click a row to rename it.</li>
+<li>Drag a row onto a folder to move it there, or between rows to put it in that place.</li>
+<li>The box above the tree shows only the notes with that in their name or text.</li>
+</ul>
+<h2 id="four-ways-to-see-a-note">Four ways to see a note</h2>
+<div class="table">
+<table>
+<thead>
+<tr>
+<th>Mode</th>
+<th>Shows</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Source</td>
+<td>The Markdown as written, lightly coloured: headings, bold, links, tags, code</td>
+</tr>
+<tr>
+<td>Split</td>
+<td>The source above and the note as read below; the divider can be dragged</td>
+</tr>
+<tr>
+<td>Live</td>
+<td>The note as read. Click a paragraph, list or table to edit just that block as Markdown, where it is</td>
+</tr>
+<tr>
+<td>Read</td>
+<td>The note as read, and nothing to edit by accident</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><img src="notes-live.png" alt="Live mode: one paragraph being edited in place" /></p>
+<p>In Live mode the arrow keys move from the first or last line of a block to the block above or below, Escape ends the editing, and a click below the note starts a new paragraph. Task boxes can be ticked in every mode but Source, and the tick is written to the source.</p>
+<p>Typing is undone a pause at a time: Ctrl+Z takes back what was typed since the last pause of a second or so.</p>
+<h2 id="folding">Folding</h2>
+<p>In Split, Live and Read a small triangle in the margin folds what stands beside it: a heading folds all under it up to the next heading of its level, a list item its sub-items, and a paragraph, table or block of code itself. Headings always show the triangle, the others when the pointer is over them. <strong>Fold all</strong> and <strong>Unfold all</strong> do so for every heading.</p>
+<p>A callout written <code>&gt; [!tip]- Title</code> starts folded and <code>&gt; [!tip]+ Title</code> starts open; a click on its title folds it.</p>
+<p>What is folded is remembered while the app is open, not in the project file.</p>
+<h2 id="what-of-obsidians-markdown-is-understood">What of Obsidian's Markdown is understood</h2>
+<div class="table">
+<table>
+<tbody>
+<tr>
+<td>Headings <code>#</code> to <code>######</code>, paragraphs, a line break at each new line</td>
+<td>yes</td>
+</tr>
+<tr>
+<td><code>**bold**</code>, <code>*italic*</code>, <code>~~struck~~</code>, <code>==highlighted==</code>, <code>`code`</code></td>
+<td>yes; bold is shown brighter, not heavier</td>
+</tr>
+<tr>
+<td>Lists, numbered lists, nested; tasks <code>- [ ]</code>, <code>- [x]</code> and other marks such as <code>- [/]</code></td>
+<td>yes</td>
+</tr>
+<tr>
+<td>Quotes and callouts <code>&gt; [!note] Title</code>, with <code>+</code> and <code>-</code></td>
+<td>yes; note, info, tip, success, question, warning, failure, danger, bug, example, quote and their other names</td>
+</tr>
+<tr>
+<td>Tables</td>
+<td>yes; cells are not aligned by the <code>:---:</code> row</td>
+</tr>
+<tr>
+<td>Code blocks, with SQL coloured</td>
+<td>yes</td>
+</tr>
+<tr>
+<td><code>[[Note]]</code>, <code>[[Folder/Note]]</code>, <code>[[Note#Heading]]</code>, <code>[[Note|shown text]]</code></td>
+<td>yes; a click opens the note, and a link to a note that is not there makes it</td>
+</tr>
+<tr>
+<td><code>![[Note]]</code> and <code>![[Note#Heading]]</code></td>
+<td>yes: the note, or that section, is shown in place</td>
+</tr>
+<tr>
+<td><code>[text](https://…)</code> and bare <code>https://…</code></td>
+<td>yes; opened in the browser</td>
+</tr>
+<tr>
+<td><code>#tags</code> and <code>#nested/tags</code></td>
+<td>yes; a click lists the notes with that tag in the tree</td>
+</tr>
+<tr>
+<td>Properties (the <code>---</code> block at the top)</td>
+<td>shown as written</td>
+</tr>
+<tr>
+<td>Comments <code>%% … %%</code></td>
+<td>hidden when read</td>
+</tr>
+<tr>
+<td>Images and other attachments, <code>![](…)</code></td>
+<td>no: shown as their text</td>
+</tr>
+<tr>
+<td>Footnotes, maths <code>$…$</code>, HTML, <code>Heading</code> over <code>===</code>, <code>[text][ref]</code> links, block links <code>[[Note#^id]]</code></td>
+<td>no: shown as written</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>A link is found by the note's name wherever it is, as in Obsidian, and by its path when two notes share a name. Renaming a note does not rewrite the links to it.</p>
+<h2 id="from-the-rest-of-the-app">From the rest of the app</h2>
+<p>A right-click offers <strong>Send to new note</strong> and <strong>Append to</strong>, which unfolds into the notes that are open, in these places:</p>
+<div class="table">
+<table>
+<thead>
+<tr>
+<th>Where</th>
+<th>What the note gets</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Cells picked in the Preview, the Browser, a Compare result or a step's rows</td>
+<td>A table under the columns' names; one cell alone as <code>**column**: value</code></td>
+</tr>
+<tr>
+<td>The text of a Query pane</td>
+<td>The selection, or the whole query, as a block of SQL</td>
+</tr>
+<tr>
+<td>A source in the list of sources</td>
+<td>What it reads and, once it has been read, its columns and their types</td>
+</tr>
+<tr>
+<td>A table's title in the Graph</td>
+<td>Its columns with their keys, what they refer to, and the tables that refer to it</td>
+</tr>
+<tr>
+<td>A step on a job's canvas</td>
+<td>Its kind, its description and its settings as the project file has them</td>
+</tr>
+<tr>
+<td>A run in the list of runs</td>
+<td>How it ended, its parameter values, and what each step did</td>
+</tr>
+<tr>
+<td>A row of another list: a check or a message of the Issues pane, a step of a run, an issue of a run in the Job designer, a key or a column in a Data Dictionary keys pane, a column of a comparison</td>
+<td>The row as a table under the columns' names. <strong>Whole table</strong> in the same menu sends every row</td>
+</tr>
+<tr>
+<td>An answer of the Assistant</td>
+<td>The answer as it is</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>A new note is named after what was sent, and opens; when a note of that name is there already, the new one gets a number: <code>Parts</code>, then <code>Parts 2</code>. <strong>Append to</strong> lists the note of every Notes pane, in any workspace or window, the note used last first; the text goes to the end of the one picked, and the panes keep showing what they showed. Either is one step to undo. The address of a database server is never written into a note, for the password it may hold.</p>
+<h2 id="out-of-the-project-and-into-it">Out of the project and into it</h2>
+<p><strong>Export…</strong> writes every note into a folder as a <code>.md</code> file, a folder for each folder of notes; files of the same names are replaced and others left alone. In the browser the files are written to the opened folder or downloaded.</p>
+<pre class="sh"><code>dbdb-cli notes project.json                       # list the notes
+dbdb-cli notes project.json --read &quot;Migration/Cutover runbook&quot;
+dbdb-cli notes project.json --export notes/       # write them as .md files
+dbdb-cli notes project.json --import ~/vault/     # add a folder of .md files</code></pre>
+<p><code>--import</code> takes a folder of Markdown files, an Obsidian vault say, and adds them to the project's notes; hidden folders such as <code>.obsidian</code> are left out.</p>
+<h2 id="in-the-project-file">In the project file</h2>
+<pre class="json"><code>&quot;notes&quot;: [
+  { &quot;type&quot;: &quot;folder&quot;, &quot;name&quot;: &quot;Migration&quot;, &quot;children&quot;: [
+    { &quot;type&quot;: &quot;note&quot;, &quot;name&quot;: &quot;Cutover runbook&quot;, &quot;text&quot;: [
+      &quot;# Cutover runbook&quot;,
+      &quot;&quot;,
+      &quot;Read [[Open questions]] first.&quot;
+    ] }
+  ] }
+]</code></pre>
+<p>A note's text is a list of its lines, so that a change shows as changed lines when the file is compared. A name cannot hold <code>/ \ : * ? " &lt; &gt; | # ^ [ ]</code>, nor start with a dot, so that every note can be a file and the target of a link.</p>
+<p>The commands <code>add_note</code>, <code>remove_note</code>, <code>move_note</code>, <code>set_note_text</code> and <code>append_to_note</code> change them (see <a href="agents.html">agents.md</a>); an assistant reads them with <code>show_project</code>.</p>
+</main>
+</body>
+</html>

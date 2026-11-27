@@ -1,0 +1,10 @@
+[Flatpak Ref]
+Title=dbdb
+Name=io.github.koziserek.dbdb
+Branch=stable
+Url=https://koziserek.github.io/dbdb/repo
+SuggestRemoteName=dbdb
+Homepage=https://koziserek.github.io/dbdb/
+IsRuntime=false
+RuntimeRepo=https://dl.flathub.org/repo/flathub.flatpakrepo
+GPGKey=mDMEavpBQBYJKwYBBAHaRw8BAQdAb0iTEtOdleOR+7A5cA1XJKdWQ5uqn3uDJxtmCF69klC0F2RiZGIgRmxhdHBhayByZXBvc2l0b3J5iJAEExYKADgWIQRJojJrC1Kleh1XQOKdHTAXNM3QwAUCavpBQAIbAwULCQgHAgYVCgkICwIEFgIDAQIeAQIXgAAKCRCdHTAXNM3QwKhWAQCcroSZ7G/bf4Ji5/oUAcyi4gJ+52a3Wh5AVMUEGRm+TAEAsGOAvWudRU9YX/jqKDU6NIlxNF3oq1HnMhlllXma5QY=

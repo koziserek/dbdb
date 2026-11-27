@@ -1,0 +1,237 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>What sharing a project allows · dbdb</title>
+<meta name="description" content="What sharing a project hands over, and what a machine agrees to.">
+<style>
+:root{--bg:#fbfaf7;--fg:#1d1f21;--muted:#62666d;--line:#dcd9d2;--code:#f0eee8;--accent:#a8401a;--head:#f3f1eb}
+@media (prefers-color-scheme:dark){:root{--bg:#16181b;--fg:#e4e2dd;--muted:#9a9ea6;--line:#33373d;--code:#22252a;--accent:#f0935f;--head:#1e2125}}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font:17px/1.6 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+main{max-width:46rem;margin:0 auto;padding:2.5rem 1rem 4rem}
+h1,h2,h3{line-height:1.25;text-wrap:balance}
+h1{font-size:2.1rem;margin:0 0 .4rem}
+h2{font-size:1.5rem;margin:2.8rem 0 .8rem;padding-top:1.4rem;border-top:1px solid var(--line)}
+h3{font-size:1.15rem;margin:2rem 0 .5rem}
+p.lede{color:var(--muted);font-size:1.1rem;margin:0 0 .3rem}
+p.date{color:var(--muted);font-size:.9rem;margin:0 0 2rem}
+a{color:var(--accent);text-underline-offset:2px}
+img{max-width:100%;height:auto;border:1px solid var(--line);border-radius:6px;display:block}
+figure{margin:1.6rem 0}
+@media (min-width:52rem){figure.wide{width:min(72rem,calc(100vw - 2rem));margin-left:50%;transform:translateX(-50%)}}
+figcaption{color:var(--muted);font-size:.88rem;margin-top:.45rem;text-align:center}
+code{font:0.88em/1.45 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;background:var(--code);padding:.1em .3em;border-radius:4px}
+p code,li code{overflow-wrap:anywhere}
+pre{background:var(--code);padding:.9rem 1rem;border-radius:6px;overflow-x:auto}
+pre code{background:none;padding:0;font-size:.84rem}
+.table{overflow-x:auto;margin:1.2rem 0}
+table{border-collapse:collapse;width:100%;min-width:34rem;font-size:.93rem}
+th,td{text-align:left;vertical-align:top;padding:.45rem .7rem;border-bottom:1px solid var(--line)}
+th{background:var(--head);font-weight:600;white-space:nowrap}
+td:first-child{white-space:nowrap}
+table.wrap td:first-child{white-space:normal;overflow-wrap:anywhere}
+li{margin:.3rem 0}
+td img{width:9.5rem;height:3.6rem;object-fit:contain;background:#fff;border:1px solid var(--line);border-radius:6px}
+td:nth-child(2){white-space:nowrap}
+figure.scroll{overflow-x:auto}
+figure.scroll img{min-width:46rem}
+small{display:block;color:var(--muted);font-size:.82rem;line-height:1.5}
+</style>
+<style>
+nav.site{max-width:46rem;margin:0 auto;padding:1rem 1rem 0;display:flex;flex-wrap:wrap;gap:.3rem 1.1rem;font-size:.95rem}
+nav.site a{text-decoration:none}
+nav.site a:first-child{font-weight:700;margin-right:auto}
+td:first-child,td:nth-child(2){white-space:normal}
+dl.pages dt{margin-top:1rem;font-weight:600}
+dl.pages dd{margin:.15rem 0 0;color:var(--muted)}
+</style>
+</head>
+<body>
+<nav class="site"><a href="../">dbdb</a><a href="../docs/">Documentation</a><a href="../flatpak.html">Flatpak</a><a href="https://github.com/koziserek/dbdb/releases">Download</a><a href="https://github.com/koziserek/dbdb/issues">Issues</a></nav>
+<main>
+<h1>What sharing a project allows</h1>
+<p class="lede">What sharing a project hands over, and what a machine agrees to.</p>
+<p>dbdb is made for a team that trusts each other: the people who build a migration, and the machines they run it on. A shared project has one permission, and it is all or nothing. This page says what you hand over with a project file, what a machine agrees to when it runs jobs for others, and how to hand over less.</p>
+<p>Read it before you send a shared project file to someone outside your team, and before you start a runner on a customer's machine.</p>
+<h2 id="the-short-version">The short version</h2>
+<ul>
+<li><strong>Whoever has the project file of a shared project can read and change everything in the project.</strong> There are no accounts, no roles and no read-only access.</li>
+<li><strong>Opening a project starts nothing.</strong> A machine runs a job for others only after its user said so, there: a tick in the app, or <code>dbdb-cli runner</code> or <code>dbdb-cli schedule run</code> started there.</li>
+<li><strong>A machine that runs jobs for others runs whatever jobs the project holds</strong>, as the user it runs as. Whoever has the project file can change those jobs. So they can read and write the files that user can, read and write the databases that machine reaches, and send what they read elsewhere.</li>
+</ul>
+<p>Treat the project file of a shared project like an administrator password for every runner of that project.</p>
+<h2 id="what-is-in-a-project-file">What is in a project file</h2>
+<p>A project file is JSON that anyone can read without dbdb. Only the values of the <a href="vault.html">vault</a> are sealed.</p>
+<div class="table">
+<table>
+<thead>
+<tr>
+<th>In the file</th>
+<th>What a reader learns</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>The relay's address and the project's key (<code>live</code>)</td>
+<td>Enough to join: read the project as it is now, and change it. A relay's <code>--password</code> is part of the address</td>
+</tr>
+<tr>
+<td>Connections of sources, database outputs and connectors</td>
+<td>Hosts, ports, database names, user names, and a password if one was typed in plain text</td>
+</tr>
+<tr>
+<td>What each machine keeps for itself in a connector (<em>Only this machine</em>)</td>
+<td>The addresses every machine uses, by the machine's name. They are in the file so that other machines can see and copy them</td>
+</tr>
+<tr>
+<td><code>env:NAME</code> and the key variable of a connector</td>
+<td>The names of the variables that hold secrets on each machine, not their values</td>
+</tr>
+<tr>
+<td>The vault</td>
+<td>The names of the secrets. The values are sealed, and whoever has the file can try passwords against them for as long as they like</td>
+</tr>
+<tr>
+<td>Sources, jobs, queries, notes</td>
+<td>Tables and columns, SQL, file paths, and whatever was written into a note</td>
+</tr>
+<tr>
+<td>Schedules and Push steps</td>
+<td>What the machines are called, and which job runs where and when</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>More than the file holds is kept in three places:</p>
+<ul>
+<li><strong>The sync folder and the relay keep the project's history.</strong> A password that was once typed into a connection is still there after it was moved to the vault, and in git if the file was committed.</li>
+<li><strong>A page in a browser keeps the project in the browser's storage</strong>, sealed with the project's key, which is in the file.</li>
+<li><strong>With direct connections on</strong>, every copy of the project is told the network addresses of your computer.</li>
+</ul>
+<h2 id="what-someone-with-the-file-can-do">What someone with the file can do</h2>
+<h3 id="on-a-machine-that-only-has-the-project-open">On a machine that only has the project open</h3>
+<p>They can change or remove any source, job, schedule, connector, parameter and note, and the change shows there in about a second. They can stop the sharing for every copy that is connected. They see what the copy is called and which pane it works in.</p>
+<p>They cannot start anything there. No job runs, no file arrives and no database is touched until the person at that machine does it, or agrees to one of the things below.</p>
+<p>One thing to watch for: a job, a source or a connector that someone else changed looks like any other. Before you press Run on a shared project, look at what the job reads and where it writes.</p>
+<h3 id="on-a-machine-that-uses-the-assistant-or-a-prompt-step">On a machine that uses the Assistant or a Prompt step</h3>
+<p>A connector to a model is part of the project: its address, the name of the variable its key is read from, and its instructions. Someone who changes them changes where that machine sends the conversation, the rows a Prompt step sends, and the key.</p>
+<ul>
+<li>The key variable can name any environment variable. With an address that was changed too, the value of that variable goes to another server as the key.</li>
+<li>A key that is a secret of the vault goes to the connector's address whenever the vault is open.</li>
+<li>The instructions go ahead of every conversation on every machine. The Assistant still asks before it changes the project or runs a job.</li>
+</ul>
+<p><em>Only this machine</em> does not guard against this: what a machine keeps for itself is in the project too, and whoever has the file can change it. On a project whose holders you do not all know, look at a connector's address and key in the Connectors pane before you use it, and start dbdb without variables that the project has no need of.</p>
+<h3 id="on-a-machine-that-runs-jobs-for-others">On a machine that runs jobs for others</h3>
+<p>A machine does this when one of these is true:</p>
+<div class="table">
+<table>
+<thead>
+<tr>
+<th>On the machine</th>
+<th>It runs</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><em>Run here</em> ticked in the Job schedule pane</td>
+<td>Every schedule that names this machine</td>
+</tr>
+<tr>
+<td><code>dbdb-cli schedule run project.json</code></td>
+<td>The same, from the project file</td>
+</tr>
+<tr>
+<td><em>Run what is asked</em> ticked in the Job schedule pane</td>
+<td>Any job another copy asks for, and it takes files pushed to it</td>
+</tr>
+<tr>
+<td><code>dbdb-cli runner project.json</code></td>
+<td>All of it, unless <code>--no-asked</code> or <code>--no-schedules</code> says otherwise</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>Whoever has the project file can add a schedule that names the machine, change the job a schedule runs, or ask for any job with any parameter values. The run needs no further yes on the machine.</p>
+<p>What a job can do there, as the user the runner runs as:</p>
+<ul>
+<li><strong>Read any file.</strong> A source reads the file at any path. A <em>File or folder input</em> reads a folder and all below it, with the content of every file.</li>
+<li><strong>Write any file.</strong> A <em>File output</em>, a <em>File or folder output</em>, an <em>HTML output</em> and an SQLite output write to any path, inside the project's folder or outside it, and make the folders that are missing. A file written into the right place, such as a shell's start-up file, a list of SSH keys or a service of the user, is run by the system later. So being able to write any file is being able to run commands.</li>
+<li><strong>Read any database the machine reaches</strong>, through a connection of the project or one written into a new source. Reads cannot change data.</li>
+<li><strong>Call any HTTP address the machine reaches</strong>, with a GET, through a <a href="rest.html">REST API source</a>, and read what it answers: an API, but also a web service on <code>localhost</code> or in the machine's network, and the metadata address of a cloud machine, which hands out that machine's credentials. A REST source sends nothing but a GET, unless the machine itself lists a host in <code>DBDB_REST_POST</code>: a POST can change things at an API, so leave that variable unset on a machine that runs jobs for others, or name only hosts that read with a POST. Set <code>DBDB_REST_HOSTS</code> to limit the hosts (see below).</li>
+<li><strong>Write to tables that exist</strong>, with the rights of the connection's user: add rows, update them, or replace all rows, which empties the table first. A job cannot change a table's structure or run SQL of its own.</li>
+<li><strong>Use the machine's secrets.</strong> A connection that reads <code>env:NAME</code>, or a secret of the vault while it is open there (<code>DBDB_VAULT_PASSWORD</code>), works for every job, also one that was added a minute ago. A secret written into a connection to another host is sent to that host. The key of a connector to a REST API is the same: its key variable can name any environment variable, and with an address that was changed too, the value of that variable goes to another host as the key.</li>
+<li><strong>Send what it read elsewhere</strong>: into a database on any host, to another machine with a Push step, or to a model.</li>
+</ul>
+<p>A job cannot start a program. dbdb has no step that runs a command, and the only programs it starts itself are the Claude Code and Copilot CLIs of the Assistant, which it finds on the machine and never through the project.</p>
+<p>A file that is pushed to a machine goes into <code>Incoming</code> beside its project file and nowhere else.</p>
+<h3 id="the-ticks-in-the-app">The ticks in the app</h3>
+<p><em>Run here</em> and <em>Run what is asked</em> are kept by the app, for the project's file, and hold after the app was closed. Nothing in a project file, and nothing another copy sends, can set them: only someone at that machine can.</p>
+<ul>
+<li><strong>When a project with a tick is opened</strong>, a window says that this machine runs its jobs for others, and which: <strong>Keep running</strong> or <strong>Stop running here</strong>. The jobs run meanwhile, so that a machine left to run a night's schedules does not wait for a click.</li>
+<li><strong>A tick stands for the project it was given for.</strong> When the project in the file was shared with a new key since, is shared for the first time, is no longer shared, or is another project saved over the file, nothing runs for others until you say so again in that window: <strong>Run for others again</strong> or <strong>Stop running here</strong>. The same happens while the project is open, when another copy shares it anew. The people who hold the new key need not be the ones you said yes for.</li>
+<li>A tick from a dbdb before this is asked about once.</li>
+</ul>
+<p><code>dbdb-cli runner</code> and <code>dbdb-cli schedule run</code> have no tick: starting the command is the yes, for as long as it runs.</p>
+<h3 id="machines-are-known-by-name-only">Machines are known by name only</h3>
+<p>A machine is what its computer is called, or what <code>DBDB_MACHINE</code> says. Anyone with the project file can start a runner under any name. A file pushed to a machine goes to the runner of that name that came to the relay first, and a run asked of it can be taken by such a runner. Do not push data to a machine name on a project whose file may be in hands you do not know.</p>
+<h2 id="taking-access-back">Taking access back</h2>
+<p>There is no way to take the file back, and less of a way to take access back than one would wish:</p>
+<ul>
+<li><em>Stop sharing</em> takes the address and the key out of every copy that is connected. Whoever still has a file with the old key can read what the relay kept until then.</li>
+<li>A copy or a runner that was not connected at that moment still has the old address and key, and whoever has them can still change the project as that copy sees it. Give every runner the new file and start it again.</li>
+<li><code>dbdb-cli runner</code> follows a relay address and key that another copy changes, without asking. The app asks once for each new address, and stops running for others when the key changes, until you say so again (<a href="#the-ticks-in-the-app">The ticks in the app</a>).</li>
+<li>Changing the vault's password does not close old copies of the file, which open with the old password.</li>
+</ul>
+<p>To go on without someone:</p>
+<ol type="1">
+<li><em>Stop sharing</em>, then share again, which makes a new key.</li>
+<li>Send the new file to those who stay, and start every runner again with it.</li>
+<li>Change, at the database or the provider, every password and key that the project or its history ever held in plain text, and every secret of the vault if they knew its password.</li>
+<li>If the relay has a <code>--password</code>, change that too: it was in the file.</li>
+</ol>
+<h2 id="how-to-hand-over-less">How to hand over less</h2>
+<p><strong>When you send a file</strong></p>
+<ul>
+<li>Send it the way you would send a password, and keep it out of a repository that others read.</li>
+<li>For someone who should look and not join, use <em>Save a copy without the key…</em>. The copy still names hosts, users, tables and machines: read it before you send it.</li>
+<li>Keep passwords out of connections. Use <code>env:NAME</code> for what differs by machine and the <a href="vault.html">vault</a> for what is shared, and give the vault's password to fewer people than the file.</li>
+</ul>
+<p><strong>When you set up a runner</strong>, above all on a machine that is not yours</p>
+<ul>
+<li><p><strong>Give it a user of its own</strong>, which owns the project's folder and the folders the jobs read and write, and nothing else: no SSH keys, no sudo, no home folder that matters. What that user cannot read or write, no job can. With systemd:</p>
+<pre class="ini"><code>[Service]
+User=dbdb-runner
+ExecStart=/usr/local/bin/dbdb-cli runner /srv/etl/project.json
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+ReadWritePaths=/srv/etl</code></pre>
+<p>This is a service of the system, not of a user as in <a href="remote-runs.html">remote-runs.md</a>. It was not tried here.</p></li>
+<li><p><strong>Give it a database user of its own</strong>, with read on what the jobs read and write on the tables they fill, and no more.</p></li>
+<li><p><strong>Say which hosts it may call over HTTP.</strong> With <code>DBDB_REST_HOSTS=api.example.com,*.corp.example</code> set, a REST API source there calls those hosts and no other. Without it, any host. A runner that reads no API can be given a host that does not exist.</p></li>
+<li><p><strong>Give it only the variables its jobs read.</strong> Leave <code>DBDB_VAULT_PASSWORD</code> out unless a job there needs a secret of the vault.</p></li>
+<li><p><strong>Let it do only what it is for.</strong> <code>--no-asked</code> runs this machine's schedules and takes no asks and no files. <code>--no-schedules</code> does the opposite. <code>--no-relay</code> follows only the sync folder, so only those who reach that folder can change what runs.</p></li>
+<li><p><strong>Where nobody else should change what runs</strong>, do not share that project at all: keep a copy of the project file on the machine, set <code>"no_sync": true</code> or run <code>dbdb-cli schedule run</code> on it, and carry changes over by hand after you read them.</p></li>
+<li><p><strong>In the app</strong>, tick <em>Run here</em> and <em>Run what is asked</em> only for a project whose every holder you would let work at that machine, and untick them when the work is done.</p></li>
+</ul>
+<p><strong>When you run a relay</strong></p>
+<ul>
+<li>Give it a <code>--password</code>, so that only copies of your projects use it. The relay cannot read a project either way.</li>
+<li><code>--forget-after-days</code> keeps old projects, and with them old keys, from staying readable for good.</li>
+</ul>
+<h2 id="what-dbdb-does-not-have">What dbdb does not have</h2>
+<p>So that nobody counts on it:</p>
+<ul>
+<li>no accounts, roles, or read-only members of a shared project;</li>
+<li>no limit on the folders or databases a job may use on a runner (the hosts a REST API source may call are the one exception, and only where <code>DBDB_REST_HOSTS</code> is set);</li>
+<li>no list of jobs a runner may run, and no approval of a changed job before it runs;</li>
+<li>no proof of which machine is which, and no record of who changed a job;</li>
+<li>no way to make a copy of the file that was sent stop working.</li>
+</ul>
+</main>
+</body>
+</html>
