@@ -267,11 +267,14 @@ Licences….
 
 dbdb is shareware, as in the old days: try it, pass it on, and pay when
 you are big enough. It is proprietary software and its source is not
-published. Its use is governed by the dbdb Licence in [LICENSE](LICENSE),
-which is still a draft:
+published. Its use is governed by the dbdb Licence in [LICENSE](LICENSE):
 
 - **Free:** for individuals, and for organisations with no more than 10
   people and no more than 5 million Swiss francs of yearly revenue.
+- **AI agents:** an agent, and each of its subagents, driven by a model of
+  more than 200 billion parameters counts as one of an organisation's
+  people. Agents on smaller models, and on models you run on your own
+  hardware, do not count.
 - **Paid:** larger organisations need a commercial licence after 30 days of
   evaluation, and so does work done for them by consultants. To ask for
   one, open an issue here.

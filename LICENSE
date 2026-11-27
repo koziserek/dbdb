@@ -1,13 +1,12 @@
-dbdb Licence, version 1.0
-
-DRAFT. This text has not yet been reviewed by a lawyer.
+dbdb Licence, version 1.1
 
 Copyright (c) 2026 Jakub Sadowski ("the Licensor"). All rights reserved.
 
 dbdb is shareware: proprietary software that You may try, and may pass on
 unchanged. Its source code is not published. Its use is free for
 individuals and for smaller organisations. Larger organisations need a paid
-commercial licence. The terms are below.
+commercial licence, and the larger AI agents that work for an organisation
+are counted among its people. The terms are below.
 
 
 1. Definitions
@@ -24,9 +23,19 @@ is controlled by it, or is under common control with it.
 included, that in its last completed financial year had
 
   (a) more than 10 people working for it, employees and contractors
-      together, or
+      together, with every AI Agent that is a User counted as one of them
+      as section 3 says, or
   (b) a revenue, or for a body without revenue a budget, of more than
       5 million Swiss francs or the same amount in another currency.
+
+"AI Agent" means a system that, driven by a machine-learning model, uses
+the Software by itself, in place of a person doing so by hand: it starts
+the Software, gives it commands or works its interface. Every running
+instance of such a system is an AI Agent of its own, and so is every
+subagent that an AI Agent starts.
+
+"User" means a person who uses the Software, or an AI Agent that section 3
+counts as one.
 
 "Commercial Licence" means a separate written agreement with the Licensor.
 
@@ -48,30 +57,57 @@ that organisation to hold a Commercial Licence, whatever the consultant's
 own size.
 
 
-3. Use that needs a Commercial Licence
+3. AI agents
+
+An AI Agent that uses the Software is a User if the model that drives it
+has more than 200 billion parameters. A model whose maker has not published
+its number of parameters is taken to have more.
+
+An AI Agent is not a User, whatever the size of its model, if You run that
+model on Your own hardware: on machines You own or have for Your use alone,
+and not as a service that someone else runs.
+
+So an AI Agent is left out of the count if its model has no more than
+200 billion parameters, or if You run its model Yourself. Either is enough.
+
+For section 1 (a), the AI Agents that are Users are counted as the highest
+number of them that used the Software at the same time during the
+financial year. Each instance, and each subagent that itself uses the
+Software, is counted on its own.
+
+Use by an AI Agent is use by whoever deploys it, or by whomever it works
+for, as section 2 says of use on behalf of someone else. That person or
+organisation is "You", and answers for the AI Agent keeping to this
+licence. An AI Agent has no rights of its own under this licence.
+
+An individual using the Software for themselves stays within section 2 (a)
+with any number of AI Agents.
+
+
+4. Use that needs a Commercial Licence
 
 Any use by or on behalf of a Large Organisation beyond the evaluation in
 section 2 needs a Commercial Licence. The README says how to get one.
 
 
-4. What You may do
+5. What You may do
 
-Within the use that sections 2 and 3 allow, You may
+Within the use that sections 2 and 4 allow, You may
 
   (a) run the Software on any number of machines You control,
   (b) make the copies that running it and keeping backups need, and
   (c) give others complete, unchanged copies of the Software as the
       Licensor published it, free of charge and together with this
       licence. Whoever receives a copy uses it under this licence, and
-      section 3 applies to them as it does to You.
+      section 4 applies to them as it does to You.
 
 
-5. What You may not do
+6. What You may not do
 
 Without the Licensor's written permission You may not
 
   (a) sell, rent or sublicense the Software, or give it to anyone else
-      in any other way than section 4 (c) allows,
+      in any other way than section 5 (c) allows,
   (b) offer the Software to others as a hosted or managed service,
   (c) decompile, disassemble or otherwise reverse engineer the Software,
       or change it or build other software from it, except where the law
@@ -84,18 +120,18 @@ reaches You in any way stays the Licensor's and is covered by these same
 limits.
 
 
-6. What You make with it stays Yours
+7. What You make with it stays Yours
 
 This licence makes no claim on Your data, on the projects, jobs, queries
 and other files You make with the Software, or on what they produce.
 
 
-7. If You like it, and if You do not
+8. If You like it, and if You do not
 
 In the tradition of shareware:
 
   (a) If You like the Software, You "shall" praise it and pass it on:
-      tell a colleague, and give them a copy as section 4 (c) allows.
+      tell a colleague, and give them a copy as section 5 (c) allows.
   (b) If You do not, You are "obliged" to say what is wrong: send a bug
       report or a request by email, or on the project's issues page on
       GitHub. The README says where.
@@ -105,14 +141,14 @@ of this licence: Your rights do not depend on them. What You send may be
 used to improve the Software, without anything being owed to You for it.
 
 
-8. Parts by others
+9. Parts by others
 
 The Software contains components by other authors under their own
 licences, among them the Terminus TTF font under the SIL Open Font License
 1.1. Those licences apply to those components in place of this one.
 
 
-9. End of the licence
+10. End of the licence
 
 Your rights under this licence end if You break its terms and have not put
 that right within 30 days of the Licensor telling You so. They also end, as
@@ -121,7 +157,7 @@ far as free use goes, when You become a Large Organisation; You then have
 Your rights end, You must stop using the Software and delete Your copies.
 
 
-10. No warranty, limited liability
+11. No warranty, limited liability
 
 The Software is provided as it is, without warranty of any kind, express or
 implied, including fitness for a particular purpose. You are responsible
@@ -131,14 +167,14 @@ from not being able to use it. Liability that the law does not allow to be
 excluded, such as for intent or gross negligence, is not affected.
 
 
-11. Law and courts
+12. Law and courts
 
 This licence is governed by Swiss law, without its rules on conflict of
 laws. The courts at the Licensor's place of residence have exclusive
 jurisdiction.
 
 
-12. Other versions
+13. Other versions
 
 The Licensor may publish new versions of this licence. A release of the
 Software stays under the version of the licence it was published with.
