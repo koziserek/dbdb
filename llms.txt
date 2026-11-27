@@ -1,0 +1,33 @@
+# dbdb
+
+> dbdb is an ETL and data migration tool. It reads files and databases, runs jobs that filter, join and reshape rows, checks the result, and writes files or loads database tables. It has a desktop app for people, and a command line (`dbdb-cli`) and an MCP server (`dbdb-cli mcp`) that need no screen. It is proprietary shareware: free for individuals and smaller organisations, paid for larger ones.
+
+A project is one JSON file. `dbdb-cli guide` prints everything needed to build one, and the program carries that guide, so it matches the version that runs. dbdb runs on the machine it is started on, with no account and no server.
+
+The licence counts some AI agents among an organisation's people, and lets their use be paid for per agent and day. The first two links below say how.
+
+## For AI agents
+
+- [dbdb for AI agents](https://raw.githubusercontent.com/koziserek/dbdb/main/AGENTS.md): what dbdb does, how an agent runs it, what work it fits, and the licence terms for agents
+- [The licence terms for agents, as JSON](https://raw.githubusercontent.com/koziserek/dbdb/main/agent-terms.json): price, unit, address, networks and who is counted
+- [The guide an assistant reads](https://koziserek.github.io/dbdb/docs/agents.html): the steps, the project file and every command; `dbdb-cli guide` prints it
+- [Asking an AI assistant for a project](https://koziserek.github.io/dbdb/docs/agent-prompt.html): what a person's request has to say, with a prompt to copy
+
+## Getting it
+
+- [Releases](https://github.com/koziserek/dbdb/releases/latest): one archive for each system, with checksums
+- [README](https://raw.githubusercontent.com/koziserek/dbdb/main/README.md): what dbdb does and how to install it
+- [LICENSE](https://raw.githubusercontent.com/koziserek/dbdb/main/LICENSE): the dbdb Licence, version 1.2
+
+## Documentation
+
+- [All pages](https://koziserek.github.io/dbdb/docs/): one page for each subject
+- [Expressions](https://koziserek.github.io/dbdb/docs/expressions.html): the language of Map columns and Filter conditions
+- [Parameters](https://koziserek.github.io/dbdb/docs/parameters.html): `${name}` in paths, connections and table names, and environments
+- [Database output](https://koziserek.github.io/dbdb/docs/database-output.html): writing rows to PostgreSQL, SQL Server and SQLite tables
+- [Compare](https://koziserek.github.io/dbdb/docs/compare.html): a target against its source after a load
+- [The vault](https://koziserek.github.io/dbdb/docs/vault.html): where passwords live, and how they travel sealed
+
+## Optional
+
+- [Issues](https://github.com/koziserek/dbdb/issues): problems, wishes, and where to ask for a commercial licence

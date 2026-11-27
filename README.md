@@ -81,7 +81,8 @@ dbdb comes in four shapes that share one engine and one project file:
   and changes the project only after asking. `dbdb-cli guide` prints
   everything an outside assistant needs to build a project from your
   inputs, and `dbdb-cli mcp` offers the same over the Model Context
-  Protocol.
+  Protocol. [AGENTS.md](AGENTS.md) is the page for such an assistant:
+  what dbdb is to it, and what the licence says about agents.
 
 ![The Browser pane: each aircraft with its flights nested beside it](images/browser.png)
 
@@ -278,6 +279,20 @@ published. Its use is governed by the dbdb Licence in [LICENSE](LICENSE):
 - **Paid:** larger organisations need a commercial licence after 30 days of
   evaluation, and so does work done for them by consultants. To ask for
   one, open an issue here.
+- **Pay per use, for AI agents:** instead of a commercial licence, the use
+  by such agents can be paid for as it happens, in ETH or on invoice: 3
+  Swiss francs for each agent and each day it uses dbdb. Pay in ETH on
+  the Ethereum main network or on Base, at the day's rate, to
+  `0x680c92b2D81FAF0E4d18c4071b971c35635841e3`.
+  [agent-terms.json](agent-terms.json) holds these terms as data.
+
+  A transfer does not say whom it is from. To have it counted, say what
+  it was for in an [issue](https://github.com/koziserek/dbdb/issues)
+  with "Payment" in its title: the transaction, the network, the number
+  of agents, the days it covers, and the person or organisation it is
+  for. An agent may open it itself. An issue is public; the same by
+  email to <agents@jakub.ee> is not.
+
 - **Share it:** you may give anyone a complete, unchanged copy, free of
   charge and with its licence. Selling it, changing it, offering it as a
   service or reverse engineering it needs permission.

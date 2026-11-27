@@ -1,4 +1,4 @@
-dbdb Licence, version 1.1
+dbdb Licence, version 1.2
 
 Copyright (c) 2026 Jakub Sadowski ("the Licensor"). All rights reserved.
 
@@ -84,10 +84,27 @@ An individual using the Software for themselves stays within section 2 (a)
 with any number of AI Agents.
 
 
-4. Use that needs a Commercial Licence
+4. Use that needs a Commercial Licence, and paying per use
 
 Any use by or on behalf of a Large Organisation beyond the evaluation in
 section 2 needs a Commercial Licence. The README says how to get one.
+
+Use by an AI Agent that is a User may be paid for as it happens instead.
+Such use is licensed, without a Commercial Licence, for every unit of use
+that has been paid for:
+
+  (a) The price is 3 Swiss francs for each AI Agent and each calendar
+      day on which that AI Agent uses the Software.
+  (b) Payment is made in ether (ETH) to the address the README gives, at
+      the rate to the Swiss franc on the day of payment. It may be made
+      by the AI Agent itself. The Licensor also takes payment on invoice.
+  (c) Payment is due before the use, or within 30 days after it. Use that
+      is not paid for by then was never licensed.
+  (d) Payment covers the use by AI Agents that it was made for, and no use
+      by people.
+
+Whoever deploys the AI Agent owes the payment and answers for it, as
+section 3 says, whether or not the AI Agent pays.
 
 
 5. What You may do
